@@ -3,7 +3,7 @@
 # libtcod python tutorial
 #
  
-import libtcodpy as libtcod
+import libtcod.libtcodpy as libtcod
 import math
 import textwrap
 import shelve
