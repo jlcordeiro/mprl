@@ -5,9 +5,9 @@
  
 import libtcod.libtcodpy as libtcod
 import math
-import textwrap
 import shelve
 from dungeon import *
+from messages import Messages
  
  
 #actual size of the window
@@ -169,10 +169,10 @@ class Fighter:
  
         if damage > 0:
             #make the target take some damage
-            message(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage) + ' hit points.')
+            messages.add(self.owner.name.capitalize() + ' attacks ' + target.name + ' for ' + str(damage) + ' hit points.')
             target.fighter.take_damage(damage)
         else:
-            message(self.owner.name.capitalize() + ' attacks ' + target.name + ' but it has no effect!')
+            messages.add(self.owner.name.capitalize() + ' attacks ' + target.name + ' but it has no effect!')
  
     def take_damage(self, damage):
         #apply damage if possible
@@ -223,7 +223,7 @@ class ConfusedMonster:
  
         else:  #restore the previous AI (this one will be deleted because it's not referenced anymore)
             self.owner.ai = self.old_ai
-            message('The ' + self.owner.name + ' is no longer confused!', libtcod.red)
+            messages.add('The ' + self.owner.name + ' is no longer confused!', libtcod.red)
  
 class Item:
     #an item that can be picked up and used.
@@ -233,11 +233,11 @@ class Item:
     def pick_up(self):
         #add to the player's inventory and remove from the map
         if len(inventory) >= 26:
-            message('Your inventory is full, cannot pick up ' + self.owner.name + '.', libtcod.red)
+            messages.add('Your inventory is full, cannot pick up ' + self.owner.name + '.', libtcod.red)
         else:
             inventory.append(self.owner)
             objects.remove(self.owner)
-            message('You picked up a ' + self.owner.name + '!', libtcod.green)
+            messages.add('You picked up a ' + self.owner.name + '!', libtcod.green)
  
             #special case: automatically equip, if the corresponding equipment slot is unused
             equipment = self.owner.equipment
@@ -254,7 +254,7 @@ class Item:
         inventory.remove(self.owner)
         self.owner.x = player.x
         self.owner.y = player.y
-        message('You dropped a ' + self.owner.name + '.', libtcod.yellow)
+        messages.add('You dropped a ' + self.owner.name + '.', libtcod.yellow)
  
     def use(self):
         #special case: if the object has the Equipment component, the "use" action is to equip/dequip
@@ -264,7 +264,7 @@ class Item:
  
         #just call the "use_function" if it is defined
         if self.use_function is None:
-            message('The ' + self.owner.name + ' cannot be used.')
+            messages.add('The ' + self.owner.name + ' cannot be used.')
         else:
             if self.use_function() != 'cancelled':
                 inventory.remove(self.owner)  #destroy after use, unless it was cancelled for some reason
@@ -293,13 +293,13 @@ class Equipment:
  
         #equip object and show a message about it
         self.is_equipped = True
-        message('Equipped ' + self.owner.name + ' on ' + self.slot + '.', libtcod.light_green)
+        messages.add('Equipped ' + self.owner.name + ' on ' + self.slot + '.', libtcod.light_green)
  
     def dequip(self):
         #dequip object and show a message about it
         if not self.is_equipped: return
         self.is_equipped = False
-        message('Dequipped ' + self.owner.name + ' from ' + self.slot + '.', libtcod.light_yellow)
+        messages.add('Dequipped ' + self.owner.name + ' from ' + self.slot + '.', libtcod.light_yellow)
  
  
 def get_equipped_in_slot(slot):  #returns the equipment in a slot, or None if it's empty
@@ -633,11 +633,7 @@ def render_all():
     libtcod.console_clear(panel)
  
     #print the game messages, one line at a time
-    y = 1
-    for (line, color) in game_msgs:
-        libtcod.console_set_default_foreground(panel, color)
-        libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT,line)
-        y += 1
+    messages.draw( panel, MSG_X )
  
     #show the player's stats
     render_bar(1, 1, BAR_WIDTH, 'HP', player.fighter.hp, player.fighter.max_hp,
@@ -650,20 +646,6 @@ def render_all():
  
     #blit the contents of "panel" to the root console
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
- 
- 
-def message(new_msg, color = libtcod.white):
-    #split the message if necessary, among multiple lines
-    new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
- 
-    for line in new_msg_lines:
-        #if the buffer is full, remove the first line to make room for the new one
-        if len(game_msgs) == MSG_HEIGHT:
-            del game_msgs[0]
- 
-        #add the new line as a tuple, with the text and the color
-        game_msgs.append( (line, color) )
- 
  
 def player_move_or_attack(dx, dy):
     global fov_recompute
@@ -825,7 +807,7 @@ def check_level_up():
         #it is! level up and ask to raise some stats
         player.level += 1
         player.fighter.xp -= level_up_xp
-        message('Your battle skills grow stronger! You reached level ' + str(player.level) + '!', libtcod.yellow)
+        messages.add('Your battle skills grow stronger! You reached level ' + str(player.level) + '!', libtcod.yellow)
  
         choice = None
         while choice == None:  #keep asking until a choice is made
@@ -845,7 +827,7 @@ def check_level_up():
 def player_death(player):
     #the game ended!
     global game_state
-    message('You died!', libtcod.red)
+    messages.add('You died!', libtcod.red)
     game_state = 'dead'
  
     #for added effect, transform the player into a corpse!
@@ -855,7 +837,7 @@ def player_death(player):
 def monster_death(monster):
     #transform it into a nasty corpse! it doesn't block, can't be
     #attacked and doesn't move
-    message('The ' + monster.name + ' is dead! You gain ' + str(monster.fighter.xp) + ' experience points.', libtcod.orange)
+    messages.add('The ' + monster.name + ' is dead! You gain ' + str(monster.fighter.xp) + ' experience points.', libtcod.orange)
     monster.char = '%'
     monster.color = libtcod.dark_red
     monster.blocks = False
@@ -912,39 +894,39 @@ def closest_monster(max_range):
 def cast_heal():
     #heal the player
     if player.fighter.hp == player.fighter.max_hp:
-        message('You are already at full health.', libtcod.red)
+        messages.add('You are already at full health.', libtcod.red)
         return 'cancelled'
  
-    message('Your wounds start to feel better!', libtcod.light_violet)
+    messages.add('Your wounds start to feel better!', libtcod.light_violet)
     player.fighter.heal(HEAL_AMOUNT)
  
 def cast_lightning():
     #find closest enemy (inside a maximum range) and damage it
     monster = closest_monster(LIGHTNING_RANGE)
     if monster is None:  #no enemy found within maximum range
-        message('No enemy is close enough to strike.', libtcod.red)
+        messages.add('No enemy is close enough to strike.', libtcod.red)
         return 'cancelled'
  
     #zap it!
-    message('A lighting bolt strikes the ' + monster.name + ' with a loud thunder! The damage is '
+    messages.add('A lighting bolt strikes the ' + monster.name + ' with a loud thunder! The damage is '
             + str(LIGHTNING_DAMAGE) + ' hit points.', libtcod.light_blue)
     monster.fighter.take_damage(LIGHTNING_DAMAGE)
  
 def cast_fireball():
     #ask the player for a target tile to throw a fireball at
-    message('Left-click a target tile for the fireball, or right-click to cancel.', libtcod.light_cyan)
+    messages.add('Left-click a target tile for the fireball, or right-click to cancel.', libtcod.light_cyan)
     (x, y) = target_tile()
     if x is None: return 'cancelled'
-    message('The fireball explodes, burning everything within ' + str(FIREBALL_RADIUS) + ' tiles!', libtcod.orange)
+    messages.add('The fireball explodes, burning everything within ' + str(FIREBALL_RADIUS) + ' tiles!', libtcod.orange)
  
     for obj in objects:  #damage every fighter in range, including the player
         if obj.distance(x, y) <= FIREBALL_RADIUS and obj.fighter:
-            message('The ' + obj.name + ' gets burned for ' + str(FIREBALL_DAMAGE) + ' hit points.', libtcod.orange)
+            messages.add('The ' + obj.name + ' gets burned for ' + str(FIREBALL_DAMAGE) + ' hit points.', libtcod.orange)
             obj.fighter.take_damage(FIREBALL_DAMAGE)
  
 def cast_confuse():
     #ask the player for a target to confuse
-    message('Left-click an enemy to confuse it, or right-click to cancel.', libtcod.light_cyan)
+    messages.add('Left-click an enemy to confuse it, or right-click to cancel.', libtcod.light_cyan)
     monster = target_monster(CONFUSE_RANGE)
     if monster is None: return 'cancelled'
  
@@ -952,7 +934,7 @@ def cast_confuse():
     old_ai = monster.ai
     monster.ai = ConfusedMonster(old_ai)
     monster.ai.owner = monster  #tell the new component who owns it
-    message('The eyes of the ' + monster.name + ' look vacant, as he starts to stumble around!', libtcod.light_green)
+    messages.add('The eyes of the ' + monster.name + ' look vacant, as he starts to stumble around!', libtcod.light_green)
  
  
 def save_game():
@@ -963,14 +945,14 @@ def save_game():
     file['player_index'] = objects.index(player)  #index of player in objects list
     file['stairs_index'] = objects.index(stairs)  #same for the stairs
     file['inventory'] = inventory
-    file['game_msgs'] = game_msgs
+    file['messages'] = messages
     file['game_state'] = game_state
     file['dungeon_level'] = dungeon_level
     file.close()
  
 def load_game():
     #open the previously saved shelve and load the game data
-    global map, objects, player, stairs, inventory, game_msgs, game_state, dungeon_level
+    global map, objects, player, stairs, inventory, messages, game_state, dungeon_level
  
     file = shelve.open('savegame', 'r')
     map = file['map']
@@ -978,7 +960,7 @@ def load_game():
     player = objects[file['player_index']]  #get index of player in objects list and access it
     stairs = objects[file['stairs_index']]  #same for the stairs
     inventory = file['inventory']
-    game_msgs = file['game_msgs']
+    messages = file['messages']
     game_state = file['game_state']
     dungeon_level = file['dungeon_level']
     file.close()
@@ -986,7 +968,7 @@ def load_game():
     initialize_fov()
  
 def new_game():
-    global player, inventory, game_msgs, game_state, dungeon_level
+    global player, inventory, messages, game_state, dungeon_level
  
     #create object representing the player
     fighter_component = Fighter(hp=100, defense=1, power=2, xp=0, death_function=player_death)
@@ -1003,10 +985,10 @@ def new_game():
     inventory = []
  
     #create the list of game messages and their colors, starts empty
-    game_msgs = []
+    messages = Messages( MSG_WIDTH, MSG_HEIGHT )
  
     #a warm welcoming message!
-    message('Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.', libtcod.red)
+    messages.add('Welcome stranger! Prepare to perish in the Tombs of the Ancient Kings.', libtcod.red)
  
     #initial equipment: a dagger
     equipment_component = Equipment(slot='right hand', power_bonus=2)
@@ -1018,11 +1000,11 @@ def new_game():
 def next_level():
     #advance to the next level
     global dungeon_level
-    message('You take a moment to rest, and recover your strength.', libtcod.light_violet)
+    messages.add('You take a moment to rest, and recover your strength.', libtcod.light_violet)
     player.fighter.heal(player.fighter.max_hp / 2)  #heal the player by 50%
  
     dungeon_level += 1
-    message('After a rare moment of peace, you descend deeper into the heart of the dungeon...', libtcod.red)
+    messages.add('After a rare moment of peace, you descend deeper into the heart of the dungeon...', libtcod.red)
     make_map()  #create a fresh new level!
     initialize_fov()
  
