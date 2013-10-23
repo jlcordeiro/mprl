@@ -5,6 +5,7 @@
  
 import libtcod.libtcodpy as libtcod
 import math
+import random
 import shelve
 from ai import *
 from dungeon import *
@@ -339,11 +340,11 @@ def make_map():
  
     for r in range(MAX_ROOMS):
         #random width and height
-        w = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-        h = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        w = random.randint( ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        h = random.randint( ROOM_MIN_SIZE, ROOM_MAX_SIZE)
         #random position without going out of the boundaries of the map
-        x = libtcod.random_get_int(0, 0, MAP_WIDTH - w - 1)
-        y = libtcod.random_get_int(0, 0, MAP_HEIGHT - h - 1)
+        x = random.randint( 0, MAP_WIDTH - w - 1)
+        y = random.randint( 0, MAP_HEIGHT - h - 1)
  
         #"Rect" class makes rectangles easier to work with
         new_room = Rect(x, y, w, h)
@@ -379,7 +380,7 @@ def make_map():
                 (prev_x, prev_y) = rooms[num_rooms-1].center()
  
                 #draw a coin (random number that is either 0 or 1)
-                if libtcod.random_get_int(0, 0, 1) == 1:
+                if random.randint( 0, 1) == 1:
                     #first move horizontally, then vertically
                     create_h_tunnel(prev_x, new_x, prev_y)
                     create_v_tunnel(prev_y, new_y, new_x)
@@ -399,7 +400,7 @@ def make_map():
  
 def random_choice_index(chances):  #choose one option from list of chances, returning its index
     #the dice will land on some number between 1 and the sum of the chances
-    dice = libtcod.random_get_int(0, 1, sum(chances))
+    dice = random.randint( 1, sum(chances))
  
     #go through all chances, keeping the sum so far
     running_sum = 0
@@ -451,12 +452,12 @@ def place_objects(room):
  
  
     #choose random number of monsters
-    num_monsters = libtcod.random_get_int(0, 0, max_monsters)
+    num_monsters = random.randint( 0, max_monsters)
  
     for i in range(num_monsters):
         #choose random spot for this monster
-        x = libtcod.random_get_int(0, room.x1+1, room.x2-1)
-        y = libtcod.random_get_int(0, room.y1+1, room.y2-1)
+        x = random.randint( room.x1+1, room.x2-1)
+        y = random.randint( room.y1+1, room.y2-1)
  
         #only place it if the tile is not blocked
         if not is_blocked(x, y):
@@ -480,12 +481,12 @@ def place_objects(room):
             objects.append(monster)
  
     #choose random number of items
-    num_items = libtcod.random_get_int(0, 0, max_items)
+    num_items = random.randint( 0, max_items)
  
     for i in range(num_items):
         #choose random spot for this item
-        x = libtcod.random_get_int(0, room.x1+1, room.x2-1)
-        y = libtcod.random_get_int(0, room.y1+1, room.y2-1)
+        x = random.randint( room.x1+1, room.x2-1)
+        y = random.randint( room.y1+1, room.y2-1)
  
         #only place it if the tile is not blocked
         if not is_blocked(x, y):
