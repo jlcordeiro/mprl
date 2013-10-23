@@ -6,6 +6,7 @@
 import libtcod.libtcodpy as libtcod
 import math
 import shelve
+from ai import *
 from dungeon import *
 from messages import Messages
  
@@ -193,37 +194,6 @@ class Fighter:
         self.hp += amount
         if self.hp > self.max_hp:
             self.hp = self.max_hp
- 
-class BasicMonster:
-    #AI for a basic monster.
-    def take_turn(self):
-        #a basic monster takes its turn. if you can see it, it can see you
-        monster = self.owner
-        if libtcod.map_is_in_fov(fov_map, monster.x, monster.y):
- 
-            #move towards player if far away
-            if monster.distance_to(player) >= 2:
-                monster.move_towards(player.x, player.y)
- 
-            #close enough, attack! (if the player is still alive.)
-            elif player.fighter.hp > 0:
-                monster.fighter.attack(player)
- 
-class ConfusedMonster:
-    #AI for a temporarily confused monster (reverts to previous AI after a while).
-    def __init__(self, old_ai, num_turns=CONFUSE_NUM_TURNS):
-        self.old_ai = old_ai
-        self.num_turns = num_turns
- 
-    def take_turn(self):
-        if self.num_turns > 0:  #still confused...
-            #move in a random direction, and decrease the number of turns confused
-            self.owner.move(libtcod.random_get_int(0, -1, 1), libtcod.random_get_int(0, -1, 1))
-            self.num_turns -= 1
- 
-        else:  #restore the previous AI (this one will be deleted because it's not referenced anymore)
-            self.owner.ai = self.old_ai
-            messages.add('The ' + self.owner.name + ' is no longer confused!', libtcod.red)
  
 class Item:
     #an item that can be picked up and used.
@@ -490,11 +460,12 @@ def place_objects(room):
  
         #only place it if the tile is not blocked
         if not is_blocked(x, y):
+            ai_component = BasicMonster()
+
             choice = random_choice(monster_chances)
             if choice == 'orc':
                 #create an orc
                 fighter_component = Fighter(hp=20, defense=0, power=4, xp=35, death_function=monster_death)
-                ai_component = BasicMonster()
  
                 monster = Object(x, y, 'o', 'orc', libtcod.desaturated_green,
                                  blocks=True, fighter=fighter_component, ai=ai_component)
@@ -502,7 +473,6 @@ def place_objects(room):
             elif choice == 'troll':
                 #create a troll
                 fighter_component = Fighter(hp=30, defense=2, power=8, xp=100, death_function=monster_death)
-                ai_component = BasicMonster()
  
                 monster = Object(x, y, 'T', 'troll', libtcod.darker_green,
                                  blocks=True, fighter=fighter_component, ai=ai_component)
@@ -932,7 +902,7 @@ def cast_confuse():
  
     #replace the monster's AI with a "confused" one; after some turns it will restore the old AI
     old_ai = monster.ai
-    monster.ai = ConfusedMonster(old_ai)
+    monster.ai = ConfusedMonster(old_ai,CONFUSE_NUM_TURNS)
     monster.ai.owner = monster  #tell the new component who owns it
     messages.add('The eyes of the ' + monster.name + ' look vacant, as he starts to stumble around!', libtcod.light_green)
  
@@ -1052,7 +1022,7 @@ def play_game():
         if game_state == 'playing' and player_action != 'didnt-take-turn':
             for object in objects:
                 if object.ai:
-                    object.ai.take_turn()
+                    object.ai.take_turn(fov_map,player)
  
 def main_menu():
     img = libtcod.image_load('menu_background.png')
