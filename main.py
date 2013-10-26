@@ -47,23 +47,7 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     libtcod.console_print_ex(panel, x + total_width / 2, y, libtcod.BKGND_NONE, libtcod.CENTER,
                                  name + ': ' + str(value) + '/' + str(maximum))
  
-def get_names_under_mouse():
-    global mouse
-    #return a string with the names of all objects under the mouse
- 
-    (x, y) = (mouse.cx, mouse.cy)
- 
-    #create a list with the names of all objects at the mouse's coordinates and in FOV
-    names = [obj.name for obj in objects
-             if obj.x == x and obj.y == y and libtcod.map_is_in_fov(fov_map, obj.x, obj.y)]
- 
-    names = ', '.join(names)  #join the names, separated by commas
-    return names.capitalize()
- 
 def render_all():
-    global fov_map, color_dark_wall, color_light_wall
-    global color_dark_ground, color_light_ground
-    global fov_recompute
  
     if fov_recompute:
         #recompute FOV if needed (the player moved or something)
@@ -113,10 +97,6 @@ def render_all():
     render_bar(1, 1, BAR_WIDTH, 'HP', player.fighter.hp, player.fighter.max_hp,
                libtcod.light_red, libtcod.darker_red)
     libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT, 'Dungeon level ' + str(dungeon_level))
- 
-    #display names of objects under the mouse
-    libtcod.console_set_default_foreground(panel, libtcod.light_gray)
-    libtcod.console_print_ex(panel, 1, 0, libtcod.BKGND_NONE, libtcod.LEFT, get_names_under_mouse())
  
     #blit the contents of "panel" to the root console
     libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
@@ -309,23 +289,16 @@ def player_death(player):
     player.color = libtcod.dark_red
  
 def target_tile(max_range=None):
-    global key, mouse
+    global key
     #return the position of a tile left-clicked in player's FOV (optionally in a range), or (None,None) if right-clicked.
     while True:
-        #render the screen. this erases the inventory and shows the names of objects under the mouse.
+        #render the screen. this erases the inventory
         libtcod.console_flush()
-        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, None)
         render_all()
  
-        (x, y) = (mouse.cx, mouse.cy)
- 
-        if mouse.rbutton_pressed or key.vk == libtcod.KEY_ESCAPE:
+        if key.vk == libtcod.KEY_ESCAPE:
             return (None, None)  #cancel if the player right-clicked or pressed Escape
- 
-        #accept the target if the player clicked in FOV, and in case a range is specified, if it's in that range
-        if (mouse.lbutton_pressed and libtcod.map_is_in_fov(fov_map, x, y) and
-                (max_range is None or player.distance(x, y) <= max_range)):
-            return (x, y)
  
 def target_monster(max_range=None):
     #returns a clicked monster inside FOV up to a range, or None if right-clicked
@@ -426,7 +399,6 @@ def next_level():
     initialize_fov()
  
 def initialize_fov():
-    global fov_recompute, fov_map
     fov_recompute = True
  
     #create the FOV map, according to the generated map
@@ -438,15 +410,14 @@ def initialize_fov():
     libtcod.console_clear(con)  #unexplored areas start black (which is the default background color)
  
 def play_game():
-    global key, mouse
+    global key
  
     player_action = None
  
-    mouse = libtcod.Mouse()
     key = libtcod.Key()
     #main loop
     while not libtcod.console_is_window_closed():
-        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, mouse)
+        libtcod.sys_check_for_event(libtcod.EVENT_KEY_PRESS | libtcod.EVENT_MOUSE, key, null)
         #render the screen
         render_all()
  
