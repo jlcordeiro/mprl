@@ -163,7 +163,7 @@ class Dungeon:
        #create stairs at the center of the last room
        self.stairs = Object(new_x, new_y, '<', 'stairs', libtcod.white, always_visible=True)
        self.objects.append(self.stairs)
-       self.stairs.send_to_back()  #so it's drawn below the monsters
+       self.stairs.send_to_back(self.objects)  #so it's drawn below the monsters
 
    def generate_objects(self, room):
     
@@ -196,7 +196,7 @@ class Dungeon:
                    monster = Object(x, y, 'T', 'troll', libtcod.darker_green,
                                     blocks=True, fighter=fighter_component, ai=ai_component)
     
-               objects.append(monster)
+               self.objects.append(monster)
     
        #choose random number of items
        num_items = random.randint( 0, max_items)
@@ -239,6 +239,6 @@ class Dungeon:
                    equipment_component = Equipment(slot='left hand', defense_bonus=1)
                    item = Object(x, y, '[', 'shield', libtcod.darker_orange, equipment=equipment_component)
     
-               objects.append(item)
-               item.send_to_back()  #items appear below other objects
+               self.objects.append(item)
+               item.send_to_back(self.objects)  #items appear below other objects
                item.always_visible = True  #items are visible even out-of-FOV, if in an explored area
