@@ -40,15 +40,17 @@ def handle_keys():
 libtcod.console_set_custom_font('./resources/fonts/arial10x10.png', libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD)
 libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'python/libtcod tutorial', False)
 libtcod.sys_set_fps(LIMIT_FPS)
-    
+con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
+
 while not libtcod.console_is_window_closed():
        
-   libtcod.console_set_default_foreground(0, libtcod.white)
-   libtcod.console_put_char(0, player.x, player.y, '@', libtcod.BKGND_NONE)
+   libtcod.console_set_default_foreground(con, libtcod.white)
+   libtcod.console_put_char(con, player.x, player.y, '@', libtcod.BKGND_NONE)
            
+   libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)   
    libtcod.console_flush()
        
-   libtcod.console_put_char(0, player.x, player.y, ' ', libtcod.BKGND_NONE)
+   libtcod.console_put_char(con, player.x, player.y, ' ', libtcod.BKGND_NONE)
            
    #handle keys and exit game if needed
    exit = handle_keys()
