@@ -21,16 +21,16 @@ def handle_keys():
                 
    #movement keys
    if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-      player.y -= 1
+      player.move(0,-1)
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-      player.y += 1
+      player.move(0,1)
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-      player.x -= 1
+      player.move(-1,0)
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-      player.x += 1
+      player.move(1,0)
 
 
 #############################################
@@ -44,13 +44,12 @@ con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 while not libtcod.console_is_window_closed():
        
-   libtcod.console_set_default_foreground(con, libtcod.white)
-   libtcod.console_put_char(con, player.x, player.y, '@', libtcod.BKGND_NONE)
-           
+   player.view.draw(con)
+
    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)   
    libtcod.console_flush()
        
-   libtcod.console_put_char(con, player.x, player.y, ' ', libtcod.BKGND_NONE)
+   player.view.clear(con)
            
    #handle keys and exit game if needed
    exit = handle_keys()
