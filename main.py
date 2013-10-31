@@ -1,5 +1,6 @@
 import libtcodpy as libtcod
 from objects import *
+from dungeon import *
  
 #actual size of the window
 SCREEN_WIDTH = 80
@@ -8,6 +9,7 @@ SCREEN_HEIGHT = 50
 LIMIT_FPS = 20  #20 frames-per-second maximum
  
 player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+dungeon = LevelController()
  
 def handle_keys():
    #key = libtcod.console_check_for_keypress()  #real-time
@@ -43,9 +45,12 @@ libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 while not libtcod.console_is_window_closed():
-       
-   player.view.draw(con)
 
+   #render the screen
+   dungeon.view.draw(con)
+   player.view.draw(con)
+ 
+   #blit the contents of "console" to the root console
    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)   
    libtcod.console_flush()
        
