@@ -23,10 +23,21 @@ class Rect:
       self.x2 = x + w
       self.y2 = y + h
 
+   def center(self):
+      center_x = (self.x1 + self.x2) / 2
+      center_y = (self.y1 + self.y2) / 2
+      return (center_x, center_y)
+                
+   def intersect(self, other):
+      #returns true if this rectangle intersects with another one
+      return (self.x1 <= other.x2 and self.x2 >= other.x1 and
+              self.y1 <= other.y2 and self.y2 >= other.y1)
+
+
 class LevelModel:
    def __init__(self):
       #fill map with "unblocked" tiles
-      self.grid = [[ Tile(False)
+      self.grid = [[ Tile(True)
             for y in range(MAP_HEIGHT) ]
             for x in range(MAP_WIDTH) ]
 
@@ -51,6 +62,7 @@ class LevelController:
       #create two rooms
       room1 = Rect(20, 15, 10, 15)
       room2 = Rect(50, 15, 10, 15)
+
       self.create_room(room1)
       self.create_room(room2)
       self.create_h_tunnel(25, 55, 23)
@@ -63,12 +75,6 @@ class LevelController:
          for y in range(room.y1 + 1, room.y2):
             self.model.grid[x][y].blocked = False
             self.model.grid[x][y].block_sight = False
-
-      for y in range(MAP_HEIGHT):
-         for x in range(MAP_WIDTH):
-            wall = self.model.grid[x][y].block_sight
-            if wall is False:
-               print wall
 
    def create_h_tunnel(self, x1, x2, y):
       for x in range(min(x1, x2), max(x1, x2) + 1):
