@@ -1,3 +1,4 @@
+import random
 import libtcodpy as libtcod
 
 MAP_WIDTH = 80
@@ -46,6 +47,25 @@ class LevelModel:
       self.rooms = []
       self.num_rooms = 0
 
+   def does_room_overlap(self,room):
+      #run through the other rooms and see if they intersect with this one
+      for other_room in self.rooms:
+         if room.intersect(other_room):
+            return True
+
+      return False
+
+   def add_room(self, room):
+      self.rooms.append(room)
+      self.num_rooms += 1
+
+   def get_last_room(self):
+      if self.num_rooms == 0:
+         return None
+
+      return self.rooms[self.num_rooms-1]
+
+
 class LevelView:
    def __init__(self,model):
       self.model = model
@@ -76,40 +96,20 @@ class LevelController:
          #"Rect" class makes rectangles easier to work with
          new_room = Rect(x, y, w, h)
     
-         #run through the other rooms and see if they intersect with this one
-         failed = False
-         for other_room in self.model.rooms:
-            if new_room.intersect(other_room):
-               failed = True
-               break
-                                                   
-         if not failed:
-            #this means there are no intersections, so this room is valid
+         #check if there are no intersections, so this room is valid
+         if self.model.does_room_overlap(new_room) == False:
             #"paint" it to the map's tiles
             self.create_room(new_room)
     
-            #center coordinates of new room, will be useful later
-            (new_x, new_y) = new_room.center()
-    
-            if self.model.num_rooms > 0:
-               #connect all rooms but the first to the previous room with a tunnel
+            #connect all rooms but the first to the previous room with a tunnel
+            prev_room = self.model.get_last_room()
+            if prev_room is not None:
+               prev_center = prev_room.center()
+               new_center = new_room.center()
+               self.connect_rooms(prev_center,new_center)
 
-               #center coordinates of previous room
-               (prev_x, prev_y) = self.model.rooms[self.model.num_rooms-1].center()
-    
-               #draw a coin (random number that is either 0 or 1)
-               if libtcod.random_get_int(0, 0, 1) == 1:
-                  #first move horizontally, then vertically
-                  self.create_h_tunnel(prev_x, new_x, prev_y)
-                  self.create_v_tunnel(prev_y, new_y, new_x)
-               else:
-                  #first move vertically, then horizontally
-                  self.create_v_tunnel(prev_y, new_y, prev_x)
-                  self.create_h_tunnel(prev_x, new_x, new_y)
-    
-            #finally, append the new room to the list
-            self.model.rooms.append(new_room)
-            self.model.num_rooms += 1
+            #append the new room to the list
+            self.model.add_room(new_room)
 
    def create_room(self,room):
       #go through the tiles in the rectangle and make them passable
@@ -127,3 +127,17 @@ class LevelController:
       y, h = min(y1,y2), abs(y1-y2)+1
       room = Rect(x,y,1,h)
       self.create_room(room)
+
+   def connect_rooms(self,center1,center2): 
+      (center1x, center1y) = center1
+      (center2x, center2y) = center2
+
+      #draw a coin (random number that is either 0 or 1)
+      if random.choice([True, False]):
+         #first move horizontally, then vertically
+         self.create_h_tunnel(center1x, center2x, center1y)
+         self.create_v_tunnel(center1y, center2y, center2x)
+      else:
+         #first move vertically, then horizontally
+         self.create_v_tunnel(center1y, center2y, center1x)
+         self.create_h_tunnel(center1x, center2x, center2y)
