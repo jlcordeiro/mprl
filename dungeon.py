@@ -113,17 +113,17 @@ class LevelController:
 
    def create_room(self,room):
       #go through the tiles in the rectangle and make them passable
-      for x in range(room.x1 + 1, room.x2):
-         for y in range(room.y1 + 1, room.y2):
+      for x in range(room.x1, room.x2):
+         for y in range(room.y1, room.y2):
             self.model.grid[x][y].blocked = False
             self.model.grid[x][y].block_sight = False
 
    def create_h_tunnel(self, x1, x2, y):
-      for x in range(min(x1, x2), max(x1, x2) + 1):
-         self.model.grid[x][y].blocked = False
-         self.model.grid[x][y].block_sight = False
+      x, w = min(x1,x2), abs(x1-x2)+1
+      room = Rect(x,y,w,1)
+      self.create_room(room)
 
    def create_v_tunnel(self, y1, y2, x):
-      for y in range(min(y1, y2), max(y1, y2) + 1):
-         self.model.grid[x][y].blocked = False
-         self.model.grid[x][y].block_sight = False
+      y, h = min(y1,y2), abs(y1-y2)+1
+      room = Rect(x,y,1,h)
+      self.create_room(room)
