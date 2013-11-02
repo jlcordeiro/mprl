@@ -87,11 +87,11 @@ class LevelController:
                                 
       for r in range(MAX_ROOMS):
          #random width and height
-         w = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-         h = libtcod.random_get_int(0, ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+         w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+         h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
          #random position without going out of the boundaries of the map
-         x = libtcod.random_get_int(0, 0, MAP_WIDTH - w - 1)
-         y = libtcod.random_get_int(0, 0, MAP_HEIGHT - h - 1)
+         x = random.randint(0, MAP_WIDTH - w - 1)
+         y = random.randint(0, MAP_HEIGHT - h - 1)
     
          #"Rect" class makes rectangles easier to work with
          new_room = Rect(x, y, w, h)
