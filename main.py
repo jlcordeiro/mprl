@@ -13,7 +13,7 @@ dungeon = LevelController()
 
 def move_player(dx,dy):
    player.move(dx,dy)
-   dungeon.compute_fov(player.get_position())
+   dungeon.update(player.get_position())
  
 def handle_keys():
    #key = libtcod.console_check_for_keypress()  #real-time

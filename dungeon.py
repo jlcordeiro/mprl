@@ -20,6 +20,7 @@ class Tile:
    #a tile of the map and its properties
    def __init__(self, blocked, block_sight = None):
       self.blocked = blocked
+      self.explored = False
  
       #by default, if a tile is blocked, it also blocks sight
       self.block_sight = blocked if block_sight is None else block_sight
@@ -95,10 +96,11 @@ class LevelView:
                else:
                   libtcod.console_set_char_background(console, x, y, color_light_ground, libtcod.BKGND_SET )
             else:
-               if wall:
-                  libtcod.console_set_char_background(console, x, y, color_dark_wall, libtcod.BKGND_SET )
-               else:
-                  libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
+               if self.model.grid[x][y].explored is True:
+                  if wall:
+                     libtcod.console_set_char_background(console, x, y, color_dark_wall, libtcod.BKGND_SET )
+                  else:
+                     libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
 
 class LevelController:
@@ -163,6 +165,12 @@ class LevelController:
          self.create_v_tunnel(center1y, center2y, center1x)
          self.create_h_tunnel(center1x, center2x, center2y)
 
-   def compute_fov(self,pos):
+   def update(self,pos):
       x, y = pos
       libtcod.map_compute_fov(self.view.fov_map, x, y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+
+      for y in range(MAP_HEIGHT):
+         for x in range(MAP_WIDTH):
+            visible = libtcod.map_is_in_fov(self.view.fov_map, x, y)
+            if visible:
+               self.model.grid[x][y].explored = True
