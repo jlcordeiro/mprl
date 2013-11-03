@@ -6,9 +6,14 @@ MAP_HEIGHT = 45
 ROOM_MAX_SIZE = 10
 ROOM_MIN_SIZE = 6
 MAX_ROOMS = 30
+FOV_ALGO = 0  #default FOV algorithm
+FOV_LIGHT_WALLS = True
+TORCH_RADIUS = 10
 
 color_dark_wall = libtcod.Color(0, 0, 100)
+color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
+color_light_ground = libtcod.Color(200, 180, 50)
 
 
 class Tile:
@@ -69,16 +74,36 @@ class LevelModel:
 class LevelView:
    def __init__(self,model):
       self.model = model
+      self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
+
+      for y in range(MAP_HEIGHT):
+         for x in range(MAP_WIDTH):
+            isTransparent = not self.model.grid[x][y].block_sight
+            isWalkable = not self.model.grid[x][y].blocked
+            libtcod.map_set_properties(self.fov_map, x, y, isTransparent, isWalkable)
 
    def draw(self,console):
       #go through all tiles, and set their background color
       for y in range(MAP_HEIGHT):
          for x in range(MAP_WIDTH):
             wall = self.model.grid[x][y].block_sight
-            if wall:
-               libtcod.console_set_char_background(console, x, y, color_dark_wall, libtcod.BKGND_SET )
+            visible = libtcod.map_is_in_fov(self.fov_map, x, y)
+
+            if visible:
+               if wall:
+                  libtcod.console_set_char_background(console, x, y, color_light_wall, libtcod.BKGND_SET )
+               else:
+                  libtcod.console_set_char_background(console, x, y, color_light_ground, libtcod.BKGND_SET )
             else:
-               libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
+               if wall:
+                  libtcod.console_set_char_background(console, x, y, color_dark_wall, libtcod.BKGND_SET )
+               else:
+                  libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
+
+   def compute_fov(self,pos):
+      x, y = pos
+      libtcod.map_compute_fov(self.fov_map, x, y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+
 
 class LevelController:
    def __init__(self):

@@ -24,15 +24,19 @@ def handle_keys():
    #movement keys
    if libtcod.console_is_key_pressed(libtcod.KEY_UP):
       player.move(0,-1)
+      dungeon.view.compute_fov(player.get_position())
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
       player.move(0,1)
+      dungeon.view.compute_fov(player.get_position())
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
       player.move(-1,0)
+      dungeon.view.compute_fov(player.get_position())
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
       player.move(1,0)
+      dungeon.view.compute_fov(player.get_position())
 
 
 #############################################

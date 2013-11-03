@@ -32,3 +32,6 @@ class ObjectController(object):
 class Player(ObjectController):
    def __init__(self,x,y):
       super(Player, self).__init__(x,y,'@',libtcod.white)
+
+   def get_position(self):
+      return (self.model.x,self.model.y)
