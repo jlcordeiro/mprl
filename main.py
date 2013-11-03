@@ -10,6 +10,10 @@ LIMIT_FPS = 20  #20 frames-per-second maximum
  
 player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
 dungeon = LevelController()
+
+def move_player(dx,dy):
+   player.move(dx,dy)
+   dungeon.compute_fov(player.get_position())
  
 def handle_keys():
    #key = libtcod.console_check_for_keypress()  #real-time
@@ -20,20 +24,16 @@ def handle_keys():
                 
    #movement keys
    if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-      player.move(0,-1)
-      dungeon.view.compute_fov(player.get_position())
+      move_player(0,-1)
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-      player.move(0,1)
-      dungeon.view.compute_fov(player.get_position())
+      move_player(0,1)
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-      player.move(-1,0)
-      dungeon.view.compute_fov(player.get_position())
+      move_player(-1,0)
 
    elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-      player.move(1,0)
-      dungeon.view.compute_fov(player.get_position())
+      move_player(1,0)
 
 
 #############################################

@@ -100,10 +100,6 @@ class LevelView:
                else:
                   libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
-   def compute_fov(self,pos):
-      x, y = pos
-      libtcod.map_compute_fov(self.fov_map, x, y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
-
 
 class LevelController:
    def __init__(self):
@@ -166,3 +162,7 @@ class LevelController:
          #first move vertically, then horizontally
          self.create_v_tunnel(center1y, center2y, center1x)
          self.create_h_tunnel(center1x, center2x, center2y)
+
+   def compute_fov(self,pos):
+      x, y = pos
+      libtcod.map_compute_fov(self.view.fov_map, x, y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
