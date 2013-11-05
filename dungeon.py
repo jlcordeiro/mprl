@@ -121,50 +121,50 @@ class LevelController:
          #check if there are no intersections, so this room is valid
          if self.model.does_room_overlap(new_room) == False:
             #"paint" it to the map's tiles
-            self.create_room(new_room)
+            self.__create_room(new_room)
     
             #connect all rooms but the first to the previous room with a tunnel
             prev_room = self.model.get_last_room()
             if prev_room is not None:
                prev_center = prev_room.center()
                new_center = new_room.center()
-               self.connect_rooms(prev_center,new_center)
+               self.__connect_rooms(prev_center,new_center)
 
             #append the new room to the list
             self.model.add_room(new_room)
 
       self.view = LevelView(self.model)
 
-   def create_room(self,room):
+   def __create_room(self,room):
       #go through the tiles in the rectangle and make them passable
       for x in range(room.x1, room.x2):
          for y in range(room.y1, room.y2):
             self.model.grid[x][y].blocked = False
             self.model.grid[x][y].block_sight = False
 
-   def create_h_tunnel(self, x1, x2, y):
+   def __create_h_tunnel(self, x1, x2, y):
       x, w = min(x1,x2), abs(x1-x2)+1
       room = Rect(x,y,w,1)
-      self.create_room(room)
+      self.__create_room(room)
 
-   def create_v_tunnel(self, y1, y2, x):
+   def __create_v_tunnel(self, y1, y2, x):
       y, h = min(y1,y2), abs(y1-y2)+1
       room = Rect(x,y,1,h)
-      self.create_room(room)
+      self.__create_room(room)
 
-   def connect_rooms(self,center1,center2): 
+   def __connect_rooms(self,center1,center2): 
       (center1x, center1y) = center1
       (center2x, center2y) = center2
 
       #draw a coin (random number that is either 0 or 1)
       if random.choice([True, False]):
          #first move horizontally, then vertically
-         self.create_h_tunnel(center1x, center2x, center1y)
-         self.create_v_tunnel(center1y, center2y, center2x)
+         self.__create_h_tunnel(center1x, center2x, center1y)
+         self.__create_v_tunnel(center1y, center2y, center2x)
       else:
          #first move vertically, then horizontally
-         self.create_v_tunnel(center1y, center2y, center1x)
-         self.create_h_tunnel(center1x, center2x, center2y)
+         self.__create_v_tunnel(center1y, center2y, center1x)
+         self.__create_h_tunnel(center1x, center2x, center2y)
 
    def update(self,pos):
       x, y = pos
