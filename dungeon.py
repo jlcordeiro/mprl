@@ -106,7 +106,6 @@ class LevelView:
 class LevelController:
    def __init__(self):
       self.model = LevelModel()
-      self.view = LevelView(self.model)
                                 
       for r in range(MAX_ROOMS):
          #random width and height
@@ -133,6 +132,8 @@ class LevelController:
 
             #append the new room to the list
             self.model.add_room(new_room)
+
+      self.view = LevelView(self.model)
 
    def create_room(self,room):
       #go through the tiles in the rectangle and make them passable
@@ -171,6 +172,5 @@ class LevelController:
 
       for y in range(MAP_HEIGHT):
          for x in range(MAP_WIDTH):
-            visible = libtcod.map_is_in_fov(self.view.fov_map, x, y)
-            if visible:
+            if libtcod.map_is_in_fov(self.view.fov_map, x, y):
                self.model.grid[x][y].explored = True
