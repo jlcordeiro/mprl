@@ -45,6 +45,8 @@ libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'mprl', False)
 libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
+move_player(0,0)
+
 while not libtcod.console_is_window_closed():
 
    #render the screen
