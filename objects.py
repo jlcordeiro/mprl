@@ -29,9 +29,18 @@ class ObjectController(object):
       self.model.x += dx
       self.model.y += dy
 
+   def get_position(self):
+      return (self.model.x,self.model.y)
+
+
 class Player(ObjectController):
    def __init__(self,x,y):
       super(Player, self).__init__(x,y,'@',libtcod.white)
 
-   def get_position(self):
-      return (self.model.x,self.model.y)
+class Orc(ObjectController):
+   def __init__(self,x,y):
+      super(Orc, self).__init__(x,y,'O',libtcod.desaturated_green)
+
+class Troll(ObjectController):
+   def __init__(self,x,y):
+      super(Troll, self).__init__(x,y,'T',libtcod.darker_green)

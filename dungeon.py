@@ -1,4 +1,5 @@
 import random
+from objects import *
 import libtcodpy as libtcod
 
 MAP_WIDTH = 80
@@ -9,6 +10,7 @@ MAX_ROOMS = 30
 FOV_ALGO = 0  #default FOV algorithm
 FOV_LIGHT_WALLS = True
 TORCH_RADIUS = 10
+MAX_ROOM_MONSTERS = 3
 
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
@@ -52,6 +54,8 @@ class LevelModel:
 
       self.rooms = []
       self.num_rooms = 0
+
+      self.objects = []
 
    def does_room_overlap(self,room):
       #run through the other rooms and see if they intersect with this one
@@ -102,6 +106,9 @@ class LevelView:
                   else:
                      libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
+      #go through all monsters
+      for monster in self.model.objects:
+         monster.view.draw(console)
 
 class LevelController:
    def __init__(self):
@@ -122,6 +129,7 @@ class LevelController:
          if self.model.does_room_overlap(new_room) == False:
             #"paint" it to the map's tiles
             self.__create_room(new_room)
+            self.__place_monsters_in_room(new_room)
     
             #connect all rooms but the first to the previous room with a tunnel
             prev_room = self.model.get_last_room()
@@ -166,6 +174,22 @@ class LevelController:
          self.__create_v_tunnel(center1y, center2y, center1x)
          self.__create_h_tunnel(center1x, center2x, center2y)
 
+   def __place_monsters_in_room(self,room):
+       #choose random number of monsters
+       num_monsters = random.randint(0, MAX_ROOM_MONSTERS)
+    
+       for i in range(num_monsters):
+           #choose random spot for this monster
+           x = random.randint(room.x1, room.x2)
+           y = random.randint(room.y1, room.y2)
+    
+           if random.randint(0, 100) < 80:  #80% chance of getting an orc
+               monster = Orc(x,y)
+           else:
+               monster = Troll(x,y)
+    
+           self.model.objects.append(monster)
+
    def update(self,pos):
       x, y = pos
       libtcod.map_compute_fov(self.view.fov_map, x, y, TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
@@ -174,3 +198,4 @@ class LevelController:
          for x in range(MAP_WIDTH):
             if libtcod.map_is_in_fov(self.view.fov_map, x, y):
                self.model.grid[x][y].explored = True
+
