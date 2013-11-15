@@ -1,9 +1,10 @@
 import libtcodpy as libtcod
 
 class ObjectModel():
-   def __init__(self,x,y):
+   def __init__(self,x,y,blocks):
       self.x = x
       self.y = y
+      self.blocks = blocks
 
 class ObjectView():
    def __init__(self,model,char,colour):
@@ -21,8 +22,8 @@ class ObjectView():
       libtcod.console_put_char(console, self.model.x, self.model.y, ' ', libtcod.BKGND_NONE)
 
 class ObjectController(object):
-   def __init__(self,x,y,char,colour):
-      self.model = ObjectModel(x,y)
+   def __init__(self,x,y,char,colour,blocks=False):
+      self.model = ObjectModel(x,y,blocks)
       self.view = ObjectView(self.model,char,colour)
 
    def move(self,dx,dy):
@@ -32,15 +33,17 @@ class ObjectController(object):
    def get_position(self):
       return (self.model.x,self.model.y)
 
+   def blocks(self):
+      return self.model.blocks
 
 class Player(ObjectController):
    def __init__(self,x,y):
-      super(Player, self).__init__(x,y,'@',libtcod.white)
+      super(Player, self).__init__(x,y,'@',libtcod.white,True)
 
 class Orc(ObjectController):
    def __init__(self,x,y):
-      super(Orc, self).__init__(x,y,'O',libtcod.desaturated_green)
+      super(Orc, self).__init__(x,y,'O',libtcod.desaturated_green,True)
 
 class Troll(ObjectController):
    def __init__(self,x,y):
-      super(Troll, self).__init__(x,y,'T',libtcod.darker_green)
+      super(Troll, self).__init__(x,y,'T',libtcod.darker_green,True)

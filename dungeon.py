@@ -185,12 +185,13 @@ class LevelController:
            x = random.randint(room.x1, room.x2-1)
            y = random.randint(room.y1, room.y2-1)
     
-           if random.randint(0, 100) < 80:  #80% chance of getting an orc
-               monster = Orc(x,y)
-           else:
-               monster = Troll(x,y)
-    
-           self.model.objects.append(monster)
+           if not self.is_blocked((x,y)):
+              if random.randint(0, 100) < 80:  #80% chance of getting an orc
+                  monster = Orc(x,y)
+              else:
+                  monster = Troll(x,y)
+       
+              self.model.objects.append(monster)
 
    def update(self,pos):
       x, y = pos
@@ -200,4 +201,18 @@ class LevelController:
          for x in range(MAP_WIDTH):
             if libtcod.map_is_in_fov(self.view.fov_map, x, y):
                self.model.grid[x][y].explored = True
+
+   def is_blocked(self, pos):
+      x, y = pos
+
+      #first test the map tile
+      if self.model.grid[x][y].blocked:
+         return True
+    
+      #now check for any blocking objects
+      for object in self.model.objects:
+         if object.blocks() and object.get_position() == pos:
+            return True
+    
+      return False
 

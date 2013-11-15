@@ -13,6 +13,10 @@ dungeon = LevelController()
 
 def move_player(dx,dy):
    player.move(dx,dy)
+   
+   if dungeon.is_blocked(player.get_position()):
+      player.move(-dx,-dy)
+   
    dungeon.update(player.get_position())
  
 def handle_keys():
