@@ -8,36 +8,48 @@ SCREEN_HEIGHT = 50
  
 LIMIT_FPS = 20  #20 frames-per-second maximum
  
+game_state = 'playing'
+player_action = None
+
 player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
 dungeon = LevelController()
 
 def move_player(dx,dy):
+
    player.move(dx,dy)
+
+   for monster in dungeon.model.objects:
+      if monster.get_position() == player.get_position():
+         print 'The ' + monster.view.char + ' laughs at your puny efforts to attack him!'
+         player.move(-dx,-dy)
    
    if dungeon.is_blocked(player.get_position()):
       player.move(-dx,-dy)
    
    dungeon.update(player.get_position())
- 
+
 def handle_keys():
    #key = libtcod.console_check_for_keypress()  #real-time
    key = libtcod.console_wait_for_keypress(True)  #turn-based
             
    if key.vk == libtcod.KEY_ESCAPE:
-      return True  #exit game
+      return "exit"
                 
-   #movement keys
-   if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-      move_player(0,-1)
+   if game_state == 'playing':
+      #movement keys
+      if libtcod.console_is_key_pressed(libtcod.KEY_UP):
+         move_player(0,-1)
 
-   elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-      move_player(0,1)
+      elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
+         move_player(0,1)
 
-   elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-      move_player(-1,0)
+      elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
+         move_player(-1,0)
 
-   elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-      move_player(1,0)
+      elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
+         move_player(1,0)
+      else:
+         return 'did-not-take-turn'
 
 
 #############################################
@@ -64,6 +76,11 @@ while not libtcod.console_is_window_closed():
    player.view.clear(con)
            
    #handle keys and exit game if needed
-   exit = handle_keys()
-   if exit:
+   key = handle_keys()
+   if key == "exit":
       break
+
+   #let monsters take their turn
+   if game_state == "playing" and player_action != 'did-not-take-turn':
+      for monster in dungeon.model.objects:
+         print "The " + monster.view.char + " growls!"
