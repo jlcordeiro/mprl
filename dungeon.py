@@ -108,7 +108,9 @@ class LevelView:
 
       #go through all monsters
       for monster in self.model.objects:
-         monster.view.draw(console)
+         (monsterx,monstery) = monster.get_position()
+         if libtcod.map_is_in_fov(self.fov_map, monsterx, monstery):
+            monster.view.draw(console)
 
 class LevelController:
    def __init__(self):
@@ -180,8 +182,8 @@ class LevelController:
     
        for i in range(num_monsters):
            #choose random spot for this monster
-           x = random.randint(room.x1, room.x2)
-           y = random.randint(room.y1, room.y2)
+           x = random.randint(room.x1, room.x2-1)
+           y = random.randint(room.y1, room.y2-1)
     
            if random.randint(0, 100) < 80:  #80% chance of getting an orc
                monster = Orc(x,y)
