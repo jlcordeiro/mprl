@@ -48,7 +48,7 @@ class Rect:
 class LevelModel:
    def __init__(self):
       #fill map with "unblocked" tiles
-      self.grid = [[ Tile(True)
+      self.tiles = [[ Tile(True)
             for y in range(MAP_HEIGHT) ]
             for x in range(MAP_WIDTH) ]
 
@@ -83,15 +83,15 @@ class LevelView:
 
       for y in range(MAP_HEIGHT):
          for x in range(MAP_WIDTH):
-            isTransparent = not self.model.grid[x][y].block_sight
-            isWalkable = not self.model.grid[x][y].blocked
+            isTransparent = not self.model.tiles[x][y].block_sight
+            isWalkable = not self.model.tiles[x][y].blocked
             libtcod.map_set_properties(self.fov_map, x, y, isTransparent, isWalkable)
 
    def draw(self,console):
       #go through all tiles, and set their background color
       for y in range(MAP_HEIGHT):
          for x in range(MAP_WIDTH):
-            wall = self.model.grid[x][y].block_sight
+            wall = self.model.tiles[x][y].block_sight
             visible = libtcod.map_is_in_fov(self.fov_map, x, y)
 
             if visible:
@@ -100,7 +100,7 @@ class LevelView:
                else:
                   libtcod.console_set_char_background(console, x, y, color_light_ground, libtcod.BKGND_SET )
             else:
-               if self.model.grid[x][y].explored is True:
+               if self.model.tiles[x][y].explored is True:
                   if wall:
                      libtcod.console_set_char_background(console, x, y, color_dark_wall, libtcod.BKGND_SET )
                   else:
@@ -149,8 +149,8 @@ class LevelController:
       #go through the tiles in the rectangle and make them passable
       for x in range(room.x1, room.x2):
          for y in range(room.y1, room.y2):
-            self.model.grid[x][y].blocked = False
-            self.model.grid[x][y].block_sight = False
+            self.model.tiles[x][y].blocked = False
+            self.model.tiles[x][y].block_sight = False
 
    def __create_h_tunnel(self, x1, x2, y):
       x, w = min(x1,x2), abs(x1-x2)+1
@@ -200,13 +200,13 @@ class LevelController:
       for y in range(MAP_HEIGHT):
          for x in range(MAP_WIDTH):
             if libtcod.map_is_in_fov(self.view.fov_map, x, y):
-               self.model.grid[x][y].explored = True
+               self.model.tiles[x][y].explored = True
 
    def is_blocked(self, pos):
       x, y = pos
 
       #first test the map tile
-      if self.model.grid[x][y].blocked:
+      if self.model.tiles[x][y].blocked:
          return True
     
       #now check for any blocking objects
