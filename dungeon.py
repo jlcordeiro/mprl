@@ -178,8 +178,8 @@ class LevelController:
       w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
       h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
       #random position without going out of the boundaries of the map
-      x = random.randint(0, MAP_WIDTH - w - 1)
-      y = random.randint(0, MAP_HEIGHT - h - 1)
+      x = random.randint(1, MAP_WIDTH - w - 1)
+      y = random.randint(1, MAP_HEIGHT - h - 1)
  
       #"Rect" class makes rectangles easier to work with
       new_room = Rect(x, y, w, h)
