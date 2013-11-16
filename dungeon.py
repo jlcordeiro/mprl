@@ -55,7 +55,7 @@ class LevelModel:
       self.rooms = []
       self.num_rooms = 0
 
-      self.objects = []
+      self.monsters = []
 
    def does_room_overlap(self,room):
       #run through the other rooms and see if they intersect with this one
@@ -107,7 +107,7 @@ class LevelView:
                      libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
       #go through all monsters
-      for monster in self.model.objects:
+      for monster in self.model.monsters:
          (monsterx,monstery) = monster.get_position()
          if libtcod.map_is_in_fov(self.fov_map, monsterx, monstery):
             monster.view.draw(console)
@@ -117,29 +117,9 @@ class LevelController:
       self.model = LevelModel()
                                 
       for r in range(MAX_ROOMS):
-         #random width and height
-         w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-         h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
-         #random position without going out of the boundaries of the map
-         x = random.randint(0, MAP_WIDTH - w - 1)
-         y = random.randint(0, MAP_HEIGHT - h - 1)
-    
-         #"Rect" class makes rectangles easier to work with
-         new_room = Rect(x, y, w, h)
-    
-         #check if there are no intersections, so this room is valid
-         if self.model.does_room_overlap(new_room) == False:
-            #"paint" it to the map's tiles
-            self.__create_room(new_room)
-            self.__place_monsters_in_room(new_room)
-    
-            #connect all rooms but the first to the previous room with a tunnel
-            prev_room = self.model.get_last_room()
-            if prev_room is not None:
-               prev_center = prev_room.center()
-               new_center = new_room.center()
-               self.__connect_rooms(prev_center,new_center)
+         new_room = self.__build_complete_room()
 
+         if new_room is not None:
             #append the new room to the list
             self.model.add_room(new_room)
 
@@ -191,7 +171,35 @@ class LevelController:
               else:
                   monster = Troll(x,y)
        
-              self.model.objects.append(monster)
+              self.model.monsters.append(monster)
+
+   def __build_complete_room(self):
+      #random width and height
+      w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+      h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+      #random position without going out of the boundaries of the map
+      x = random.randint(0, MAP_WIDTH - w - 1)
+      y = random.randint(0, MAP_HEIGHT - h - 1)
+ 
+      #"Rect" class makes rectangles easier to work with
+      new_room = Rect(x, y, w, h)
+ 
+      #check if there are no intersections, so this room is valid
+      if self.model.does_room_overlap(new_room):
+         return None
+
+      #"paint" it to the map's tiles
+      self.__create_room(new_room)
+      self.__place_monsters_in_room(new_room)
+
+      #connect all rooms but the first to the previous room with a tunnel
+      prev_room = self.model.get_last_room()
+      if prev_room is not None:
+         prev_center = prev_room.center()
+         new_center = new_room.center()
+         self.__connect_rooms(prev_center,new_center)
+
+      return new_room
 
    def update(self,pos):
       x, y = pos
@@ -209,10 +217,9 @@ class LevelController:
       if self.model.tiles[x][y].blocked:
          return True
     
-      #now check for any blocking objects
-      for object in self.model.objects:
-         if object.blocks() and object.get_position() == pos:
+      #now check for any blocking monsters
+      for monster in self.model.monsters:
+         if monster.blocks() and monster.get_position() == pos:
             return True
     
       return False
-

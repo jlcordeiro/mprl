@@ -1,5 +1,4 @@
 import libtcodpy as libtcod
-from objects import *
 from dungeon import *
  
 #actual size of the window
@@ -18,7 +17,7 @@ def move_player(dx,dy):
 
    player.move(dx,dy)
 
-   for monster in dungeon.model.objects:
+   for monster in dungeon.model.monsters:
       if monster.get_position() == player.get_position():
          print 'The ' + monster.view.char + ' laughs at your puny efforts to attack him!'
          player.move(-dx,-dy)
@@ -82,5 +81,5 @@ while not libtcod.console_is_window_closed():
 
    #let monsters take their turn
    if game_state == "playing" and player_action != 'did-not-take-turn':
-      for monster in dungeon.model.objects:
+      for monster in dungeon.model.monsters:
          print "The " + monster.view.char + " growls!"
