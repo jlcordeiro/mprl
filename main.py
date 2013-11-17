@@ -18,8 +18,9 @@ def move_player(dx,dy):
    player.move(dx,dy)
 
    for monster in dungeon.model.monsters:
-      if monster.get_position() == player.get_position():
+      if monster.get_position() == player.get_position() and monster.blocks():
          print 'The ' + monster.view.char + ' laughs at your puny efforts to attack him!'
+         player.attack(monster)
          player.move(-dx,-dy)
    
    if dungeon.is_blocked(player.get_position()):
@@ -70,9 +71,17 @@ while not libtcod.console_is_window_closed():
  
    #blit the contents of "console" to the root console
    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)   
+
+   #show the player's stats
+   libtcod.console_set_default_foreground(con, libtcod.white)
+   libtcod.console_print_ex(0, 1, SCREEN_HEIGHT - 2, libtcod.BKGND_NONE, libtcod.LEFT,
+                 'HP: ' + str(player.model.hp) + '/' + str(player.model.max_hp))
+
    libtcod.console_flush()
        
    player.view.clear(con)
+   for monster in dungeon.model.monsters:
+      monster.view.clear(con)
            
    #handle keys and exit game if needed
    key = handle_keys()
@@ -82,4 +91,10 @@ while not libtcod.console_is_window_closed():
    #let monsters take their turn
    if game_state == "playing" and player_action != 'did-not-take-turn':
       for monster in dungeon.model.monsters:
-         print "The " + monster.view.char + " growls!"
+         if monster.ai is not None:
+            monster.ai.take_turn(dungeon,monster,player)
+
+   if player.has_died():
+      print "YOU DIED!"
+      game_state = 'dead'
+

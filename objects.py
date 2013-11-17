@@ -1,10 +1,28 @@
+import math
 import libtcodpy as libtcod
 
-class ObjectModel():
+last_uid = 0
+
+def get_uid():
+   global last_uid
+   last_uid += 1
+   return last_uid
+
+class ObjectModel(object):
    def __init__(self,x,y,blocks):
       self.x = x
       self.y = y
       self.blocks = blocks
+
+      self.uid = str(get_uid())
+
+class CreatureModel(ObjectModel):
+   def __init__(self,x,y,hp,defense,power):
+      super(CreatureModel, self).__init__(x,y,True)
+      self.max_hp = hp
+      self.hp = hp
+      self.defense = defense
+      self.power = power
 
 class ObjectView():
    def __init__(self,model,char,colour):
@@ -36,14 +54,93 @@ class ObjectController(object):
    def blocks(self):
       return self.model.blocks
 
-class Player(ObjectController):
-   def __init__(self,x,y):
-      super(Player, self).__init__(x,y,'@',libtcod.white,True)
+class CreatureController(ObjectController):
+   #combat-related properties and methods (monster, player, NPC).
+   def __init__(self, x, y, hp, defense, power, char, colour, ai=None):
+      self.model = CreatureModel(x,y,hp,defense,power)
+      self.view = ObjectView(self.model,char,colour)
+      self.ai = ai
 
-class Orc(ObjectController):
-   def __init__(self,x,y):
-      super(Orc, self).__init__(x,y,'O',libtcod.desaturated_green,True)
+   def move_towards_creature(self, dungeon, other):
+      (x,y) = self.get_position()
+      (target_x,target_y) = other.get_position()
 
-class Troll(ObjectController):
+      #return the distance to another object
+      dx = target_x - self.model.x
+      dy = target_y - self.model.y
+      distance = math.sqrt(dx ** 2 + dy ** 2)
+       
+      #normalize it to length 1 (preserving direction), then round it and
+      #convert to integer so the movement is restricted to the map grid
+      dx = int(round(dx / distance))
+      dy = int(round(dy / distance))
+
+      if dungeon.is_blocked((x+dx,y+dy)) == False:
+         self.move(dx, dy)
+
+   def distance_to_creature(self, other):
+      (target_x,target_y) = other.get_position()
+
+      #return the distance to another object
+      dx = target_x - self.model.x
+      dy = target_y - self.model.y
+      return math.sqrt(dx ** 2 + dy ** 2)
+
+   def take_damage(self, damage):
+      #apply damage if possible
+      if damage > 0:
+         self.model.hp -= damage
+
+      if self.model.hp <= 0:
+         self.die()
+
+   def attack(self, target):
+      #a simple formula for attack damage
+      damage = self.model.power - target.model.defense
+                         
+      if damage > 0:
+         #make the target take some damage
+         print self.model.uid + ' attacks ' + target.model.uid + ' for ' + str(damage) + ' hit points.'
+         target.take_damage(damage)
+      else:
+         print self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!'
+
+   def die(self):
+      #transform it into a nasty corpse! it doesn't block, can't be
+      #attacked and doesn't move
+      print self.model.uid + ' is dead!'
+      self.ai = None
+      self.view.char = '%'
+      self.model.blocks = False
+      self.model.uid += " (dead)"
+
+   def has_died(self):
+      return (self.model.hp <= 0)
+
+class Player(CreatureController):
    def __init__(self,x,y):
-      super(Troll, self).__init__(x,y,'T',libtcod.darker_green,True)
+      super(Player, self).__init__(x,y,30,2,5,'@',libtcod.white)
+
+class BasicMonsterAI():
+   #AI for a basic monster.
+   def take_turn(self,dungeon,owner,player):
+      #a basic monster takes its turn. If you can see it, it can see you
+      (owner_x,owner_y) = owner.get_position()
+      if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
+                             
+         #move towards player if far away
+         if owner.distance_to_creature(player) >= 2:
+            owner.move_towards_creature(dungeon,player)
+         #close enough, attack! (if the player is still alive.)
+         elif player.model.hp > 0:
+            owner.attack(player)
+
+class Orc(CreatureController):
+   def __init__(self,x,y):
+      ai = BasicMonsterAI()
+      super(Orc, self).__init__(x,y,10,0,3,'O',libtcod.desaturated_green,ai)
+
+class Troll(CreatureController):
+   def __init__(self,x,y):
+      ai = BasicMonsterAI()
+      super(Troll, self).__init__(x,y,16,1,4,'T',libtcod.darker_green,ai)

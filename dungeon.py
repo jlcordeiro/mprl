@@ -87,6 +87,14 @@ class LevelView:
             isWalkable = not self.model.tiles[x][y].blocked
             libtcod.map_set_properties(self.fov_map, x, y, isTransparent, isWalkable)
 
+   def __draw_monsters(self,console,draw_dead=False):
+      #go through all monsters
+      for monster in self.model.monsters:
+         (monsterx,monstery) = monster.get_position()
+         if libtcod.map_is_in_fov(self.fov_map, monsterx, monstery):
+            if (draw_dead == True and monster.has_died() == True) or (draw_dead == False and monster.has_died() == False):
+               monster.view.draw(console)
+
    def draw(self,console):
       #go through all tiles, and set their background color
       for y in range(MAP_HEIGHT):
@@ -106,11 +114,9 @@ class LevelView:
                   else:
                      libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
-      #go through all monsters
-      for monster in self.model.monsters:
-         (monsterx,monstery) = monster.get_position()
-         if libtcod.map_is_in_fov(self.fov_map, monsterx, monstery):
-            monster.view.draw(console)
+      # start by drawing the monsters that have died
+      self.__draw_monsters(console,True)
+      self.__draw_monsters(console,False)
 
 class LevelController:
    def __init__(self):
