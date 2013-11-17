@@ -61,13 +61,12 @@ class CreatureController(ObjectController):
       self.view = ObjectView(self.model,char,colour)
       self.ai = ai
 
-   def move_towards_creature(self, dungeon, other):
-      (x,y) = self.get_position()
-      (target_x,target_y) = other.get_position()
+   def move_towards_creature(self, other, method_check_blocks):
+      (x, y) = self.get_position()
+      (target_x, target_y) = other.get_position()
 
       #return the distance to another object
-      dx = target_x - self.model.x
-      dy = target_y - self.model.y
+      (dx, dy) = (target_x - x, target_y - y)
       distance = math.sqrt(dx ** 2 + dy ** 2)
        
       #normalize it to length 1 (preserving direction), then round it and
@@ -75,7 +74,7 @@ class CreatureController(ObjectController):
       dx = int(round(dx / distance))
       dy = int(round(dy / distance))
 
-      if dungeon.is_blocked((x+dx,y+dy)) == False:
+      if method_check_blocks((x+dx,y+dy)) == False:
          self.move(dx, dy)
 
    def distance_to_creature(self, other):
@@ -123,17 +122,13 @@ class Player(CreatureController):
 
 class BasicMonsterAI():
    #AI for a basic monster.
-   def take_turn(self,dungeon,owner,player):
-      #a basic monster takes its turn. If you can see it, it can see you
-      (owner_x,owner_y) = owner.get_position()
-      if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
-                             
-         #move towards player if far away
-         if owner.distance_to_creature(player) >= 2:
-            owner.move_towards_creature(dungeon,player)
-         #close enough, attack! (if the player is still alive.)
-         elif player.model.hp > 0:
-            owner.attack(player)
+   def take_turn(self,owner,player,method_check_blocks):
+      #move towards player if far away
+      if owner.distance_to_creature(player) >= 2:
+         owner.move_towards_creature(player,method_check_blocks)
+      #close enough, attack! (if the player is still alive.)
+      elif player.model.hp > 0:
+         owner.attack(player)
 
 class Orc(CreatureController):
    def __init__(self,x,y):

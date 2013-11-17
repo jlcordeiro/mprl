@@ -92,7 +92,8 @@ class LevelView:
       for monster in self.model.monsters:
          (monsterx,monstery) = monster.get_position()
          if libtcod.map_is_in_fov(self.fov_map, monsterx, monstery):
-            if (draw_dead == True and monster.has_died() == True) or (draw_dead == False and monster.has_died() == False):
+            if ((draw_dead == True and monster.has_died() == True) or
+               (draw_dead == False and monster.has_died() == False)):
                monster.view.draw(console)
 
    def draw(self,console):

@@ -92,7 +92,10 @@ while not libtcod.console_is_window_closed():
    if game_state == "playing" and player_action != 'did-not-take-turn':
       for monster in dungeon.model.monsters:
          if monster.ai is not None:
-            monster.ai.take_turn(dungeon,monster,player)
+            #a basic monster takes its turn. If you can see it, it can see you
+            (owner_x,owner_y) = monster.get_position()
+            if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
+               monster.ai.take_turn(monster,player,dungeon.is_blocked)
 
    if player.has_died():
       print "YOU DIED!"
