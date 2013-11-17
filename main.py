@@ -19,7 +19,7 @@ def move_player(dx,dy):
 
    for monster in dungeon.model.monsters:
       if monster.get_position() == player.get_position() and monster.blocks():
-         print 'The ' + monster.view.char + ' laughs at your puny efforts to attack him!'
+         print 'The ' + monster.name + ' laughs at your puny efforts to attack him!'
          player.attack(monster)
          player.move(-dx,-dy)
    

@@ -116,6 +116,10 @@ class CreatureController(ObjectController):
    def has_died(self):
       return (self.model.hp <= 0)
 
+   @property
+   def name(self):
+      return self.view.char
+
 class Player(CreatureController):
    def __init__(self,x,y):
       super(Player, self).__init__(x,y,30,2,5,'@',libtcod.white)
