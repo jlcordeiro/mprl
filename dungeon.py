@@ -230,3 +230,13 @@ class LevelController:
             return True
     
       return False
+
+   def get_unblocked_pos(self):
+     #choose random spot
+     x = random.randint(1, MAP_WIDTH - 1)
+     y = random.randint(1, MAP_HEIGHT - 1)
+
+     if not self.is_blocked((x,y)):
+        return (x,y)
+
+     return self.get_unblocked_pos()

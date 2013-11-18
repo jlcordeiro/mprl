@@ -10,8 +10,9 @@ LIMIT_FPS = 20  #20 frames-per-second maximum
 game_state = 'playing'
 player_action = None
 
-player = Player(SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
 dungeon = LevelController()
+(x,y) = dungeon.get_unblocked_pos()
+player = Player(x,y)
 
 def move_player(dx,dy):
 
