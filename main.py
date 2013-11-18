@@ -1,14 +1,7 @@
 import libtcodpy as libtcod
+from config import *
 from dungeon import *
- 
-#actual size of the window
-SCREEN_WIDTH = 80
-SCREEN_HEIGHT = 50
-BAR_WIDTH = 20
-PANEL_HEIGHT = 7
-PANEL_Y = SCREEN_HEIGHT - PANEL_HEIGHT
- 
-LIMIT_FPS = 20  #20 frames-per-second maximum
+from messages import *
  
 game_state = 'playing'
 player_action = None
@@ -23,7 +16,6 @@ def move_player(dx,dy):
 
    for monster in dungeon.model.monsters:
       if monster.get_position() == player.get_position() and monster.blocks():
-         print 'The ' + monster.name + ' laughs at your puny efforts to attack him!'
          player.attack(monster)
          player.move(-dx,-dy)
    
@@ -86,8 +78,9 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
 move_player(0,0)
 
-while not libtcod.console_is_window_closed():
+global_msgs.add('Welcome stranger!', libtcod.red)
 
+while not libtcod.console_is_window_closed():
    #render the screen
    dungeon.view.draw(con)
    player.view.draw(con)
@@ -99,6 +92,13 @@ while not libtcod.console_is_window_closed():
    #prepare to render the GUI panel
    libtcod.console_set_default_background(panel, libtcod.black)
    libtcod.console_clear(panel)
+
+   #print the game messages, one line at a time
+   y = 1
+   for (line, color) in global_msgs.get_all():
+      libtcod.console_set_default_foreground(panel, color)
+      libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
+      y += 1
     
    #show the player's stats
    render_bar(1, 1, BAR_WIDTH, 'HP', player.model.hp, player.model.max_hp,
@@ -128,6 +128,6 @@ while not libtcod.console_is_window_closed():
                monster.ai.take_turn(monster,player,dungeon.is_blocked)
 
    if player.has_died():
-      print "YOU DIED!"
+      global_msgs.add("YOU DIED!",libtcod.red)
       game_state = 'dead'
 

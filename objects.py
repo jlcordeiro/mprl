@@ -1,5 +1,6 @@
 import math
 import libtcodpy as libtcod
+from messages import *
 
 last_uid = 0
 
@@ -99,15 +100,15 @@ class CreatureController(ObjectController):
                          
       if damage > 0:
          #make the target take some damage
-         print self.model.uid + ' attacks ' + target.model.uid + ' for ' + str(damage) + ' hit points.'
+         global_msgs.add(self.model.uid + ' attacks ' + target.model.uid + ' for ' + str(damage) + ' hit points.')
          target.take_damage(damage)
       else:
-         print self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!'
+         global_msgs.add(self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!')
 
    def die(self):
       #transform it into a nasty corpse! it doesn't block, can't be
       #attacked and doesn't move
-      print self.model.uid + ' is dead!'
+      global_msgs.add(self.model.uid + ' is dead!',libtcod.white)
       self.ai = None
       self.view.char = '%'
       self.model.blocks = False
