@@ -78,7 +78,8 @@ panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
 move_player(0,0)
 
-global_msgs.add('Welcome stranger!', libtcod.red)
+messages = MessagesBorg()
+messages.add('Welcome stranger!', libtcod.red)
 
 while not libtcod.console_is_window_closed():
    #render the screen
@@ -95,7 +96,7 @@ while not libtcod.console_is_window_closed():
 
    #print the game messages, one line at a time
    y = 1
-   for (line, color) in global_msgs.get_all():
+   for (line, color) in messages.get_all():
       libtcod.console_set_default_foreground(panel, color)
       libtcod.console_print_ex(panel, MSG_X, y, libtcod.BKGND_NONE, libtcod.LEFT, line)
       y += 1
@@ -128,6 +129,6 @@ while not libtcod.console_is_window_closed():
                monster.ai.take_turn(monster,player,dungeon.is_blocked)
 
    if player.has_died():
-      global_msgs.add("YOU DIED!",libtcod.red)
+      messages.add("YOU DIED!",libtcod.red)
       game_state = 'dead'
 

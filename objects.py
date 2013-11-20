@@ -98,17 +98,19 @@ class CreatureController(ObjectController):
       #a simple formula for attack damage
       damage = self.model.power - target.model.defense
                          
+      messages = MessagesBorg()
       if damage > 0:
          #make the target take some damage
-         global_msgs.add(self.model.uid + ' attacks ' + target.model.uid + ' for ' + str(damage) + ' hit points.')
+         messages.add(self.model.uid + ' attacks ' + target.model.uid + ' for ' + str(damage) + ' hit points.')
          target.take_damage(damage)
       else:
-         global_msgs.add(self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!')
+         messages.add(self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!')
 
    def die(self):
       #transform it into a nasty corpse! it doesn't block, can't be
       #attacked and doesn't move
-      global_msgs.add(self.model.uid + ' is dead!',libtcod.white)
+      messages = MessagesBorg()
+      messages.add(self.model.uid + ' is dead!',libtcod.white)
       self.ai = None
       self.view.char = '%'
       self.model.blocks = False

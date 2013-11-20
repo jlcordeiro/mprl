@@ -2,9 +2,12 @@ import textwrap
 import libtcodpy as libtcod
 from config import *
 
-class GameMessages:
+class MessagesBorg:
+   __shared_state = {}
+   messages = []
+
    def __init__(self):
-      self.msgs = []
+      pass
 
    def add(self, new_msg, color = libtcod.white):
       #split the message if necessary, among multiple lines
@@ -12,13 +15,11 @@ class GameMessages:
        
       for line in new_msg_lines:
          #if the buffer is full, remove the first line to make room for the new one
-         if len(self.msgs) == MSG_HEIGHT:
-            del self.msgs[0]
+         if len(self.messages) == MSG_HEIGHT:
+            del self.messages[0]
                                
          #add the new line as a tuple, with the text and the color
-         self.msgs.append( (line, color) )
+         self.messages.append( (line, color) )
 
    def get_all(self):
-      return self.msgs
-
-global_msgs = GameMessages()
+      return self.messages
