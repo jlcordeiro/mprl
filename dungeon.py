@@ -1,22 +1,12 @@
 import random
+from config import *
 from objects import *
 import libtcodpy as libtcod
-
-MAP_WIDTH = 80
-MAP_HEIGHT = 45
-ROOM_MAX_SIZE = 10
-ROOM_MIN_SIZE = 6
-MAX_ROOMS = 30
-FOV_ALGO = 0  #default FOV algorithm
-FOV_LIGHT_WALLS = True
-TORCH_RADIUS = 10
-MAX_ROOM_MONSTERS = 3
 
 color_dark_wall = libtcod.Color(0, 0, 100)
 color_light_wall = libtcod.Color(130, 110, 50)
 color_dark_ground = libtcod.Color(50, 50, 150)
 color_light_ground = libtcod.Color(200, 180, 50)
-
 
 class Tile:
    #a tile of the map and its properties
