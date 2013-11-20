@@ -110,6 +110,12 @@ class CreatureController(ObjectController):
       else:
          messages.add(self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!')
 
+   def heal(self, amount):
+      #heal by the given amount, without going over the maximum
+      self.model.hp += amount
+      if self.model.hp > self.model.max_hp:
+         self.model.hp = self.model.max_hp
+
    def die(self):
       #transform it into a nasty corpse! it doesn't block, can't be
       #attacked and doesn't move
@@ -126,6 +132,7 @@ class CreatureController(ObjectController):
 class Player(CreatureController):
    def __init__(self,x,y):
       super(Player, self).__init__(x,y,30,2,5,'@',libtcod.white)
+      #TODO: move to the model
       self.inventory = []
 
    def pick_item(self,item):
@@ -136,6 +143,7 @@ class Player(CreatureController):
          return False
       
       self.inventory.append(item)
+      item.update(self)
       messages.add('You picked up a ' + item.name + '!', libtcod.green)
       return True
 
@@ -159,6 +167,24 @@ class Troll(CreatureController):
       ai = BasicMonsterAI()
       super(Troll, self).__init__(x,y,16,1,4,'T',libtcod.darker_green,ai)
 
-class HealingPotion(ObjectController):
+class Item(ObjectController):
+   def __init__(self,x,y,char,colour,use_function=None):
+      super(Item, self).__init__(x,y, char, colour)
+#TODO: move to model
+      self.use_function = use_function
+
+   def use(self):
+      self.use_function()
+      return True
+
+def cast_heal(creature):
+   messages = MessagesBorg()
+   messages.add('Your wounds start to feel better!', libtcod.light_violet)
+   creature.heal(HEAL_AMOUNT)
+
+class HealingPotion(Item):
    def __init__(self,x,y):
       super(HealingPotion, self).__init__(x,y, '!', libtcod.violet)
+
+   def update(self, owner):
+      self.use_function = lambda: cast_heal(owner)
