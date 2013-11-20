@@ -55,6 +55,10 @@ class ObjectController(object):
    def blocks(self):
       return self.model.blocks
 
+   @property
+   def name(self):
+      return self.view.char
+
 class CreatureController(ObjectController):
    #combat-related properties and methods (monster, player, NPC).
    def __init__(self, x, y, hp, defense, power, char, colour, ai=None):
@@ -119,13 +123,21 @@ class CreatureController(ObjectController):
    def has_died(self):
       return (self.model.hp <= 0)
 
-   @property
-   def name(self):
-      return self.view.char
-
 class Player(CreatureController):
    def __init__(self,x,y):
       super(Player, self).__init__(x,y,30,2,5,'@',libtcod.white)
+      self.inventory = []
+
+   def pick_item(self,item):
+      #add to the player's inventory and remove from the map
+      messages = MessagesBorg()
+      if len(self.inventory) >= 26:
+         messages.add('Your inventory is full, cannot pick up ' + item.name + '.', libtcod.red)
+         return False
+      
+      self.inventory.append(item)
+      messages.add('You picked up a ' + item.name + '!', libtcod.green)
+      return True
 
 class BasicMonsterAI():
    #AI for a basic monster.
@@ -146,3 +158,7 @@ class Troll(CreatureController):
    def __init__(self,x,y):
       ai = BasicMonsterAI()
       super(Troll, self).__init__(x,y,16,1,4,'T',libtcod.darker_green,ai)
+
+class HealingPotion(ObjectController):
+   def __init__(self,x,y):
+      super(HealingPotion, self).__init__(x,y, '!', libtcod.violet)

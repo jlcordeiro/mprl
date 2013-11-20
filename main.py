@@ -62,6 +62,14 @@ def handle_keys():
 
       elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
          move_player(1,0)
+
+      elif chr(key.c) == 'g':
+         #pick up an item
+         for item in dungeon.model.items:  #look for an item in the player's tile
+            if item.get_position() == player.get_position():
+               if player.pick_item(item) is True:
+                  dungeon.model.items.remove(item)
+
       else:
          return 'did-not-take-turn'
 

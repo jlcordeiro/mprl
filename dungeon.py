@@ -45,6 +45,7 @@ class LevelModel:
       self.rooms = []
       self.num_rooms = 0
 
+      self.items = []
       self.monsters = []
 
    def does_room_overlap(self,room):
@@ -77,6 +78,12 @@ class LevelView:
             isWalkable = not self.model.tiles[x][y].blocked
             libtcod.map_set_properties(self.fov_map, x, y, isTransparent, isWalkable)
 
+   def __draw_items(self,console):
+      for item in self.model.items:
+         (itemx,itemy) = item.get_position()
+         if libtcod.map_is_in_fov(self.fov_map, itemx, itemy):
+            item.view.draw(console)
+
    def __draw_monsters(self,console,draw_dead=False):
       #go through all monsters
       for monster in self.model.monsters:
@@ -105,6 +112,7 @@ class LevelView:
                   else:
                      libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
+      self.__draw_items(console)
       # start by drawing the monsters that have died
       self.__draw_monsters(console,True)
       self.__draw_monsters(console,False)
@@ -159,8 +167,8 @@ class LevelController:
     
        for i in range(num_monsters):
            #choose random spot for this monster
-           x = random.randint(room.x1, room.x2-1)
-           y = random.randint(room.y1, room.y2-1)
+           x = random.randint(room.x1+1, room.x2-1)
+           y = random.randint(room.y1+1, room.y2-1)
     
            if not self.is_blocked((x,y)):
               if random.randint(0, 100) < 80:  #80% chance of getting an orc
@@ -169,6 +177,21 @@ class LevelController:
                   monster = Troll(x,y)
        
               self.model.monsters.append(monster)
+
+   def __place_items_in_room(self,room):
+      #choose random number of items
+      num_items = libtcod.random_get_int(0, 0, MAX_ROOM_ITEMS)
+
+      for i in range(num_items):
+         #choose random spot for this item
+         x = random.randint(room.x1+1, room.x2-1)
+         y = random.randint(room.y1+1, room.y2-1)
+
+         #only place it if the tile is not blocked
+         if not self.is_blocked((x,y)):
+            #create a healing potion
+            item = HealingPotion(x,y)
+            self.model.items.append(item)
 
    def __build_complete_room(self):
       #random width and height
@@ -187,6 +210,7 @@ class LevelController:
 
       #"paint" it to the map's tiles
       self.__create_room(new_room)
+      self.__place_items_in_room(new_room)
       self.__place_monsters_in_room(new_room)
 
       #connect all rooms but the first to the previous room with a tunnel
