@@ -1,23 +1,10 @@
 import math
 import libtcodpy as libtcod
 from messages import *
+import views.potions
+import views.creatures
 import models.potions
 import models.creatures
-
-class ObjectView():
-   def __init__(self,model,char,colour):
-      self.model = model
-      self.char = char
-      self.colour = colour
-
-   def draw(self,console):
-      #set the colour and then draw the character that represents this object at its position
-      libtcod.console_set_default_foreground(console, self.colour)
-      libtcod.console_put_char(console, self.model.x, self.model.y, self.char, libtcod.BKGND_NONE)
-
-   def clear(self,console):
-      #erase the character that represents this object
-      libtcod.console_put_char(console, self.model.x, self.model.y, ' ', libtcod.BKGND_NONE)
 
 class ObjectController(object):
    def __init__(self):
@@ -111,7 +98,7 @@ class CreatureController(ObjectController):
 class Player(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Player(x,y)
-      self.view = ObjectView(self.model,'@',libtcod.white)
+      self.view = views.creatures.Player(self.model)
       self.ai = None
 
    def pick_item(self,item):
@@ -139,19 +126,19 @@ class BasicMonsterAI():
 class Orc(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Orc(x,y)
-      self.view = ObjectView(self.model,'O',libtcod.desaturated_green)
+      self.view = views.creatures.Orc(self.model)
       self.ai = BasicMonsterAI()
 
 class Troll(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Troll(x,y)
-      self.view = ObjectView(self.model,'T',libtcod.darker_green)
+      self.view = views.creatures.Troll(self.model)
       self.ai = BasicMonsterAI()
 
 class Item(ObjectController):
-   def __init__(self,x,y,char,colour,use_function=None):
+   def __init__(self,x,y,use_function=None):
       self.model = models.potions.Potion(x,y)
-      self.view = ObjectView(self.model,char,colour)
+      self.view = views.potions.Potion(self.model)
       self.use_function = use_function
 
    def use(self):
@@ -165,7 +152,7 @@ def cast_heal(creature):
 
 class HealingPotion(Item):
    def __init__(self,x,y):
-      super(HealingPotion, self).__init__(x,y, '!', libtcod.violet)
+      super(HealingPotion, self).__init__(x,y)
 
    def update(self, owner):
       self.use_function = lambda: cast_heal(owner)
