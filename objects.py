@@ -150,11 +150,12 @@ class Troll(CreatureController):
 
 class Item(ObjectController):
    def __init__(self,x,y,char,colour,use_function=None):
-      self.model = models.potions.Potion(x,y,use_function)
+      self.model = models.potions.Potion(x,y)
       self.view = ObjectView(self.model,char,colour)
+      self.use_function = use_function
 
    def use(self):
-      self.model.use_function()
+      self.use_function()
       return True
 
 def cast_heal(creature):
@@ -167,4 +168,4 @@ class HealingPotion(Item):
       super(HealingPotion, self).__init__(x,y, '!', libtcod.violet)
 
    def update(self, owner):
-      self.model.use_function = lambda: cast_heal(owner)
+      self.use_function = lambda: cast_heal(owner)
