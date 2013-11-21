@@ -1,29 +1,8 @@
 import math
 import libtcodpy as libtcod
 from messages import *
-
-last_uid = 0
-
-def get_uid():
-   global last_uid
-   last_uid += 1
-   return last_uid
-
-class ObjectModel(object):
-   def __init__(self,x,y,blocks):
-      self.x = x
-      self.y = y
-      self.blocks = blocks
-
-      self.uid = str(get_uid())
-
-class CreatureModel(ObjectModel):
-   def __init__(self,x,y,hp,defense,power):
-      super(CreatureModel, self).__init__(x,y,True)
-      self.max_hp = hp
-      self.hp = hp
-      self.defense = defense
-      self.power = power
+import models.potions
+import models.creatures
 
 class ObjectView():
    def __init__(self,model,char,colour):
@@ -41,9 +20,9 @@ class ObjectView():
       libtcod.console_put_char(console, self.model.x, self.model.y, ' ', libtcod.BKGND_NONE)
 
 class ObjectController(object):
-   def __init__(self,x,y,char,colour,blocks=False):
-      self.model = ObjectModel(x,y,blocks)
-      self.view = ObjectView(self.model,char,colour)
+   def __init__(self):
+      self.model = None
+      self.view = None
 
    def move(self,dx,dy):
       self.model.x += dx
@@ -61,10 +40,10 @@ class ObjectController(object):
 
 class CreatureController(ObjectController):
    #combat-related properties and methods (monster, player, NPC).
-   def __init__(self, x, y, hp, defense, power, char, colour, ai=None):
-      self.model = CreatureModel(x,y,hp,defense,power)
-      self.view = ObjectView(self.model,char,colour)
-      self.ai = ai
+   def __init__(self):
+      self.model = None
+      self.view = None
+      self.ai = None
 
    def move_towards_creature(self, other, method_check_blocks):
       (x, y) = self.get_position()
@@ -131,18 +110,18 @@ class CreatureController(ObjectController):
 
 class Player(CreatureController):
    def __init__(self,x,y):
-      super(Player, self).__init__(x,y,30,2,5,'@',libtcod.white)
-      #TODO: move to the model
-      self.inventory = []
+      self.model = models.creatures.Player(x,y)
+      self.view = ObjectView(self.model,'@',libtcod.white)
+      self.ai = None
 
    def pick_item(self,item):
       #add to the player's inventory and remove from the map
       messages = MessagesBorg()
-      if len(self.inventory) >= 26:
+      if len(self.model.inventory) >= 26:
          messages.add('Your inventory is full, cannot pick up ' + item.name + '.', libtcod.red)
          return False
       
-      self.inventory.append(item)
+      self.model.inventory.append(item)
       item.update(self)
       messages.add('You picked up a ' + item.name + '!', libtcod.green)
       return True
@@ -159,22 +138,23 @@ class BasicMonsterAI():
 
 class Orc(CreatureController):
    def __init__(self,x,y):
-      ai = BasicMonsterAI()
-      super(Orc, self).__init__(x,y,10,0,3,'O',libtcod.desaturated_green,ai)
+      self.model = models.creatures.Orc(x,y)
+      self.view = ObjectView(self.model,'O',libtcod.desaturated_green)
+      self.ai = BasicMonsterAI()
 
 class Troll(CreatureController):
    def __init__(self,x,y):
-      ai = BasicMonsterAI()
-      super(Troll, self).__init__(x,y,16,1,4,'T',libtcod.darker_green,ai)
+      self.model = models.creatures.Troll(x,y)
+      self.view = ObjectView(self.model,'T',libtcod.darker_green)
+      self.ai = BasicMonsterAI()
 
 class Item(ObjectController):
    def __init__(self,x,y,char,colour,use_function=None):
-      super(Item, self).__init__(x,y, char, colour)
-#TODO: move to model
-      self.use_function = use_function
+      self.model = models.potions.Potion(x,y,use_function)
+      self.view = ObjectView(self.model,char,colour)
 
    def use(self):
-      self.use_function()
+      self.model.use_function()
       return True
 
 def cast_heal(creature):
@@ -187,4 +167,4 @@ class HealingPotion(Item):
       super(HealingPotion, self).__init__(x,y, '!', libtcod.violet)
 
    def update(self, owner):
-      self.use_function = lambda: cast_heal(owner)
+      self.model.use_function = lambda: cast_heal(owner)

@@ -67,7 +67,7 @@ def handle_keys():
           chosen_item = inventory_menu(con,'Press the key next to an item to use it, or any other to cancel.\n')
           if chosen_item is not None:
             if chosen_item.use() is True:
-               player.inventory.remove(chosen_item)
+               player.model.inventory.remove(chosen_item)
 
       elif chr(key.c) == 'g':
          #pick up an item
@@ -118,18 +118,18 @@ def menu(con, header, options, width):
 
 def inventory_menu(console,header):
    #show a menu with each item of the inventory as an option
-   if len(player.inventory) == 0:
+   if len(player.model.inventory) == 0:
       options = ['Inventory is empty.']
    else:
-      options = [item.name for item in player.inventory]
+      options = [item.name for item in player.model.inventory]
 
    index = menu(console, header, options, INVENTORY_WIDTH)
 
    #if an item was chosen, return it
-   if index is None or len(player.inventory) == 0:
+   if index is None or len(player.model.inventory) == 0:
       return None
 
-   return player.inventory[index]
+   return player.model.inventory[index]
 
 #############################################
 # Initialization & Main Loop
