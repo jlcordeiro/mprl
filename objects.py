@@ -145,10 +145,30 @@ class Item(ObjectController):
       self.use_function()
       return True
 
+def closest_monster(from_pos,max_range):
+   #find closest enemy, up to a maximum range, and in the player's FOV
+   closest_enemy = None
+   closest_dist = max_range + 1  #start with (slightly more than) maximum range
+
+   for object in objects:
+      if object.fighter and not object == player and libtcod.map_is_in_fov(fov_map, object.x, object.y):
+          #calculate distance between this object and the player
+          dist = player.distance_to(object)
+          if dist < closest_dist:  #it's closer, so remember it
+             closest_enemy = object
+             closest_dist = dist
+   return closest_enemy
+
 def cast_heal(creature):
    messages = MessagesBorg()
    messages.add('Your wounds start to feel better!', libtcod.light_violet)
    creature.heal(HEAL_AMOUNT)
+
+def cast_lightning(monster):
+   messages = MessagesBorg()
+   messages.add('A lighting bolt strikes the ' + monster.name + ' with a loud thunder! The damage is '
+        + str(LIGHTNING_DAMAGE) + ' hit points.', libtcod.light_blue)
+   monster.take_damage(LIGHTNING_DAMAGE)
 
 class HealingPotion(Item):
    def __init__(self,x,y):
@@ -156,3 +176,19 @@ class HealingPotion(Item):
 
    def update(self, owner):
       self.use_function = lambda: cast_heal(owner)
+
+class LightningBolt(Item):
+   def __init__(self,x,y):
+      super(LightningBolt, self).__init__(x,y)
+
+   def update(self, owner, target):
+
+      #find closest enemy (inside a maximum range) and damage it
+#      monster = closest_monster(self.get_position(),LIGHTNING_RANGE)
+#      if monster is None:
+#         messages.add('No enemy is close enough to strike.', libtcod.red)
+#         return 'cancelled'
+
+      self.use_function = lambda: cast_lightning(target)
+
+

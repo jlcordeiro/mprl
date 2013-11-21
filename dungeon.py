@@ -189,8 +189,13 @@ class LevelController:
 
          #only place it if the tile is not blocked
          if not self.is_blocked((x,y)):
-            #create a healing potion
-            item = HealingPotion(x,y)
+            dice = libtcod.random_get_int(0, 0, 100)
+            if dice < 70:
+               item = HealingPotion(x,y)
+            else:
+               item = LightningBolt(x,y)
+
+
             self.model.items.append(item)
 
    def __build_complete_room(self):
