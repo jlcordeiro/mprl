@@ -72,6 +72,7 @@ class LevelView:
       self.model = model
       self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
+   def set_fovmap(self):
       for y in range(MAP_HEIGHT):
          for x in range(MAP_WIDTH):
             isTransparent = not self.model.tiles[x][y].block_sight
@@ -121,6 +122,8 @@ class LevelController:
    def __init__(self):
       self.model = LevelModel()
                                 
+      self.view = LevelView(self.model)
+
       for r in range(MAX_ROOMS):
          new_room = self.__build_complete_room()
 
@@ -128,7 +131,7 @@ class LevelController:
             #append the new room to the list
             self.model.add_room(new_room)
 
-      self.view = LevelView(self.model)
+      self.view.set_fovmap()
 
    def __create_room(self,room):
       #go through the tiles in the rectangle and make them passable
@@ -193,7 +196,7 @@ class LevelController:
             if dice < 70:
                item = HealingPotion(x,y)
             else:
-               item = LightningBolt(x,y)
+               item = LightningBolt(x,y,self.view.fov_map)
 
 
             self.model.items.append(item)

@@ -9,3 +9,6 @@ class HealingPotion(Potion):
    def __init__(self,model):
       super(HealingPotion, self).__init__(model,libtcod.violet)
 
+class LightningBolt(Potion):
+   def __init__(self,model):
+      super(LightningBolt, self).__init__(model,libtcod.light_yellow)

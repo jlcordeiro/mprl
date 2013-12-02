@@ -109,7 +109,6 @@ class Player(CreatureController):
          return False
       
       self.model.inventory.append(item)
-      item.update(self)
       messages.add('You picked up a ' + item.name + '!', libtcod.green)
       return True
 
@@ -137,25 +136,27 @@ class Troll(CreatureController):
 
 class Item(ObjectController):
    def __init__(self,x,y,use_function=None):
-      self.model = models.potions.Potion(x,y)
-      self.view = views.potions.Potion(self.model)
-      self.use_function = use_function
+      pass
+
+   def update(self, player, monsters):
+      pass
 
    def use(self):
       self.use_function()
       return True
 
-def closest_monster(from_pos,max_range):
+def closest_monster(fov_map,player,monsters,from_pos,max_range):
    #find closest enemy, up to a maximum range, and in the player's FOV
    closest_enemy = None
    closest_dist = max_range + 1  #start with (slightly more than) maximum range
 
-   for object in objects:
-      if object.fighter and not object == player and libtcod.map_is_in_fov(fov_map, object.x, object.y):
+   for monster in monsters:
+      x,y = monster.get_position()
+      if libtcod.map_is_in_fov(fov_map, x, y):
           #calculate distance between this object and the player
-          dist = player.distance_to(object)
+          dist = player.distance_to_creature(monster)
           if dist < closest_dist:  #it's closer, so remember it
-             closest_enemy = object
+             closest_enemy = monster
              closest_dist = dist
    return closest_enemy
 
@@ -172,23 +173,28 @@ def cast_lightning(monster):
 
 class HealingPotion(Item):
    def __init__(self,x,y):
-      super(HealingPotion, self).__init__(x,y)
+      self.model = models.potions.Potion(x,y)
+      self.view = views.potions.HealingPotion(self.model)
+      self.use_function = None
 
-   def update(self, owner):
-      self.use_function = lambda: cast_heal(owner)
+   def update(self, player, monsters):
+      self.use_function = lambda: cast_heal(player)
 
 class LightningBolt(Item):
-   def __init__(self,x,y):
-      super(LightningBolt, self).__init__(x,y)
+   def __init__(self,x,y,fov_map):
+      self.model = models.potions.Potion(x,y)
+      self.view = views.potions.LightningBolt(self.model)
+      self.use_function = None
+      self.fov_map = fov_map
 
-   def update(self, owner, target):
+   def update(self, player, monsters):
 
       #find closest enemy (inside a maximum range) and damage it
-#      monster = closest_monster(self.get_position(),LIGHTNING_RANGE)
-#      if monster is None:
-#         messages.add('No enemy is close enough to strike.', libtcod.red)
-#         return 'cancelled'
+      monster = closest_monster(self.fov_map,player,monsters,self.get_position(),LIGHTNING_RANGE)
+      if monster is None:
+         messages.add('No enemy is close enough to strike.', libtcod.red)
+         return 'cancelled'
 
-      self.use_function = lambda: cast_lightning(target)
+      self.use_function = lambda: cast_lightning(monster)
 
 

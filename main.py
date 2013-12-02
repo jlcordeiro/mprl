@@ -66,6 +66,7 @@ def handle_keys():
       elif chr(key.c) == 'i':
           chosen_item = inventory_menu(con,'Press the key next to an item to use it, or any other to cancel.\n')
           if chosen_item is not None:
+            chosen_item.update(player,dungeon.model.monsters)
             if chosen_item.use() is True:
                player.model.inventory.remove(chosen_item)
 
