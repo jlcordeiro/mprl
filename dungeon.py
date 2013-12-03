@@ -193,10 +193,12 @@ class LevelController:
          #only place it if the tile is not blocked
          if not self.is_blocked((x,y)):
             dice = libtcod.random_get_int(0, 0, 100)
-            if dice < 70:
+            if dice < 30:
                item = HealingPotion(x,y)
-            else:
+            elif dice < 60:
                item = LightningBolt(x,y,self.view.fov_map)
+            else:
+               item = ConfusionScroll(x,y,self.view.fov_map)
 
 
             self.model.items.append(item)

@@ -192,7 +192,7 @@ while not libtcod.console_is_window_closed():
             #a basic monster takes its turn. If you can see it, it can see you
             (owner_x,owner_y) = monster.get_position()
             if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
-               monster.ai.take_turn(monster,player,dungeon.is_blocked)
+               monster.take_turn(player,dungeon.is_blocked)
 
    if player.has_died():
       messages.add("YOU DIED!",libtcod.red)

@@ -12,3 +12,7 @@ class HealingPotion(Potion):
 class LightningBolt(Potion):
    def __init__(self,model):
       super(LightningBolt, self).__init__(model,libtcod.light_yellow)
+
+class ConfusionScroll(Potion):
+   def __init__(self,model):
+      super(ConfusionScroll, self).__init__(model,libtcod.light_green) #TODO: should be light_yellow like all the scrolls

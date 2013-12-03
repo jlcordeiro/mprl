@@ -1,4 +1,5 @@
 import math
+import random
 import libtcodpy as libtcod
 from messages import *
 import views.potions
@@ -25,12 +26,50 @@ class ObjectController(object):
    def name(self):
       return self.view.char
 
+class BasicMonsterAI():
+   #AI for a basic monster.
+   def take_turn(self,owner,player,method_check_blocks):
+      #move towards player if far away
+      if owner.distance_to_creature(player) >= 2:
+         owner.move_towards_creature(player,method_check_blocks)
+      #close enough, attack! (if the player is still alive.)
+      elif player.model.hp > 0:
+         owner.attack(player)
+
+class ConfusedMonsterAI():
+    #AI for a confused monster.
+    def take_turn(self,owner,method_check_blocks):
+      #move in a random direction
+      (x, y) = owner.get_position()
+      (dx, dy) = (random.randint(-1, 1), random.randint(-1, 1))
+       
+      if method_check_blocks((x+dx,y+dy)) == False:
+         owner.move(dx, dy)
+
 class CreatureController(ObjectController):
    #combat-related properties and methods (monster, player, NPC).
    def __init__(self):
       self.model = None
       self.view = None
       self.ai = None
+      self.confused_ai = None
+      self.confused_turns = 0
+
+   def confuse(self):
+      self.confused_turns = CONFUSE_NUM_TURNS 
+      
+   def take_turn( self, player, method_check_blocks ):
+      messages = MessagesBorg()
+      if self.confused_turns > 0 and self.confused_ai is not None:
+         messages.add('The ' + self.name + ' is still confused!', libtcod.red)
+         self.confused_ai.take_turn( self, method_check_blocks )
+         self.confused_turns -= 1
+         
+         if self.confused_turns == 0:
+            messages.add('The ' + self.name + ' is no longer confused!', libtcod.red)
+            
+      else:
+         self.ai.take_turn(self, player, method_check_blocks)
 
    def move_towards_creature(self, other, method_check_blocks):
       (x, y) = self.get_position()
@@ -100,6 +139,8 @@ class Player(CreatureController):
       self.model = models.creatures.Player(x,y)
       self.view = views.creatures.Player(self.model)
       self.ai = None
+      self.confused_ai = None
+      self.confused_turns = 0
 
    def pick_item(self,item):
       #add to the player's inventory and remove from the map
@@ -112,27 +153,21 @@ class Player(CreatureController):
       messages.add('You picked up a ' + item.name + '!', libtcod.green)
       return True
 
-class BasicMonsterAI():
-   #AI for a basic monster.
-   def take_turn(self,owner,player,method_check_blocks):
-      #move towards player if far away
-      if owner.distance_to_creature(player) >= 2:
-         owner.move_towards_creature(player,method_check_blocks)
-      #close enough, attack! (if the player is still alive.)
-      elif player.model.hp > 0:
-         owner.attack(player)
-
 class Orc(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Orc(x,y)
       self.view = views.creatures.Orc(self.model)
       self.ai = BasicMonsterAI()
+      self.confused_ai = ConfusedMonsterAI()
+      self.confused_turns = 0
 
 class Troll(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Troll(x,y)
       self.view = views.creatures.Troll(self.model)
       self.ai = BasicMonsterAI()
+      self.confused_ai = ConfusedMonsterAI()
+      self.confused_turns = 0
 
 class Item(ObjectController):
    def __init__(self,x,y,use_function=None):
@@ -145,7 +180,7 @@ class Item(ObjectController):
       self.use_function()
       return True
 
-def closest_monster(fov_map,player,monsters,from_pos,max_range):
+def closest_monster(fov_map,player,monsters,max_range):
    #find closest enemy, up to a maximum range, and in the player's FOV
    closest_enemy = None
    closest_dist = max_range + 1  #start with (slightly more than) maximum range
@@ -171,6 +206,11 @@ def cast_lightning(monster):
         + str(LIGHTNING_DAMAGE) + ' hit points.', libtcod.light_blue)
    monster.take_damage(LIGHTNING_DAMAGE)
 
+def cast_confuse(monster):
+   messages = MessagesBorg()
+   messages.add('The eyes of the ' + monster.name + ' look vacant, as he starts to stumble around!', libtcod.light_green)
+   monster.confuse()
+
 class HealingPotion(Item):
    def __init__(self,x,y):
       self.model = models.potions.Potion(x,y)
@@ -190,7 +230,7 @@ class LightningBolt(Item):
    def update(self, player, monsters):
 
       #find closest enemy (inside a maximum range) and damage it
-      monster = closest_monster(self.fov_map,player,monsters,self.get_position(),LIGHTNING_RANGE)
+      monster = closest_monster(self.fov_map,player,monsters,LIGHTNING_RANGE)
       if monster is None:
          messages.add('No enemy is close enough to strike.', libtcod.red)
          return 'cancelled'
@@ -198,3 +238,19 @@ class LightningBolt(Item):
       self.use_function = lambda: cast_lightning(monster)
 
 
+class ConfusionScroll(Item):
+   def __init__(self,x,y,fov_map):
+      self.model = models.potions.Potion(x,y)
+      self.view = views.potions.ConfusionScroll(self.model)
+      self.use_function = None
+      self.fov_map = fov_map
+
+   def update(self, player, monsters):
+
+      #find closest enemy (inside a maximum range) and damage it
+      monster = closest_monster(self.fov_map,player,monsters,CONFUSE_RANGE)
+      if monster is None:
+         messages.add('No enemy is close enough to confuse.', libtcod.red)
+         return 'cancelled'
+
+      self.use_function = lambda: cast_confuse(monster)
