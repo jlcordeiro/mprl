@@ -153,6 +153,15 @@ class Player(CreatureController):
       messages.add('You picked up a ' + item.name + '!', libtcod.green)
       return True
 
+   def drop_item(self,item):
+      #add to the map and remove from the player's inventory. also, place it at the player's coordinates
+      self.model.inventory.remove(item)
+      item.model.x = self.model.x
+      item.model.y = self.model.y
+
+      messages = MessagesBorg()
+      messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
+
 class Orc(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Orc(x,y)

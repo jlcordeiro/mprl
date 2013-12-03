@@ -15,4 +15,6 @@ class LightningBolt(Potion):
 
 class ConfusionScroll(Potion):
    def __init__(self,model):
-      super(ConfusionScroll, self).__init__(model,libtcod.light_green) #TODO: should be light_yellow like all the scrolls
+      super(ConfusionScroll, self).__init__(model,libtcod.light_green)
+
+#TODO" Fireball

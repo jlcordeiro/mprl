@@ -70,6 +70,13 @@ def handle_keys():
             if chosen_item.use() is True:
                player.model.inventory.remove(chosen_item)
 
+      elif chr(key.c) == 'd':
+          #show the inventory; if an item is selected, drop it
+          chosen_item = inventory_menu(con,'Press the key next to an item to drop it, or any other to cancel.\n')
+          if chosen_item is not None:
+              player.drop_item(chosen_item)
+              dungeon.model.items.append(chosen_item)
+
       elif chr(key.c) == 'g':
          #pick up an item
          for item in dungeon.model.items:  #look for an item in the player's tile
