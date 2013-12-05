@@ -9,16 +9,17 @@ import models.creatures
 
 class ObjectController(object):
    def __init__(self):
-      self.model = None
-      self.view = None
-
+      raise NotImplementedError( "not_implemented" )
+      
    def move(self,dx,dy):
       self.model.x += dx
       self.model.y += dy
 
-   def get_position(self):
+   @property
+   def position(self):
       return (self.model.x,self.model.y)
 
+   @property
    def blocks(self):
       return self.model.blocks
 
@@ -26,11 +27,19 @@ class ObjectController(object):
    def name(self):
       return self.view.char
 
+def distance_between_objects(obj1,obj2):
+   (x1, y1) = obj1.position
+   (x2, y2) = obj2.position
+
+   #return the distance to another object
+   (dx, dy) = ( x2 - x1, y2 - y1 )
+   return math.sqrt(dx ** 2 + dy ** 2)
+
 class BasicMonsterAI():
    #AI for a basic monster.
    def take_turn(self,owner,player,method_check_blocks):
       #move towards player if far away
-      if owner.distance_to_creature(player) >= 2:
+      if distance_between_objects(player,owner) >= 2:
          owner.move_towards_creature(player,method_check_blocks)
       #close enough, attack! (if the player is still alive.)
       elif player.model.hp > 0:
@@ -40,7 +49,7 @@ class ConfusedMonsterAI():
     #AI for a confused monster.
     def take_turn(self,owner,method_check_blocks):
       #move in a random direction
-      (x, y) = owner.get_position()
+      (x, y) = owner.position
       (dx, dy) = (random.randint(-1, 1), random.randint(-1, 1))
        
       if method_check_blocks((x+dx,y+dy)) == False:
@@ -72,28 +81,19 @@ class CreatureController(ObjectController):
          self.ai.take_turn(self, player, method_check_blocks)
 
    def move_towards_creature(self, other, method_check_blocks):
-      (x, y) = self.get_position()
-      (target_x, target_y) = other.get_position()
+      (x, y) = self.position
+      (target_x, target_y) = other.position
 
       #return the distance to another object
-      (dx, dy) = (target_x - x, target_y - y)
-      distance = math.sqrt(dx ** 2 + dy ** 2)
+      distance = distance_between_objects(self,other)
        
       #normalize it to length 1 (preserving direction), then round it and
       #convert to integer so the movement is restricted to the map grid
-      dx = int(round(dx / distance))
-      dy = int(round(dy / distance))
+      dx = int(round((target_x - x) / distance))
+      dy = int(round((target_y - y) / distance))
 
       if method_check_blocks((x+dx,y+dy)) == False:
          self.move(dx, dy)
-
-   def distance_to_creature(self, other):
-      (target_x,target_y) = other.get_position()
-
-      #return the distance to another object
-      dx = target_x - self.model.x
-      dy = target_y - self.model.y
-      return math.sqrt(dx ** 2 + dy ** 2)
 
    def take_damage(self, damage):
       #apply damage if possible
@@ -131,7 +131,8 @@ class CreatureController(ObjectController):
       self.model.blocks = False
       self.model.uid += " (dead)"
 
-   def has_died(self):
+   @property
+   def died(self):
       return (self.model.hp <= 0)
 
 class Player(CreatureController):
@@ -180,7 +181,7 @@ class Troll(CreatureController):
 
 class Item(ObjectController):
    def __init__(self,x,y,use_function=None):
-      pass
+      raise NotImplementedError( "not_implemented" )
 
    def update(self, player, monsters):
       pass
@@ -195,10 +196,10 @@ def closest_monster(fov_map,player,monsters,max_range):
    closest_dist = max_range + 1  #start with (slightly more than) maximum range
 
    for monster in monsters:
-      x,y = monster.get_position()
+      x,y = monster.position
       if libtcod.map_is_in_fov(fov_map, x, y):
           #calculate distance between this object and the player
-          dist = player.distance_to_creature(monster)
+          dist = distance_between_objects(player,monster)
           if dist < closest_dist:  #it's closer, so remember it
              closest_enemy = monster
              closest_dist = dist

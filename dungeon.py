@@ -81,17 +81,16 @@ class LevelView:
 
    def __draw_items(self,console):
       for item in self.model.items:
-         (itemx,itemy) = item.get_position()
+         (itemx,itemy) = item.position
          if libtcod.map_is_in_fov(self.fov_map, itemx, itemy):
             item.view.draw(console)
 
    def __draw_monsters(self,console,draw_dead=False):
       #go through all monsters
       for monster in self.model.monsters:
-         (monsterx,monstery) = monster.get_position()
+         (monsterx,monstery) = monster.position
          if libtcod.map_is_in_fov(self.fov_map, monsterx, monstery):
-            if ((draw_dead == True and monster.has_died() == True) or
-               (draw_dead == False and monster.has_died() == False)):
+            if draw_dead == monster.died:
                monster.view.draw(console)
 
    def draw(self,console):
@@ -250,7 +249,7 @@ class LevelController:
     
       #now check for any blocking monsters
       for monster in self.model.monsters:
-         if monster.blocks() and monster.get_position() == pos:
+         if monster.blocks and monster.position == pos:
             return True
     
       return False

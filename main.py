@@ -15,14 +15,14 @@ def move_player(dx,dy):
    player.move(dx,dy)
 
    for monster in dungeon.model.monsters:
-      if monster.get_position() == player.get_position() and monster.blocks():
+      if monster.position == player.position and monster.blocks:
          player.attack(monster)
          player.move(-dx,-dy)
    
-   if dungeon.is_blocked(player.get_position()):
+   if dungeon.is_blocked(player.position):
       player.move(-dx,-dy)
    
-   dungeon.update(player.get_position())
+   dungeon.update(player.position)
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
    #render a bar (HP, experience, etc). first calculate the width of the bar
@@ -80,7 +80,7 @@ def handle_keys():
       elif chr(key.c) == 'g':
          #pick up an item
          for item in dungeon.model.items:  #look for an item in the player's tile
-            if item.get_position() == player.get_position():
+            if item.position == player.position:
                if player.pick_item(item) is True:
                   dungeon.model.items.remove(item)
 
@@ -197,11 +197,11 @@ while not libtcod.console_is_window_closed():
       for monster in dungeon.model.monsters:
          if monster.ai is not None:
             #a basic monster takes its turn. If you can see it, it can see you
-            (owner_x,owner_y) = monster.get_position()
+            (owner_x,owner_y) = monster.position
             if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
                monster.take_turn(player,dungeon.is_blocked)
 
-   if player.has_died():
+   if player.died:
       messages.add("YOU DIED!",libtcod.red)
       game_state = 'dead'
 
