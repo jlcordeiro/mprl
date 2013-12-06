@@ -83,10 +83,13 @@ def handle_keys():
       elif chr(key.c) == 'i':
           chosen_item = inventory_menu(con,'Press the key next to an item to use it, or any other to cancel.\n')
           if chosen_item is not None:
+             affected_monsters = []
+
              if chosen_item.who_is_affected == 'closest':
-                affected_monsters = [ closest_monster(chosen_item.affects_range) ]
-             else:
-                affected_monsters = []
+                closest_one = closest_monster(chosen_item.affects_range)
+
+                if closest_one is not None:
+                   affected_monsters.append(closest_one)
 
              if chosen_item.cast(player,affected_monsters) is True:
                player.model.inventory.remove(chosen_item)
