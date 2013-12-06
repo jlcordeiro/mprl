@@ -20,7 +20,7 @@ class Item(ObjectController):
 
 class HealingPotion(Item):
    def __init__(self,x,y):
-      self.model = models.potions.Potion(x,y,0,'owner')
+      self.model = models.potions.HealingPotion(x,y)
       self.view = views.potions.HealingPotion(self.model)
 
    def cast(self, player, monsters):
@@ -31,7 +31,7 @@ class HealingPotion(Item):
 
 class LightningBolt(Item):
    def __init__(self,x,y):
-      self.model = models.potions.Potion(x,y,LIGHTNING_RANGE,'closest')
+      self.model = models.potions.LightningBolt(x,y)
       self.view = views.potions.LightningBolt(self.model)
 
    def cast(self, player, monsters):
@@ -51,7 +51,7 @@ class LightningBolt(Item):
 
 class ConfusionScroll(Item):
    def __init__(self,x,y):
-      self.model = models.potions.Potion(x,y,CONFUSE_RANGE,'closest')
+      self.model = models.potions.ConfusionScroll(x,y)
       self.view = views.potions.ConfusionScroll(self.model)
 
    def cast(self, player, monsters):

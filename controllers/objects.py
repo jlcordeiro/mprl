@@ -18,7 +18,7 @@ class ObjectController(object):
 
    @property
    def name(self):
-      return self.view.char
+      return self.model.name
 
    def distance_to(self,obj2):
       (x1, y1) = self.position
