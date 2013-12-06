@@ -1,8 +1,6 @@
 from objects import ObjectController
 from messages import *
-import views.potions
 import views.creatures
-import models.potions
 import models.creatures
 
 

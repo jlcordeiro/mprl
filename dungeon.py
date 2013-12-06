@@ -1,6 +1,7 @@
 import random
 from config import *
 from objects import *
+import controllers.items
 import controllers.creatures
 import libtcodpy as libtcod
 
@@ -194,11 +195,11 @@ class LevelController:
          if not self.is_blocked((x,y)):
             dice = libtcod.random_get_int(0, 0, 100)
             if dice < 30:
-               item = HealingPotion(x,y)
+               item = controllers.items.HealingPotion(x,y)
             elif dice < 60:
-               item = LightningBolt(x,y,self.view.fov_map)
+               item = controllers.items.LightningBolt(x,y)
             else:
-               item = ConfusionScroll(x,y,self.view.fov_map)
+               item = controllers.items.ConfusionScroll(x,y)
 
 
             self.model.items.append(item)

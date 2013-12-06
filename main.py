@@ -25,6 +25,22 @@ def move_player(dx,dy):
    
    dungeon.update(player.position)
 
+def closest_monster(max_range):
+   #find closest enemy, up to a maximum range, and in the player's FOV
+   closest_enemy = None
+   closest_dist = max_range + 1  #start with (slightly more than) maximum range
+
+   for monster in dungeon.model.monsters:
+      x,y = monster.position
+      if libtcod.map_is_in_fov(dungeon.view.fov_map, x, y):
+          #calculate distance between this object and the player
+          dist = monster.distance_to(player)
+          if dist < closest_dist:  #it's closer, so remember it
+             closest_enemy = monster
+             closest_dist = dist
+
+   return closest_enemy
+
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
    #render a bar (HP, experience, etc). first calculate the width of the bar
    bar_width = int(float(value) / maximum * total_width)
@@ -67,8 +83,12 @@ def handle_keys():
       elif chr(key.c) == 'i':
           chosen_item = inventory_menu(con,'Press the key next to an item to use it, or any other to cancel.\n')
           if chosen_item is not None:
-            chosen_item.update(player,dungeon.model.monsters)
-            if chosen_item.use() is True:
+             if chosen_item.who_is_affected == 'closest':
+                affected_monsters = [ closest_monster(chosen_item.range) ]
+             else:
+                affected_monsters = []
+
+             if chosen_item.cast(player,affected_monsters) is True:
                player.model.inventory.remove(chosen_item)
 
       elif chr(key.c) == 'd':
