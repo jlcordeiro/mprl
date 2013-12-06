@@ -2,184 +2,57 @@ import math
 import random
 import libtcodpy as libtcod
 from messages import *
+import controllers.objects
+
 import views.potions
 import views.creatures
 import models.potions
 import models.creatures
 
-class ObjectController(object):
-   def __init__(self):
-      raise NotImplementedError( "not_implemented" )
-      
-   def move(self,dx,dy):
-      self.model.x += dx
-      self.model.y += dy
-
-   @property
-   def position(self):
-      return (self.model.x,self.model.y)
-
-   @property
-   def blocks(self):
-      return self.model.blocks
-
-   @property
-   def name(self):
-      return self.view.char
-
-def distance_between_objects(obj1,obj2):
-   (x1, y1) = obj1.position
-   (x2, y2) = obj2.position
+def move_towards_creature(one, other, method_check_blocks):
+   (x1, y1) = one.position
+   (x2, y2) = other.position
 
    #return the distance to another object
-   (dx, dy) = ( x2 - x1, y2 - y1 )
-   return math.sqrt(dx ** 2 + dy ** 2)
+   distance = one.distance_to(other)
+    
+   #normalize it to length 1 (preserving direction), then round it and
+   #convert to integer so the movement is restricted to the map grid
+   dx = int(round((x2 - x1) / distance))
+   dy = int(round((y2 - y1) / distance))
 
-class BasicMonsterAI():
-   #AI for a basic monster.
-   def take_turn(self,owner,player,method_check_blocks):
-      #move towards player if far away
-      if distance_between_objects(player,owner) >= 2:
-         owner.move_towards_creature(player,method_check_blocks)
-      #close enough, attack! (if the player is still alive.)
-      elif player.model.hp > 0:
-         owner.attack(player)
+   if method_check_blocks((x1+dx,y1+dy)) == False:
+      one.move(dx, dy)
+ 
+def take_turn( monster, player, method_check_blocks ):
+   if monster.died:
+      return
 
-class ConfusedMonsterAI():
-    #AI for a confused monster.
-    def take_turn(self,owner,method_check_blocks):
-      #move in a random direction
-      (x, y) = owner.position
-      (dx, dy) = (random.randint(-1, 1), random.randint(-1, 1))
-       
-      if method_check_blocks((x+dx,y+dy)) == False:
+   messages = MessagesBorg()
+   if monster.confused_turns > 0:
+      messages.add('The ' + monster.name + ' is confused!', libtcod.red)
+
+      (xi, yi) = monster.position
+      final_pos = ( xi+random.randint(-1, 1), yi+random.randint(-1, 1))
+
+      if method_check_blocks( final_pos ) == False:
          owner.move(dx, dy)
 
-class CreatureController(ObjectController):
-   #combat-related properties and methods (monster, player, NPC).
-   def __init__(self):
-      self.model = None
-      self.view = None
-      self.ai = None
-      self.confused_ai = None
-      self.confused_turns = 0
-
-   def confuse(self):
-      self.confused_turns = CONFUSE_NUM_TURNS 
+      monster.confused_turns -= 1
       
-   def take_turn( self, player, method_check_blocks ):
-      messages = MessagesBorg()
-      if self.confused_turns > 0 and self.confused_ai is not None:
-         messages.add('The ' + self.name + ' is still confused!', libtcod.red)
-         self.confused_ai.take_turn( self, method_check_blocks )
-         self.confused_turns -= 1
-         
-         if self.confused_turns == 0:
-            messages.add('The ' + self.name + ' is no longer confused!', libtcod.red)
-            
-      else:
-         self.ai.take_turn(self, player, method_check_blocks)
+      if monster.confused_turns == 0:
+         messages.add('The ' + self.name + ' is no longer confused!', libtcod.red)
 
-   def move_towards_creature(self, other, method_check_blocks):
-      (x, y) = self.position
-      (target_x, target_y) = other.position
+   else:
+      #move towards player if far away
+      if monster.distance_to(player) >= 2:
+         move_towards_creature(monster,player,method_check_blocks)
+      #close enough, attack! (if the player is still alive.)
+      elif player.model.hp > 0:
+         monster.attack(player)
 
-      #return the distance to another object
-      distance = distance_between_objects(self,other)
-       
-      #normalize it to length 1 (preserving direction), then round it and
-      #convert to integer so the movement is restricted to the map grid
-      dx = int(round((target_x - x) / distance))
-      dy = int(round((target_y - y) / distance))
 
-      if method_check_blocks((x+dx,y+dy)) == False:
-         self.move(dx, dy)
-
-   def take_damage(self, damage):
-      #apply damage if possible
-      if damage > 0:
-         self.model.hp -= damage
-
-      if self.model.hp <= 0:
-         self.die()
-
-   def attack(self, target):
-      #a simple formula for attack damage
-      damage = self.model.power - target.model.defense
-                         
-      messages = MessagesBorg()
-      if damage > 0:
-         #make the target take some damage
-         messages.add(self.model.uid + ' attacks ' + target.model.uid + ' for ' + str(damage) + ' hit points.')
-         target.take_damage(damage)
-      else:
-         messages.add(self.model.uid + ' attacks ' + target.model.uid + ' but it has no effect!')
-
-   def heal(self, amount):
-      #heal by the given amount, without going over the maximum
-      self.model.hp += amount
-      if self.model.hp > self.model.max_hp:
-         self.model.hp = self.model.max_hp
-
-   def die(self):
-      #transform it into a nasty corpse! it doesn't block, can't be
-      #attacked and doesn't move
-      messages = MessagesBorg()
-      messages.add(self.model.uid + ' is dead!',libtcod.white)
-      self.ai = None
-      self.view.char = '%'
-      self.model.blocks = False
-      self.model.uid += " (dead)"
-
-   @property
-   def died(self):
-      return (self.model.hp <= 0)
-
-class Player(CreatureController):
-   def __init__(self,x,y):
-      self.model = models.creatures.Player(x,y)
-      self.view = views.creatures.Player(self.model)
-      self.ai = None
-      self.confused_ai = None
-      self.confused_turns = 0
-
-   def pick_item(self,item):
-      #add to the player's inventory and remove from the map
-      messages = MessagesBorg()
-      if len(self.model.inventory) >= 26:
-         messages.add('Your inventory is full, cannot pick up ' + item.name + '.', libtcod.red)
-         return False
-      
-      self.model.inventory.append(item)
-      messages.add('You picked up a ' + item.name + '!', libtcod.green)
-      return True
-
-   def drop_item(self,item):
-      #add to the map and remove from the player's inventory. also, place it at the player's coordinates
-      self.model.inventory.remove(item)
-      item.model.x = self.model.x
-      item.model.y = self.model.y
-
-      messages = MessagesBorg()
-      messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
-
-class Orc(CreatureController):
-   def __init__(self,x,y):
-      self.model = models.creatures.Orc(x,y)
-      self.view = views.creatures.Orc(self.model)
-      self.ai = BasicMonsterAI()
-      self.confused_ai = ConfusedMonsterAI()
-      self.confused_turns = 0
-
-class Troll(CreatureController):
-   def __init__(self,x,y):
-      self.model = models.creatures.Troll(x,y)
-      self.view = views.creatures.Troll(self.model)
-      self.ai = BasicMonsterAI()
-      self.confused_ai = ConfusedMonsterAI()
-      self.confused_turns = 0
-
-class Item(ObjectController):
+class Item(controllers.objects.ObjectController):
    def __init__(self,x,y,use_function=None):
       raise NotImplementedError( "not_implemented" )
 
@@ -199,7 +72,7 @@ def closest_monster(fov_map,player,monsters,max_range):
       x,y = monster.position
       if libtcod.map_is_in_fov(fov_map, x, y):
           #calculate distance between this object and the player
-          dist = distance_between_objects(player,monster)
+          dist = monster.distance_to(player)
           if dist < closest_dist:  #it's closer, so remember it
              closest_enemy = monster
              closest_dist = dist

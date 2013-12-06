@@ -2,13 +2,14 @@ import libtcodpy as libtcod
 from config import *
 from dungeon import *
 from messages import *
+import controllers.creatures
  
 game_state = 'playing'
 player_action = None
 
 dungeon = LevelController()
 (x,y) = dungeon.get_unblocked_pos()
-player = Player(x,y)
+player = controllers.creatures.Player(x,y)
 
 def move_player(dx,dy):
 
@@ -195,11 +196,10 @@ while not libtcod.console_is_window_closed():
    #let monsters take their turn
    if game_state == "playing" and player_action != 'did-not-take-turn':
       for monster in dungeon.model.monsters:
-         if monster.ai is not None:
-            #a basic monster takes its turn. If you can see it, it can see you
-            (owner_x,owner_y) = monster.position
-            if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
-               monster.take_turn(player,dungeon.is_blocked)
+         #a basic monster takes its turn. If you can see it, it can see you
+         (owner_x,owner_y) = monster.position
+         if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
+            take_turn(monster,player,dungeon.is_blocked)
 
    if player.died:
       messages.add("YOU DIED!",libtcod.red)

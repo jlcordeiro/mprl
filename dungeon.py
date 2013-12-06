@@ -1,6 +1,7 @@
 import random
 from config import *
 from objects import *
+import controllers.creatures
 import libtcodpy as libtcod
 
 color_dark_wall = libtcod.Color(0, 0, 100)
@@ -174,9 +175,9 @@ class LevelController:
     
            if not self.is_blocked((x,y)):
               if random.randint(0, 100) < 80:  #80% chance of getting an orc
-                  monster = Orc(x,y)
+                  monster = controllers.creatures.Orc(x,y)
               else:
-                  monster = Troll(x,y)
+                  monster = controllers.creatures.Troll(x,y)
        
               self.model.monsters.append(monster)
 
