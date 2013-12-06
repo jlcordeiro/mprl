@@ -84,7 +84,7 @@ def handle_keys():
           chosen_item = inventory_menu(con,'Press the key next to an item to use it, or any other to cancel.\n')
           if chosen_item is not None:
              if chosen_item.who_is_affected == 'closest':
-                affected_monsters = [ closest_monster(chosen_item.range) ]
+                affected_monsters = [ closest_monster(chosen_item.affects_range) ]
              else:
                 affected_monsters = []
 

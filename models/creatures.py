@@ -8,6 +8,8 @@ class Creature(ObjectModel):
       self.defense = defense
       self.power = power
 
+      self.confused_turns = 0
+
 class Orc(Creature):
    def __init__(self,x,y):
       super(Orc, self).__init__(x,y,10,0,3)

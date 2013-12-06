@@ -23,19 +23,20 @@ def take_turn( monster, player, method_check_blocks ):
       return
 
    messages = MessagesBorg()
-   if monster.confused_turns > 0:
+   if monster.model.confused_turns > 0:
       messages.add('The ' + monster.name + ' is confused!', libtcod.red)
 
       (xi, yi) = monster.position
-      final_pos = ( xi+random.randint(-1, 1), yi+random.randint(-1, 1))
+      (dx, dy) = ( random.randint(-1, 1), random.randint(-1, 1) )
+      final_pos = ( xi+dx, yi+dy )
 
       if method_check_blocks( final_pos ) == False:
          monster.move(dx, dy)
 
-      monster.confused_turns -= 1
+      monster.model.confused_turns -= 1
       
-      if monster.confused_turns == 0:
-         messages.add('The ' + self.name + ' is no longer confused!', libtcod.red)
+      if monster.model.confused_turns == 0:
+         messages.add('The ' + monster.name + ' is no longer confused!', libtcod.red)
 
    else:
       #move towards player if far away

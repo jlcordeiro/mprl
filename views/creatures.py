@@ -4,7 +4,6 @@ import libtcodpy as libtcod
 class Player(ObjectView):
    def __init__(self,model):
       super(Player, self).__init__(model,'@',libtcod.white)
-      self.inventory = []
 
 class Orc(ObjectView):
    def __init__(self,model):

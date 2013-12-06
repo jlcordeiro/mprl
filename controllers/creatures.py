@@ -9,7 +9,7 @@ class CreatureController(ObjectController):
       raise NotImplementedError( "not_implemented" )
 
    def confuse(self):
-      self.confused_turns = CONFUSE_NUM_TURNS 
+      self.model.confused_turns = CONFUSE_NUM_TURNS 
 
    def attack(self, target):
       #a simple formula for attack damage
@@ -41,6 +41,7 @@ class CreatureController(ObjectController):
       messages = MessagesBorg()
       messages.add(self.model.uid + ' is dead!',libtcod.white)
       self.view.char = '%'
+      self.model.confused_turns = 0
       self.model.blocks = False
       self.model.uid += " (dead)"
 
@@ -52,7 +53,6 @@ class Player(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Player(x,y)
       self.view = views.creatures.Player(self.model)
-      self.confused_turns = 0
 
    def pick_item(self,item):
       #add to the player's inventory and remove from the map
@@ -78,11 +78,8 @@ class Orc(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Orc(x,y)
       self.view = views.creatures.Orc(self.model)
-      self.confused_turns = 0
 
 class Troll(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Troll(x,y)
       self.view = views.creatures.Troll(self.model)
-      self.confused_turns = 0
-
