@@ -1,11 +1,7 @@
-import math
 import random
 import libtcodpy as libtcod
 from messages import *
 import controllers.objects
-
-import views.creatures
-import models.creatures
 
 def move_towards_creature(one, other, method_check_blocks):
    (x1, y1) = one.position
