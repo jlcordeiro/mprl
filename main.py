@@ -3,11 +3,12 @@ from config import *
 from dungeon import *
 from messages import *
 import controllers.creatures
+import controllers.dungeon
  
 game_state = 'playing'
 player_action = None
 
-dungeon = LevelController()
+dungeon = controllers.dungeon.Level()
 (x,y) = dungeon.get_unblocked_pos()
 player = controllers.creatures.Player(x,y)
 

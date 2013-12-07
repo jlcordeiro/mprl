@@ -66,3 +66,12 @@ class ConfusionScroll(Item):
          monster.confuse()
 
       return True
+
+def ItemFactory(x,y):
+   dice = libtcod.random_get_int(0, 0, 100)
+   if dice < 30:
+      return HealingPotion(x,y)
+   elif dice < 60:
+      return LightningBolt(x,y)
+   else:
+      return ConfusionScroll(x,y)

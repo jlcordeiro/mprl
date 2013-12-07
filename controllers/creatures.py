@@ -83,3 +83,11 @@ class Troll(CreatureController):
    def __init__(self,x,y):
       self.model = models.creatures.Troll(x,y)
       self.view = views.creatures.Troll(self.model)
+
+def MonsterFactory(x,y):
+   dice = libtcod.random_get_int(0, 0, 100)
+
+   if dice < 80:  #80% chance of getting an orc
+      return Orc(x,y)
+
+   return Troll(x,y)
