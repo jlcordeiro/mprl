@@ -44,8 +44,11 @@ class Level:
                   else:
                      libtcod.console_set_char_background(console, x, y, color_dark_ground, libtcod.BKGND_SET )
 
-      self.__draw_items(console)
       # start by drawing the monsters that have died
       self.__draw_monsters(console,True)
-      self.__draw_monsters(console,False)
+      
+      # then the items on the floor
+      self.__draw_items(console)
 
+      # and finally, the monsters that are still alive
+      self.__draw_monsters(console,False)
