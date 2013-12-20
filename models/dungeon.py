@@ -40,10 +40,10 @@ class Room:
 
     def intersects(self, other):
         #returns true if this rectangle intersects with another one
-        return (self.x1 <= other.x2 and
-                self.x2 >= other.x1 and
-                self.y1 <= other.y2 and
-                self.y2 >= other.y1)
+        return (self.x1 <= other.x2+1 and
+                self.x2 >= other.x1-1 and
+                self.y1 <= other.y2+1 and
+                self.y2 >= other.y1-1)
 
 
 class Level:
