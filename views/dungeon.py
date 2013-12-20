@@ -16,14 +16,14 @@ class Level:
     def __draw_items(self, console):
         for item in self.model.items:
             (x, y) = item.position
-            if libtcod.map_is_in_fov(self.fov_map, x, y):
+            if libtcod.map_is_in_fov(self.fov_map, x, y) or DRAW_NOT_IN_FOV:
                 item.view.draw(console)
 
     def __draw_monsters(self, console, draw_dead=False):
         #go through all monsters
         for monster in self.model.monsters:
             (x, y) = monster.position
-            if libtcod.map_is_in_fov(self.fov_map, x, y):
+            if libtcod.map_is_in_fov(self.fov_map, x, y) or DRAW_NOT_IN_FOV:
                 if draw_dead == monster.died:
                     monster.view.draw(console)
 
@@ -33,11 +33,12 @@ class Level:
             for x in range(MAP_WIDTH):
                 wall = self.model.tiles[x][y].block_sight
                 visible = libtcod.map_is_in_fov(self.fov_map, x, y)
+                explored = self.model.tiles[x][y].explored
 
                 color = color_black
-                if visible:
+                if visible or DRAW_NOT_IN_FOV:
                     color = color_light_wall if wall else color_light_ground
-                elif self.model.tiles[x][y].explored is True:
+                elif explored:
                     color = color_dark_wall if wall else color_dark_ground
 
                 libtcod.console_set_char_background(console,
