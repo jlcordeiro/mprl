@@ -14,7 +14,7 @@ LIMIT_FPS = 20  # 20 frames-per-second maximum
 
 MAP_WIDTH = 110
 MAP_HEIGHT = 75
-ROOM_MAX_SIZE = 30
+ROOM_MAX_SIZE = 20
 ROOM_MIN_SIZE = 6
 MAX_ROOMS = 20
 FOV_ALGO = 0  # default FOV algorithm
@@ -33,6 +33,3 @@ CONFUSE_RANGE = 8
 CONFUSE_NUM_TURNS = 10
 FIREBALL_RADIUS = 3
 FIREBALL_DAMAGE = 12
-
-# debugging
-DRAW_NOT_IN_FOV = False

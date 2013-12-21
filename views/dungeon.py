@@ -13,21 +13,21 @@ class Level:
         self.model = model
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
-    def __draw_items(self, console):
+    def __draw_items(self, console, draw_not_in_fov=False):
         for item in self.model.items:
             (x, y) = item.position
-            if libtcod.map_is_in_fov(self.fov_map, x, y) or DRAW_NOT_IN_FOV:
+            if libtcod.map_is_in_fov(self.fov_map, x, y) or draw_not_in_fov:
                 item.view.draw(console)
 
-    def __draw_monsters(self, console, draw_dead=False):
+    def __draw_monsters(self, console, draw_dead=False, draw_not_in_fov=False):
         #go through all monsters
         for monster in self.model.monsters:
             (x, y) = monster.position
-            if libtcod.map_is_in_fov(self.fov_map, x, y) or DRAW_NOT_IN_FOV:
+            if libtcod.map_is_in_fov(self.fov_map, x, y) or draw_not_in_fov:
                 if draw_dead == monster.died:
                     monster.view.draw(console)
 
-    def draw(self, console):
+    def draw(self, console, draw_not_in_fov=False):
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
@@ -36,7 +36,7 @@ class Level:
                 explored = self.model.tiles[x][y].explored
 
                 color = color_black
-                if visible or DRAW_NOT_IN_FOV:
+                if visible or draw_not_in_fov:
                     color = color_light_wall if wall else color_light_ground
                 elif explored:
                     color = color_dark_wall if wall else color_dark_ground
@@ -48,10 +48,10 @@ class Level:
                                                     libtcod.BKGND_SET)
 
         # start by drawing the monsters that have died
-        self.__draw_monsters(console, True)
+        self.__draw_monsters(console, True, draw_not_in_fov)
 
         #then the items on the floor
-        self.__draw_items(console)
+        self.__draw_items(console, draw_not_in_fov)
 
         #and finally, the monsters that are still alive
-        self.__draw_monsters(console, False)
+        self.__draw_monsters(console, False, draw_not_in_fov)

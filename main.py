@@ -5,6 +5,8 @@ from messages import *
 import controllers.creatures
 import controllers.dungeon
 
+DRAW_NOT_IN_FOV = False
+
 game_state = 'playing'
 player_action = None
 
@@ -81,6 +83,8 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
 
 
 def handle_keys():
+    global DRAW_NOT_IN_FOV
+
     #turn-based
     key = libtcod.console_wait_for_keypress(True)
 
@@ -136,6 +140,9 @@ def handle_keys():
                         dungeon.model.items.remove(item)
 
         else:
+            if chr(key.c) == 'v':
+                DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
+
             return 'did-not-take-turn'
 
 
@@ -231,7 +238,7 @@ messages.add('Welcome stranger!', libtcod.red)
 
 while not libtcod.console_is_window_closed():
     #render the screen
-    dungeon.view.draw(con)
+    dungeon.view.draw(con,DRAW_NOT_IN_FOV)
     player.view.draw(con)
 
     #blit the contents of "console" to the root console
@@ -272,6 +279,8 @@ while not libtcod.console_is_window_closed():
     player.view.clear(con)
     for monster in dungeon.model.monsters:
         monster.view.clear(con)
+    for item in dungeon.model.items:
+        item.view.clear(con)
 
     #handle keys and exit game if needed
     key = handle_keys()
