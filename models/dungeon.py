@@ -122,19 +122,28 @@ class Level:
         room = Room(x, y, 1, h)
         self.__dig_room(room)
 
-    def __connect_two_rooms(self, room1, room2):
-        (center1x, center1y) = room1.center
-        (center2x, center2y) = room2.center
+    def __connect_two_rooms(self, room1, room2, mode="center"):
+        """Digs tunnels between room1 and room2.
+           When mode is "center" the tunnels are started from the
+           center of each room. When it is "random", the origin
+           points are random points inside the room."""
+
+        if mode == "center":
+            (origin1x, origin1y) = room1.center
+            (origin2x, origin2y) = room2.center
+        elif mode == "random":
+            (origin1x, origin1y) = room1.get_random_point()
+            (origin2x, origin2y) = room2.get_random_point()
 
         #draw a coin (random number that is either 0 or 1)
         if random.choice([True, False]):
             #first move horizontally, then vertically
-            self.__dig_h_tunnel(center1x, center2x, center1y)
-            self.__dig_v_tunnel(center1y, center2y, center2x)
+            self.__dig_h_tunnel(origin1x, origin2x, origin1y)
+            self.__dig_v_tunnel(origin1y, origin2y, origin2x)
         else:
             #first move vertically, then horizontally
-            self.__dig_v_tunnel(center1y, center2y, center1x)
-            self.__dig_h_tunnel(center1x, center2x, center2y)
+            self.__dig_v_tunnel(origin1y, origin2y, origin1x)
+            self.__dig_h_tunnel(origin1x, origin2x, origin2y)
 
     def is_blocked(self, pos):
         x, y = pos
@@ -197,6 +206,6 @@ class Level:
             closest = self.closest_unconnected_room(r)
 
             if closest:
-                self.__connect_two_rooms(r,closest)
+                self.__connect_two_rooms(r,closest,"random")
 
             r.connected = True
