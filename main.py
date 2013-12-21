@@ -295,6 +295,6 @@ while not libtcod.console_is_window_closed():
             if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
                 take_turn(monster, player, dungeon.is_blocked)
 
-    if player.died:
+    if player.died and game_state != 'dead':
         messages.add("YOU DIED!", libtcod.red)
         game_state = 'dead'
