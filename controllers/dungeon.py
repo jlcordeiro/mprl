@@ -19,9 +19,7 @@ class Level:
                 self.__place_items_in_room(new_room)
                 self.__place_monsters_in_room(new_room)
 
-                #append the new room to the list
-                self.model.add_room(new_room)
-
+        self.model.connect_rooms()
         self.set_fov()
 
     def __place_monsters_in_room(self, room):

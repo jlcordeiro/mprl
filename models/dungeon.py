@@ -1,3 +1,4 @@
+import math
 import random
 from config import *
 
@@ -19,6 +20,7 @@ class Room:
         self.y1 = y
         self.x2 = x + w
         self.y2 = y + h
+        self.connected = False
 
     @property
     def all_points(self):
@@ -37,13 +39,40 @@ class Room:
         y = random.randint(self.y1 + 1, self.y2 - 1)
 
         return (x, y)
+ 
+    def x_distance_to_room(self, other):
+        if (self.x1 >= other.x1 and self.x1 <= other.x2) or \
+           (self.x2 >= other.x1 and self.x2 <= other.x2):
+            return 0
+
+        if self.x2 < other.x1:
+            return other.x1 - self.x2
+
+        return self.x1 - other.x2
+
+    def y_distance_to_room(self, other):
+        if (self.y1 >= other.y1 and self.y1 <= other.y2) or \
+           (self.y2 >= other.y1 and self.y2 <= other.y2):
+            return 0
+
+        if self.y2 < other.y1:
+            return other.y1 - self.y2
+
+        return self.y1 - other.y2
 
     def intersects(self, other):
         #returns true if this rectangle intersects with another one
-        return (self.x1 <= other.x2+1 and
-                self.x2 >= other.x1-1 and
-                self.y1 <= other.y2+1 and
-                self.y2 >= other.y1-1)
+        return (self.x_distance_to_room(other) <= 1 and
+                self.y_distance_to_room(other) <= 1)
+
+    def distance_to_room(self, other):
+        if self.intersects(other):
+            return 1
+
+        dx = self.x_distance_to_room(other)
+        dy = self.y_distance_to_room(other)
+
+        return math.sqrt(dx ** 2 + dy ** 2)
 
 
 class Level:
@@ -59,7 +88,7 @@ class Level:
         self.items = []
         self.monsters = []
 
-    def add_room(self, room):
+    def __add_room(self, room):
         self.rooms.append(room)
         self.num_rooms += 1
 
@@ -93,13 +122,7 @@ class Level:
         room = Room(x, y, 1, h)
         self.__dig_room(room)
 
-    def __connect_with_previous_room(self, room1):
-        #connect all rooms but the first to the previous room with a tunnel
-        if self.num_rooms == 0:
-            return
-
-        room2 = self.rooms[self.num_rooms - 1]
-
+    def __connect_two_rooms(self, room1, room2):
         (center1x, center1y) = room1.center
         (center2x, center2y) = room2.center
 
@@ -142,6 +165,38 @@ class Level:
             return None
 
         self.__dig_room(new_room)
-        self.__connect_with_previous_room(new_room)
+        #self.__connect_with_previous_room(new_room)
+
+        #append the new room to the list
+        self.__add_room(new_room)
 
         return new_room
+
+    def closest_unconnected_room(self, room):
+        closest = None
+        min_distance = MAP_WIDTH * MAP_HEIGHT
+
+        unconnected_rooms = [r
+                             for r in self.rooms
+                             if r.connected is False and r is not room]
+
+        for r in unconnected_rooms:
+            distance = room.distance_to_room(r)
+
+            if distance < min_distance:
+                closest = r
+                min_distance = distance
+
+        return closest
+
+    def connect_rooms(self):
+        for r in self.rooms:
+            if r.connected:
+                continue
+
+            closest = self.closest_unconnected_room(r)
+
+            if closest:
+                self.__connect_two_rooms(r,closest)
+
+            r.connected = True
