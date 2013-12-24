@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+from utils import euclidean_distance
 from config import *
 from dungeon import *
 from messages import *
@@ -28,6 +29,11 @@ def move_player(dx, dy):
         player.move(-dx, -dy)
 
     dungeon.update(player.position)
+
+
+def monsters_in_area(pos, radius):
+    return [m for m in dungeon.model.monsters
+            if euclidean_distance(pos, m.position) <= radius]
 
 
 def closest_monster(max_range):
@@ -82,6 +88,52 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
                              name + ': ' + str(value) + '/' + str(maximum))
 
 
+def aim():
+    (x,y) = player.position
+
+    while True:
+
+        draw_everything()
+
+        prev_char = libtcod.console_get_char(con, x, y)
+
+        libtcod.console_put_char(con,
+                                 x,
+                                 y,
+                                 prev_char,
+                                 libtcod.BKGND_OVERLAY)
+
+        flush()
+
+        libtcod.console_put_char(con,
+                                 x,
+                                 y,
+                                 ' ',
+                                 libtcod.BKGND_NONE)
+
+
+        #turn-based
+        key = libtcod.console_wait_for_keypress(True)
+
+        if key.vk == libtcod.KEY_ESCAPE:
+            return None
+
+        if key.vk == libtcod.KEY_ENTER:
+            return (x, y)
+
+        if libtcod.console_is_key_pressed(libtcod.KEY_UP):
+            y -= 1
+
+        elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
+            y += 1
+
+        elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
+            x -= 1
+
+        elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
+            x += 1
+
+
 def handle_keys():
     global DRAW_NOT_IN_FOV
 
@@ -110,10 +162,16 @@ def handle_keys():
                                          "Press the key next to an item " +
                                          " to use it," +
                                          "or any other to cancel.\n")
+
             if chosen_item is not None:
                 affected_monsters = []
 
-                if chosen_item.who_is_affected == 'closest':
+                if chosen_item.who_is_affected == 'aim':
+                    aim_pos = aim()
+                    affected_monsters = monsters_in_area(aim_pos,
+                                                         chosen_item.model.range)
+
+                elif chosen_item.who_is_affected == 'closest':
                     closest_one = closest_monster(chosen_item.affects_range)
 
                     if closest_one is not None:
@@ -220,29 +278,10 @@ def inventory_menu(console, header):
 
     return player.model.inventory[index]
 
-#############################################
-# Initialization & Main Loop
-#############################################
-
-flags = libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD
-libtcod.console_set_custom_font('./resources/fonts/arial10x10.png', flags)
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'mprl', False)
-libtcod.sys_set_fps(LIMIT_FPS)
-con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
-panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
-
-move_player(0, 0)
-
-messages = MessagesBorg()
-messages.add('Welcome stranger!', libtcod.red)
-
-while not libtcod.console_is_window_closed():
+def draw_everything():
     #render the screen
     dungeon.view.draw(con,DRAW_NOT_IN_FOV)
     player.view.draw(con)
-
-    #blit the contents of "console" to the root console
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
     #prepare to render the GUI panel
     libtcod.console_set_default_background(panel, libtcod.black)
@@ -264,6 +303,10 @@ while not libtcod.console_is_window_closed():
     render_bar(1, 1, BAR_WIDTH, 'HP', player.model.hp, player.model.max_hp,
                libtcod.light_red, libtcod.darker_red)
 
+def flush():
+    #blit the contents of "console" to the root console
+    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
     #blit the contents of "panel" to the root console
     libtcod.console_blit(panel,
                          0,
@@ -275,6 +318,27 @@ while not libtcod.console_is_window_closed():
                          PANEL_Y)
 
     libtcod.console_flush()
+
+#############################################
+# Initialization & Main Loop
+#############################################
+
+flags = libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD
+libtcod.console_set_custom_font('./resources/fonts/arial10x10.png', flags)
+libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'mprl', False)
+libtcod.sys_set_fps(LIMIT_FPS)
+con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
+panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
+
+move_player(0, 0)
+
+messages = MessagesBorg()
+messages.add('Welcome stranger!', libtcod.red)
+
+while not libtcod.console_is_window_closed():
+
+    draw_everything()
+    flush()
 
     player.view.clear(con)
     for monster in dungeon.model.monsters:

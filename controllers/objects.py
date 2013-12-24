@@ -1,4 +1,5 @@
 import math
+from utils import euclidean_distance
 
 
 class ObjectController(object):
@@ -22,9 +23,5 @@ class ObjectController(object):
         return self.model.name
 
     def distance_to(self, obj2):
-        (x1, y1) = self.position
-        (x2, y2) = obj2.position
-
-        #return the distance to another object
-        (dx, dy) = (x2 - x1, y2 - y1)
-        return math.sqrt(dx ** 2 + dy ** 2)
+        return euclidean_distance(self.position,
+                                  obj2.position)

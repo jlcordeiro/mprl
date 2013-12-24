@@ -16,15 +16,6 @@ class HealingPotion(Potion):
 
 class LightningBolt(Potion):
     def __init__(self, x, y):
-        super(HealingPotion, self).__init__('Lightning Bolt',
-                                            x,
-                                            y,
-                                            LIGHTNING_RANGE,
-                                            'closest')
-
-
-class LightningBolt(Potion):
-    def __init__(self, x, y):
         super(LightningBolt, self).__init__('Lightning Bolt',
                                             x,
                                             y,
@@ -38,4 +29,4 @@ class ConfusionScroll(Potion):
                                               x,
                                               y,
                                               CONFUSE_RANGE,
-                                              'closest')
+                                              'aim')
