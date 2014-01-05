@@ -1,7 +1,7 @@
 import libtcodpy as libtcod
 from utils import euclidean_distance
 from config import *
-from dungeon import *
+from objects import *
 from messages import *
 import controllers.creatures
 import controllers.dungeon
