@@ -90,6 +90,10 @@ class Player(CreatureController):
     def max_hp(self):
         return self.model.max_hp
 
+    @property
+    def items(self):
+        return self.model.inventory
+
 
 class Orc(CreatureController):
     def __init__(self, x, y):

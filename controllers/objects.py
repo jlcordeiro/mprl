@@ -25,3 +25,10 @@ class ObjectController(object):
     def distance_to(self, obj2):
         return euclidean_distance(self.position,
                                   obj2.position)
+
+    def draw_ui(self, con):
+        self.view.draw(con)
+
+    def clear_ui(self, con):
+        self.view.clear(con)
+

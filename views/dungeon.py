@@ -17,7 +17,7 @@ class Level:
         for item in self.model.items:
             (x, y) = item.position
             if libtcod.map_is_in_fov(self.fov_map, x, y) or draw_not_in_fov:
-                item.view.draw(console)
+                item.draw_ui(console)
 
     def __draw_monsters(self, console, draw_dead=False, draw_not_in_fov=False):
         #go through all monsters
@@ -25,7 +25,7 @@ class Level:
             (x, y) = monster.position
             if libtcod.map_is_in_fov(self.fov_map, x, y) or draw_not_in_fov:
                 if draw_dead == monster.died:
-                    monster.view.draw(console)
+                    monster.draw_ui(console)
 
     def draw(self, console, draw_not_in_fov=False):
         #go through all tiles, and set their background color

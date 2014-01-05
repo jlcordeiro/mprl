@@ -293,13 +293,3 @@ class Level:
                 closest_dist = dist
 
         return closest_enemy
-
-    def take_item_from_player(self, item):
-        self.model.player.drop_item(item)
-        self.model.items.append(item)
-
-    def give_item_to_player(self):
-        for item in self.model.items:
-            if item.position == self.model.player.position:
-                if self.model.player.pick_item(item) is True:
-                    self.model.items.remove(item)

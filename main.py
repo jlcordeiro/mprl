@@ -137,7 +137,7 @@ def handle_keys():
                     affected_monsters = monsters_in_area(aim_pos, item_range)
 
                 elif chosen_item.who_is_affected == 'closest':
-                    closest_one = closest_monster_to_player_in_fov(item_range)
+                    closest_one = dungeon.closest_monster_to_player_in_fov(item_range)
 
                     if closest_one is not None:
                         affected_monsters.append(closest_one)
@@ -226,7 +226,7 @@ def menu(con, header, options, width):
 
 def inventory_menu(console, header):
     #show a menu with each item of the inventory as an option
-    items = dungeon.player_items
+    items = dungeon.player.items
     options = [i.name for i in items]
     if len(options) == 0:
         messages.add('Inventory is empty.', libtcod.orange)
@@ -314,7 +314,7 @@ while not libtcod.console_is_window_closed():
         for monster in dungeon.model.monsters:
             #a basic monster takes its turn. If you can see it, it can see you
             (owner_x, owner_y) = monster.position
-            if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
+            if dungeon.is_in_fov((owner_x, owner_y)):
                 take_turn(monster, dungeon.player, dungeon.is_blocked)
 
     if dungeon.player.died and game_state != 'dead':
