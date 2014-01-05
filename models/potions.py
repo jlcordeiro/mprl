@@ -12,21 +12,3 @@ class Potion(ObjectModel):
 class HealingPotion(Potion):
     def __init__(self, x, y):
         super(HealingPotion, self).__init__('Healing Potion', x, y, 0, 'owner')
-
-
-class LightningBolt(Potion):
-    def __init__(self, x, y):
-        super(LightningBolt, self).__init__('Lightning Bolt',
-                                            x,
-                                            y,
-                                            LIGHTNING_RANGE,
-                                            'closest')
-
-
-class ConfusionScroll(Potion):
-    def __init__(self, x, y):
-        super(ConfusionScroll, self).__init__('Confusion Scroll',
-                                              x,
-                                              y,
-                                              CONFUSE_RANGE,
-                                              'aim')

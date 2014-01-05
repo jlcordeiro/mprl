@@ -1,6 +1,8 @@
 from objects import ObjectController
 from messages import *
+import views.scrolls
 import views.potions
+import models.scrolls
 import models.potions
 
 
@@ -34,8 +36,8 @@ class HealingPotion(Item):
 
 class LightningBolt(Item):
     def __init__(self, x, y):
-        self.model = models.potions.LightningBolt(x, y)
-        self.view = views.potions.LightningBolt(self.model)
+        self.model = models.scrolls.LightningBolt(x, y)
+        self.view = views.scrolls.LightningBolt(self.model)
 
     def cast(self, player, monsters):
         messages = MessagesBorg()
@@ -56,8 +58,8 @@ class LightningBolt(Item):
 
 class ConfusionScroll(Item):
     def __init__(self, x, y):
-        self.model = models.potions.ConfusionScroll(x, y)
-        self.view = views.potions.ConfusionScroll(self.model)
+        self.model = models.scrolls.ConfusionScroll(x, y)
+        self.view = views.scrolls.ConfusionScroll(self.model)
 
     def cast(self, player, monsters):
         messages = MessagesBorg()

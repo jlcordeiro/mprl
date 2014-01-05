@@ -1,11 +1,11 @@
 import libtcodpy as libtcod
 from config import *
 
-color_black = libtcod.Color(0, 0, 0)
-color_dark_wall = libtcod.Color(0, 0, 100)
-color_light_wall = libtcod.Color(130, 110, 50)
-color_dark_ground = libtcod.Color(50, 50, 150)
-color_light_ground = libtcod.Color(200, 180, 50)
+color_none = libtcod.Color(0, 0, 0)
+color_dark_wall = libtcod.Color(0, 0, 200)
+color_light_wall = libtcod.Color(200, 200, 200)
+color_dark_ground = libtcod.Color(0, 0, 70)
+color_light_ground = libtcod.Color(0, 25, 50)
 
 
 class Level:
@@ -35,7 +35,7 @@ class Level:
                 visible = libtcod.map_is_in_fov(self.fov_map, x, y)
                 explored = self.model.tiles[x][y].explored
 
-                color = color_black
+                color = color_none
                 if visible or draw_not_in_fov:
                     color = color_light_wall if wall else color_light_ground
                 elif explored:

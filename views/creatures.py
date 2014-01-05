@@ -9,9 +9,9 @@ class Player(ObjectView):
 
 class Orc(ObjectView):
     def __init__(self, model):
-        super(Orc, self).__init__(model, 'O', libtcod.desaturated_green)
+        super(Orc, self).__init__(model, 'O', libtcod.light_orange)
 
 
 class Troll(ObjectView):
     def __init__(self, model):
-        super(Troll, self).__init__(model, 'T', libtcod.darker_green)
+        super(Troll, self).__init__(model, 'T', libtcod.light_orange)
