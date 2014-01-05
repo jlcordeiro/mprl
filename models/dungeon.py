@@ -1,6 +1,10 @@
+import libtcodpy as libtcod
 import math
 import random
 from config import *
+import controllers
+from controllers.items import ItemFactory
+from controllers.creatures import MonsterFactory
 
 
 class Tile:
@@ -153,13 +157,34 @@ class Level:
             return True
 
         #now check for any blocking monsters
-        for monster in self.monsters:
-            if monster.blocks and monster.position == pos:
-                return True
+        return (self.__get_monster_in_pos(pos) is not None)
 
-        return False
+    def __place_monsters_in_room(self, room):
+        #choose random number of monsters
+        num_monsters = random.randint(0, MAX_ROOM_MONSTERS)
 
-    def build_complete_room(self):
+        for i in range(num_monsters):
+            #choose random spot for this monster
+            (x, y) = room.get_random_point()
+
+            if not self.is_blocked((x, y)):
+                monster = MonsterFactory(x, y)
+                self.add_monster(monster)
+
+    def __place_items_in_room(self, room):
+        #choose random number of items
+        num_items = libtcod.random_get_int(0, 0, MAX_ROOM_ITEMS)
+
+        for i in range(num_items):
+            #choose random spot for this item
+            (x, y) = room.get_random_point()
+
+            #only place it if the tile is not blocked
+            if not self.is_blocked((x, y)):
+                item = ItemFactory(x, y)
+                self.add_item(item)
+
+    def __build_complete_room(self):
         #random width and height
         w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
         h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
@@ -198,7 +223,17 @@ class Level:
 
         return closest
 
-    def connect_rooms(self):
+    def generate(self):
+
+        # build rooms
+        for r in range(MAX_ROOMS):
+            new_room = self.__build_complete_room()
+
+            if new_room is not None:
+                self.__place_items_in_room(new_room)
+                self.__place_monsters_in_room(new_room)
+
+        # connect rooms
         for r in self.rooms:
             if r.connected:
                 continue
@@ -209,3 +244,62 @@ class Level:
                 self.__connect_two_rooms(r,closest,"random")
 
             r.connected = True
+
+        # start the player on a random position (not blocked)
+        (x, y) = self.__random_unblocked_pos()
+        self.player = controllers.creatures.Player(x, y)
+
+    def __random_unblocked_pos(self):
+        #choose random spot
+        pos = (random.randint(1, MAP_WIDTH - 1),
+               random.randint(1, MAP_HEIGHT - 1))
+
+        if not self.is_blocked(pos):
+            return pos
+
+        return self.__random_unblocked_pos()
+
+    def __get_monster_in_pos(self, pos):
+        for monster in self.monsters:
+            if monster.position == pos and monster.blocks:
+                return monster
+
+        return None
+
+    def move_player(self, dx, dy):
+
+        self.player.move(dx, dy)
+
+        monster = self.__get_monster_in_pos(self.player.position)
+        if monster is not None:
+            self.player.attack(monster)
+            self.player.move(-dx, -dy)
+
+        if self.is_blocked(self.player.position):
+            self.player.move(-dx, -dy)
+
+        return self.player.position
+
+    def closest_monster_to_player(self, max_range):
+        #find closest enemy, up to a maximum range, and in the player's FOV
+        closest_enemy = None
+        closest_dist = max_range + 1
+
+        for monster in self.monsters:
+            #calculate distance between this object and the player
+            dist = monster.distance_to(self.player)
+            if dist < closest_dist:
+                closest_enemy = monster
+                closest_dist = dist
+
+        return closest_enemy
+
+    def take_item_from_player(self, item):
+        self.model.player.drop_item(item)
+        self.model.items.append(item)
+
+    def give_item_to_player(self):
+        for item in self.model.items:
+            if item.position == self.model.player.position:
+                if self.model.player.pick_item(item) is True:
+                    self.model.items.remove(item)

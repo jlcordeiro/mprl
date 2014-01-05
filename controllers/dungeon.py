@@ -12,43 +12,12 @@ class Level:
         self.model = models.dungeon.Level()
         self.view = views.dungeon.Level(self.model)
 
-        for r in range(MAX_ROOMS):
-            new_room = self.model.build_complete_room()
-
-            if new_room is not None:
-                self.__place_items_in_room(new_room)
-                self.__place_monsters_in_room(new_room)
-
-        self.model.connect_rooms()
+        self.model.generate()
         self.set_fov()
 
-    def __place_monsters_in_room(self, room):
-        #choose random number of monsters
-        num_monsters = random.randint(0, MAX_ROOM_MONSTERS)
+    def move_player(self, dx, dy):
+        x, y = self.model.move_player(dx, dy)
 
-        for i in range(num_monsters):
-            #choose random spot for this monster
-            (x, y) = room.get_random_point()
-
-            if not self.is_blocked((x, y)):
-                monster = MonsterFactory(x, y)
-                self.model.add_monster(monster)
-
-    def __place_items_in_room(self, room):
-        #choose random number of items
-        num_items = libtcod.random_get_int(0, 0, MAX_ROOM_ITEMS)
-
-        for i in range(num_items):
-            #choose random spot for this item
-            (x, y) = room.get_random_point()
-
-            #only place it if the tile is not blocked
-            if not self.is_blocked((x, y)):
-                item = ItemFactory(x, y)
-                self.model.add_item(item)
-
-    def update(self, pos):
-        x, y = pos
         libtcod.map_compute_fov(self.view.fov_map,
                                 x,
                                 y,
@@ -60,16 +29,6 @@ class Level:
             for x in range(MAP_WIDTH):
                 if libtcod.map_is_in_fov(self.view.fov_map, x, y):
                     self.model.tiles[x][y].explored = True
-
-    def get_unblocked_pos(self):
-        #choose random spot
-        x = random.randint(1, MAP_WIDTH - 1)
-        y = random.randint(1, MAP_HEIGHT - 1)
-
-        if not self.is_blocked((x, y)):
-            return (x, y)
-
-        return self.get_unblocked_pos()
 
     def is_blocked(self, pos):
         return self.model.is_blocked(pos)
@@ -84,3 +43,32 @@ class Level:
                                            y,
                                            isTransparent,
                                            isWalkable)
+
+    def clear_ui(self, con):
+        self.model.player.view.clear(con)
+
+        for monster in self.model.monsters:
+            monster.view.clear(con)
+
+        for item in self.model.items:
+            item.view.clear(con)
+
+    def draw_ui(self, con, draw_outside_fov):
+        self.view.draw(con, draw_outside_fov)
+        self.model.player.view.draw(con)
+
+    def closest_monster_to_player_in_fov(self, max_range):
+        closest_enemy = self.model.closest_monster_to_player(max_range)
+
+        if closest_enemy is None:
+            return None
+
+        x, y = closest_enemy.position
+        if libtcod.map_is_in_fov(self.view.fov_map, x, y):
+            return closest_enemy
+
+        return None 
+
+    @property
+    def player(self):
+        return self.model.player

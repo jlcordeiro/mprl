@@ -69,15 +69,26 @@ class Player(CreatureController):
         messages.add('You picked up a ' + item.name + '!', libtcod.green)
         return True
 
+    def remove_item(self, item):
+        self.model.inventory.remove(item)
+
     def drop_item(self, item):
         #add to the map and remove from the player's inventory.
-        self.model.inventory.remove(item)
+        self.remove_item(item)
         # place it on the current player position
         item.model.x = self.model.x
         item.model.y = self.model.y
 
         messages = MessagesBorg()
         messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
+
+    @property
+    def hp(self):
+        return self.model.hp
+
+    @property
+    def max_hp(self):
+        return self.model.max_hp
 
 
 class Orc(CreatureController):

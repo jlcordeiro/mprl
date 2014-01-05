@@ -12,45 +12,11 @@ game_state = 'playing'
 player_action = None
 
 dungeon = controllers.dungeon.Level()
-(x, y) = dungeon.get_unblocked_pos()
-player = controllers.creatures.Player(x, y)
-
-
-def move_player(dx, dy):
-
-    player.move(dx, dy)
-
-    for monster in dungeon.model.monsters:
-        if monster.position == player.position and monster.blocks:
-            player.attack(monster)
-            player.move(-dx, -dy)
-
-    if dungeon.is_blocked(player.position):
-        player.move(-dx, -dy)
-
-    dungeon.update(player.position)
 
 
 def monsters_in_area(pos, radius):
     return [m for m in dungeon.model.monsters
             if euclidean_distance(pos, m.position) <= radius]
-
-
-def closest_monster(max_range):
-    #find closest enemy, up to a maximum range, and in the player's FOV
-    closest_enemy = None
-    closest_dist = max_range + 1
-
-    for monster in dungeon.model.monsters:
-        x, y = monster.position
-        if libtcod.map_is_in_fov(dungeon.view.fov_map, x, y):
-            #calculate distance between this object and the player
-            dist = monster.distance_to(player)
-            if dist < closest_dist:
-                closest_enemy = monster
-                closest_dist = dist
-
-    return closest_enemy
 
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
@@ -89,10 +55,9 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
 
 
 def aim():
-    (x,y) = player.position
+    (x,y) = dungeon.player.position
 
     while True:
-
         draw_everything()
 
         prev_char = libtcod.console_get_char(con, x, y)
@@ -146,16 +111,16 @@ def handle_keys():
     if game_state == 'playing':
         #movement keys
         if libtcod.console_is_key_pressed(libtcod.KEY_UP):
-            move_player(0, -1)
+            dungeon.move_player(0, -1)
 
         elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
-            move_player(0, 1)
+            dungeon.move_player(0, 1)
 
         elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
-            move_player(-1, 0)
+            dungeon.move_player(-1, 0)
 
         elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
-            move_player(1, 0)
+            dungeon.move_player(1, 0)
 
         elif chr(key.c) == 'i':
             chosen_item = inventory_menu(con,
@@ -164,21 +129,21 @@ def handle_keys():
                                          "or any other to cancel.\n")
 
             if chosen_item is not None:
+                item_range = chosen_item.affects_range
                 affected_monsters = []
 
                 if chosen_item.who_is_affected == 'aim':
                     aim_pos = aim()
-                    affected_monsters = monsters_in_area(aim_pos,
-                                                         chosen_item.model.range)
+                    affected_monsters = monsters_in_area(aim_pos, item_range)
 
                 elif chosen_item.who_is_affected == 'closest':
-                    closest_one = closest_monster(chosen_item.affects_range)
+                    closest_one = closest_monster_to_player_in_fov(item_range)
 
                     if closest_one is not None:
                         affected_monsters.append(closest_one)
 
-                if chosen_item.cast(player, affected_monsters) is True:
-                    player.model.inventory.remove(chosen_item)
+                if chosen_item.cast(dungeon.player, affected_monsters) is True:
+                    dungeon.player.remove_item(chosen_item)
 
         elif chr(key.c) == 'd':
             #show the inventory; if an item is selected, drop it
@@ -187,15 +152,11 @@ def handle_keys():
                                          "to drop it," +
                                          "or any other to cancel.\n")
             if chosen_item is not None:
-                player.drop_item(chosen_item)
-                dungeon.model.items.append(chosen_item)
+                dungeon.take_item_from_player(chosen_item)
 
         elif chr(key.c) == 'g':
             #pick up an item
-            for item in dungeon.model.items:
-                if item.position == player.position:
-                    if player.pick_item(item) is True:
-                        dungeon.model.items.remove(item)
+            dungeon.give_item_to_player()
 
         else:
             if chr(key.c) == 'v':
@@ -265,23 +226,23 @@ def menu(con, header, options, width):
 
 def inventory_menu(console, header):
     #show a menu with each item of the inventory as an option
-    if len(player.model.inventory) == 0:
-        options = ['Inventory is empty.']
-    else:
-        options = [item.name for item in player.model.inventory]
+    items = dungeon.player_items
+    options = [i.name for i in items]
+    if len(options) == 0:
+        messages.add('Inventory is empty.', libtcod.orange)
+        return
 
     index = menu(console, header, options, INVENTORY_WIDTH)
 
     #if an item was chosen, return it
-    if index is None or len(player.model.inventory) == 0:
+    if index is None:
         return None
 
-    return player.model.inventory[index]
+    return items[index]
 
 def draw_everything():
     #render the screen
-    dungeon.view.draw(con,DRAW_NOT_IN_FOV)
-    player.view.draw(con)
+    dungeon.draw_ui(con, DRAW_NOT_IN_FOV)
 
     #prepare to render the GUI panel
     libtcod.console_set_default_background(panel, libtcod.black)
@@ -300,7 +261,8 @@ def draw_everything():
         y += 1
 
     #show the player's stats
-    render_bar(1, 1, BAR_WIDTH, 'HP', player.model.hp, player.model.max_hp,
+    render_bar(1, 1, BAR_WIDTH, 'HP',
+               dungeon.player.model.hp, dungeon.player.model.max_hp,
                libtcod.light_red, libtcod.darker_red)
 
 def flush():
@@ -330,7 +292,7 @@ libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
 
-move_player(0, 0)
+dungeon.move_player(0, 0)
 
 messages = MessagesBorg()
 messages.add('Welcome stranger!', libtcod.red)
@@ -340,11 +302,7 @@ while not libtcod.console_is_window_closed():
     draw_everything()
     flush()
 
-    player.view.clear(con)
-    for monster in dungeon.model.monsters:
-        monster.view.clear(con)
-    for item in dungeon.model.items:
-        item.view.clear(con)
+    dungeon.clear_ui(con)
 
     #handle keys and exit game if needed
     key = handle_keys()
@@ -357,8 +315,8 @@ while not libtcod.console_is_window_closed():
             #a basic monster takes its turn. If you can see it, it can see you
             (owner_x, owner_y) = monster.position
             if libtcod.map_is_in_fov(dungeon.view.fov_map, owner_x, owner_y):
-                take_turn(monster, player, dungeon.is_blocked)
+                take_turn(monster, dungeon.player, dungeon.is_blocked)
 
-    if player.died and game_state != 'dead':
+    if dungeon.player.died and game_state != 'dead':
         messages.add("YOU DIED!", libtcod.red)
         game_state = 'dead'

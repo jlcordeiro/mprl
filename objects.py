@@ -48,3 +48,18 @@ def take_turn(monster, player, method_check_blocks):
         #close enough, attack! (if the player is still alive.)
         elif player.model.hp > 0:
             monster.attack(player)
+
+
+def find_shortest_path(source, destiny, method_check_blocks):
+    print source
+    print destiny
+    print method_check_blocks(source, destiny)
+
+    return "returned"
+
+
+
+if __name__ == "__main__":
+    validity_method = lambda x, y: True
+
+    print find_shortest_path((1, 2), (4, 3), validity_method)
