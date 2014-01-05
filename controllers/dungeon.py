@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+from utils import euclidean_distance
 import random
 import views.dungeon
 import models.dungeon
@@ -76,6 +77,9 @@ class Level:
     def player(self):
         return self.model.player
 
+    def get_monsters(self):
+        return self.model.monsters
+
     def take_item_from_player(self, item):
         self.player.drop_item(item)
         self.model.items.append(item)
@@ -85,3 +89,8 @@ class Level:
             if item.position == self.player.position:
                 if self.player.pick_item(item) is True:
                     self.model.items.remove(item)
+
+    def monsters_in_area(self, pos, radius):
+        return [m for m in self.model.monsters
+                if euclidean_distance(pos, m.position) <= radius]
+

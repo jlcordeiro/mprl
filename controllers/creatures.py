@@ -51,6 +51,18 @@ class CreatureController(ObjectController):
     def died(self):
         return (self.model.hp <= 0)
 
+    @property
+    def confused_turns(self):
+        return self.model.confused_turns
+
+    @property
+    def hp(self):
+        return self.model.hp
+
+    @property
+    def max_hp(self):
+        return self.model.max_hp
+
 
 class Player(CreatureController):
     def __init__(self, x, y):
@@ -81,14 +93,6 @@ class Player(CreatureController):
 
         messages = MessagesBorg()
         messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
-
-    @property
-    def hp(self):
-        return self.model.hp
-
-    @property
-    def max_hp(self):
-        return self.model.max_hp
 
     @property
     def items(self):

@@ -1,5 +1,4 @@
 import libtcodpy as libtcod
-from utils import euclidean_distance
 from config import *
 from objects import *
 from messages import *
@@ -13,10 +12,6 @@ player_action = None
 
 dungeon = controllers.dungeon.Level()
 
-
-def monsters_in_area(pos, radius):
-    return [m for m in dungeon.model.monsters
-            if euclidean_distance(pos, m.position) <= radius]
 
 
 def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
@@ -134,7 +129,8 @@ def handle_keys():
 
                 if chosen_item.who_is_affected == 'aim':
                     aim_pos = aim()
-                    affected_monsters = monsters_in_area(aim_pos, item_range)
+                    affected_monsters = dungeon.monsters_in_area(aim_pos,
+                                                                 item_range)
 
                 elif chosen_item.who_is_affected == 'closest':
                     closest_one = dungeon.closest_monster_to_player_in_fov(item_range)
@@ -262,7 +258,7 @@ def draw_everything():
 
     #show the player's stats
     render_bar(1, 1, BAR_WIDTH, 'HP',
-               dungeon.player.model.hp, dungeon.player.model.max_hp,
+               dungeon.player.hp, dungeon.player.max_hp,
                libtcod.light_red, libtcod.darker_red)
 
 def flush():
@@ -311,10 +307,9 @@ while not libtcod.console_is_window_closed():
 
     #let monsters take their turn
     if game_state == "playing" and player_action != 'did-not-take-turn':
-        for monster in dungeon.model.monsters:
+        for monster in dungeon.get_monsters():
             #a basic monster takes its turn. If you can see it, it can see you
-            (owner_x, owner_y) = monster.position
-            if dungeon.is_in_fov((owner_x, owner_y)):
+            if dungeon.is_in_fov(monster.position):
                 take_turn(monster, dungeon.player, dungeon.is_blocked)
 
     if dungeon.player.died and game_state != 'dead':

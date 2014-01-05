@@ -25,7 +25,7 @@ def take_turn(monster, player, method_check_blocks):
         return
 
     messages = MessagesBorg()
-    if monster.model.confused_turns > 0:
+    if monster.confused_turns > 0:
         messages.add('The ' + monster.name + ' is confused!', libtcod.red)
 
         (xi, yi) = monster.position
@@ -35,9 +35,9 @@ def take_turn(monster, player, method_check_blocks):
         if method_check_blocks(final_pos) is False:
             monster.move(dx, dy)
 
-        monster.model.confused_turns -= 1
+        monster.confused_turns -= 1
 
-        if monster.model.confused_turns == 0:
+        if monster.confused_turns == 0:
             messages.add('The ' + monster.name + ' is no longer confused!',
                          libtcod.red)
 
@@ -46,7 +46,7 @@ def take_turn(monster, player, method_check_blocks):
         if monster.distance_to(player) >= 2:
             move_towards_creature(monster, player, method_check_blocks)
         #close enough, attack! (if the player is still alive.)
-        elif player.model.hp > 0:
+        elif player.hp > 0:
             monster.attack(player)
 
 
