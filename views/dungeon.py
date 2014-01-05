@@ -10,18 +10,18 @@ color_light_ground = libtcod.Color(0, 25, 50)
 
 class Level:
     def __init__(self, model):
-        self.model = model
+        self._model = model
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
     def __draw_items(self, console, draw_not_in_fov=False):
-        for item in self.model.items:
+        for item in self._model.items:
             (x, y) = item.position
             if libtcod.map_is_in_fov(self.fov_map, x, y) or draw_not_in_fov:
                 item.draw_ui(console)
 
     def __draw_monsters(self, console, draw_dead=False, draw_not_in_fov=False):
         #go through all monsters
-        for monster in self.model.monsters:
+        for monster in self._model.monsters:
             (x, y) = monster.position
             if libtcod.map_is_in_fov(self.fov_map, x, y) or draw_not_in_fov:
                 if draw_dead == monster.died:
@@ -31,9 +31,9 @@ class Level:
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                wall = self.model.tiles[x][y].block_sight
+                wall = self._model.tiles[x][y].block_sight
                 visible = libtcod.map_is_in_fov(self.fov_map, x, y)
-                explored = self.model.tiles[x][y].explored
+                explored = self._model.tiles[x][y].explored
 
                 color = color_none
                 if visible or draw_not_in_fov:

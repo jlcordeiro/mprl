@@ -12,11 +12,11 @@ class Item(ObjectController):
 
     @property
     def who_is_affected(self):
-        return self.model.affects
+        return self._model.affects
 
     @property
     def affects_range(self):
-        return self.model.range
+        return self._model.range
 
     def cast(self, player, monsters):
         raise NotImplementedError("not_implemented")
@@ -24,8 +24,8 @@ class Item(ObjectController):
 
 class HealingPotion(Item):
     def __init__(self, x, y):
-        self.model = models.potions.HealingPotion(x, y)
-        self.view = views.potions.HealingPotion(self.model)
+        self._model = models.potions.HealingPotion(x, y)
+        self._view = views.potions.HealingPotion(self._model)
 
     def cast(self, player, monsters):
         messages = MessagesBorg()
@@ -36,8 +36,8 @@ class HealingPotion(Item):
 
 class LightningBolt(Item):
     def __init__(self, x, y):
-        self.model = models.scrolls.LightningBolt(x, y)
-        self.view = views.scrolls.LightningBolt(self.model)
+        self._model = models.scrolls.LightningBolt(x, y)
+        self._view = views.scrolls.LightningBolt(self._model)
 
     def cast(self, player, monsters):
         messages = MessagesBorg()
@@ -58,8 +58,8 @@ class LightningBolt(Item):
 
 class ConfusionScroll(Item):
     def __init__(self, x, y):
-        self.model = models.scrolls.ConfusionScroll(x, y)
-        self.view = views.scrolls.ConfusionScroll(self.model)
+        self._model = models.scrolls.ConfusionScroll(x, y)
+        self._view = views.scrolls.ConfusionScroll(self._model)
 
     def cast(self, player, monsters):
         messages = MessagesBorg()

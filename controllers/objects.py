@@ -7,28 +7,33 @@ class ObjectController(object):
         raise NotImplementedError("not_implemented")
 
     def move(self, dx, dy):
-        self.model.x += dx
-        self.model.y += dy
+        self._model.x += dx
+        self._model.y += dy
 
     @property
     def position(self):
-        return (self.model.x, self.model.y)
+        return (self._model.x, self._model.y)
+
+    @position.setter
+    def position(self, value):
+        self._model.x = value[0]
+        self._model.y = value[1]
 
     @property
     def blocks(self):
-        return self.model.blocks
+        return self._model.blocks
 
     @property
     def name(self):
-        return self.model.name
+        return self._model.name
 
     def distance_to(self, obj2):
         return euclidean_distance(self.position,
                                   obj2.position)
 
     def draw_ui(self, con):
-        self.view.draw(con)
+        self._view.draw(con)
 
     def clear_ui(self, con):
-        self.view.clear(con)
+        self._view.clear(con)
 
