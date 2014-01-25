@@ -153,11 +153,11 @@ def handle_keys():
         elif chr(key.c) == 'g':
             #pick up an item
             dungeon.give_item_to_player()
-        elif chr(key.c) in ('>', '<'):
-            dungeon.climb_stairs()
         else:
             if chr(key.c) == 'v':
                 DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
+            elif chr(key.c) in ('>', '<'):
+                dungeon.climb_stairs()
 
             return 'did-not-take-turn'
 
@@ -302,8 +302,8 @@ while not libtcod.console_is_window_closed():
     dungeon.clear_ui(con)
 
     #handle keys and exit game if needed
-    key = handle_keys()
-    if key == "exit":
+    player_action = handle_keys()
+    if player_action == "exit":
         break
 
     #let monsters take their turn
