@@ -6,7 +6,7 @@ import models.dungeon
 from items import ItemFactory
 from creatures import MonsterFactory
 from config import *
-
+from messages import *
 
 class Level:
     def __init__(self):
@@ -49,6 +49,8 @@ class Level:
                                            is_walkable)
 
     def clear_ui(self, con):
+        self._view.clear(con)
+
         self.player.clear_ui(con)
 
         for monster in self._model.monsters:
@@ -94,3 +96,11 @@ class Level:
         return [m for m in self._model.monsters
                 if euclidean_distance(pos, m.position) <= radius]
 
+    def climb_stairs(self):
+        valid_pos = (self._model.stairs_up_pos, self._model.stairs_down_pos)
+
+        messages = MessagesBorg()
+        if self.player.position not in valid_pos:
+            messages.add('There are no stairs here.', libtcod.orange)
+        else:
+            messages.add('You walk down fake stairs..', libtcod.green)

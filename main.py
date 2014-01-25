@@ -153,7 +153,8 @@ def handle_keys():
         elif chr(key.c) == 'g':
             #pick up an item
             dungeon.give_item_to_player()
-
+        elif chr(key.c) in ('>', '<'):
+            dungeon.climb_stairs()
         else:
             if chr(key.c) == 'v':
                 DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV

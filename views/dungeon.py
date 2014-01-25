@@ -13,6 +13,8 @@ class Level:
         self._model = model
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
+        self.bkgd = libtcod.BKGND_NONE
+
     def __draw_items(self, console, draw_not_in_fov=False):
         for item in self._model.items:
             (x, y) = item.position
@@ -47,6 +49,15 @@ class Level:
                                                     color,
                                                     libtcod.BKGND_SET)
 
+
+
+                # draw stairs
+                if visible or draw_not_in_fov:
+                    if (x, y) == self._model.stairs_up_pos:
+                        libtcod.console_put_char(console, x, y, '<', self.bkgd)
+                    elif (x, y) == self._model.stairs_down_pos:
+                        libtcod.console_put_char(console, x, y, '>', self.bkgd)
+
         # start by drawing the monsters that have died
         self.__draw_monsters(console, True, draw_not_in_fov)
 
@@ -55,3 +66,11 @@ class Level:
 
         #and finally, the monsters that are still alive
         self.__draw_monsters(console, False, draw_not_in_fov)
+
+    def clear(self, console):
+        #erase the character that represents this object
+        (x, y) = self._model.stairs_up_pos
+        libtcod.console_put_char(console, x, y, ' ', self.bkgd)
+
+        (x, y) = self._model.stairs_down_pos
+        libtcod.console_put_char(console, x, y, ' ', self.bkgd)

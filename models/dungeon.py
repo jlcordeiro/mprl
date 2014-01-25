@@ -92,6 +92,9 @@ class Level:
         self.items = []
         self.monsters = []
 
+        self.stairs_up_pos = None
+        self.stairs_down_pos = None
+
     def __add_room(self, room):
         self.rooms.append(room)
         self.num_rooms += 1
@@ -232,6 +235,10 @@ class Level:
             if new_room is not None:
                 self.__place_items_in_room(new_room)
                 self.__place_monsters_in_room(new_room)
+
+        # place stairs
+        self.stairs_up_pos = self.__random_unblocked_pos()
+        self.stairs_down_pos = self.__random_unblocked_pos()
 
         # connect rooms
         for r in self.rooms:
