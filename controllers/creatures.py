@@ -1,5 +1,6 @@
 from objects import ObjectController
 from messages import *
+from path import build_path_map
 import views.creatures
 import models.creatures
 
@@ -71,6 +72,12 @@ class Player(CreatureController):
     def __init__(self, x, y):
         self._model = models.creatures.Player(x, y)
         self._view = views.creatures.Player(self._model)
+
+    def build_path_map(self, width, height, validity_method):
+        if self._model.path_map is None:
+            self._model.path_map = build_path_map(self.position, width, height, validity_method)
+        else:
+            self._model.path_map = build_path_map(self.position, width, height, validity_method)
 
     def pick_item(self, item):
         #add to the player's inventory and remove from the map

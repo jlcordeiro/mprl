@@ -281,9 +281,10 @@ class Level:
         if monster is not None:
             self.player.attack(monster)
             self.player.move(-dx, -dy)
-
-        if self.is_blocked(self.player.position):
+        elif self.is_blocked(self.player.position):
             self.player.move(-dx, -dy)
+        else:
+            self.player.build_path_map(MAP_WIDTH, MAP_HEIGHT, self.is_blocked)
 
         return self.player.position
 

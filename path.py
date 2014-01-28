@@ -29,21 +29,20 @@ def min_neighbour(values, pos):
     return res
 
 
-def find_shortest_path(destiny, source, width, height, method_check_blocks):
-    """ Search for the minimum path between destiny and source.
-        destiny is the path beginning with the format (x, y)
-        source is the path destination with the format (x, y)
+def build_path_map(source, width, height, method_check_blocks):
+    """ Build the path map with a certain position as reference.
+        source is the path source, beginning with the format (x, y)
         width is the width of the map in which the path will be searched.
         height is the height of the map in which the path will be searched.
         method_check_blocks is a method that takes as argument one parameter,
             a tuple (x, y) and returns True if that position can be part
             of the path, or False if it can not.
-        Returns (length, (dx, dy)) where length is the path lenght and dx, dy
-            form the distance vector to which destiny should move next, to take
-            the path found.
-            If no path is found, returns None. """
+        Returns The path map.
+                Squares not reachable will have the value None. The other ones
+                will be an integer, with the number of steps required to get
+                to the source."""
 
-    (end_x, end_y) = destiny
+    (sx, sy) = source
 
     # build map
     rmap = [[-1 for x in xrange(0, width)]
@@ -53,17 +52,17 @@ def find_shortest_path(destiny, source, width, height, method_check_blocks):
         for y in xrange(0, height):
             rmap[y][x] = None if method_check_blocks((x, y)) else -1
 
-    rmap[end_y][end_x] = 0
+    rmap[sy][sx] = 0
 
-    # check how far from destiny it has to go
-    max_dist = max(end_x, end_y, width - end_x, height - end_y)
+    # check how far from source it has to go
+    max_dist = max(sx, sy, width - sx, height - sy)
 
     for dist in xrange(1, max_dist):
 
-        min_x = max(0, end_x - dist)
-        max_x = min(width, end_x + dist + 1)
-        min_y = max(0, end_y - dist)
-        max_y = min(height, end_y + dist + 1)
+        min_x = max(0, sx - dist)
+        max_x = min(width, sx + dist + 1)
+        min_y = max(0, sy - dist)
+        max_y = min(height, sy + dist + 1)
 
         for tx, ty in product(xrange(min_x, max_x), xrange(min_y, max_y)):
             minn = min_neighbour(rmap, (tx, ty))
@@ -71,15 +70,11 @@ def find_shortest_path(destiny, source, width, height, method_check_blocks):
             if minn is not None and (rmap[ty][tx] is -1 or rmap[ty][tx] > minn[0]):
                 rmap[ty][tx] = minn[0]+1
 
-    return min_neighbour(rmap, source)
+    return rmap
 
 def move_towards_creature(one, other, map_width, map_height, method_check_blocks):
 
-    path = find_shortest_path(other.position,
-                              one.position,
-                              map_width,
-                              map_height,
-                              method_check_blocks)
+    path = min_neighbour(other._model.path_map, one.position)
 
     if path is None:
         return
@@ -128,10 +123,24 @@ if __name__ == "__main__":
 
     plr = (5, 3)
     orc = (7, 3)
+  
+
+    width, height = 150, 100
+
 
     while orc != plr:
-        p = find_shortest_path(plr, orc, 25, 10, validity_method)
-        print p
-        orc = (orc[0] + p[1][0], orc[1] + p[1][1])
 
-        raw_input()
+        rmap = build_path_map(plr, width, height, validity_method)
+        p = min_neighbour(rmap, orc)
+
+#            printed = rmap
+#            for idx1, rr in enumerate(rmap):
+#                for idx2, r in enumerate(rr):
+#                    if r is None:
+#                        printed[idx1][idx2] = -1
+#
+#            for rr in printed:
+#                pass
+#                print "\t".join(map(str,rr))
+
+        orc = (orc[0] + p[1][0], orc[1] + p[1][1])
