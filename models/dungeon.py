@@ -254,15 +254,6 @@ class Level:
 
             r.connected = True
 
-        # build map for path finding
-        path_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
-
-        for x in range(MAP_WIDTH):
-            for y in range(MAP_HEIGHT):
-                libtcod.map_set_properties(path_map, x, y, True, not self.is_blocked((x, y)))
-
-        self.path = libtcod.path_new_using_map(path_map)
-
         # start the player on a random position (not blocked)
         (x, y) = self.__random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
@@ -310,3 +301,23 @@ class Level:
                 closest_dist = dist
 
         return closest_enemy
+
+    def compute_path(self):
+        # build map for path finding
+        path_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
+
+        for x in range(MAP_WIDTH):
+            for y in range(MAP_HEIGHT):
+                libtcod.map_set_properties(path_map, x, y, True, not self.is_blocked((x, y)))
+
+        self.path = libtcod.path_new_using_map(path_map)
+
+    def get_path_to_player(self, monster):
+        mx, my = monster.position
+        px, py = self.player.position
+        libtcod.path_compute(self.path, mx, my, px, py)
+
+        if libtcod.path_is_empty(self.path):
+            return None
+
+        return libtcod.path_get(self.path, 0)

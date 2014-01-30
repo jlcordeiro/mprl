@@ -48,6 +48,7 @@ class Level:
                                            is_transparent,
                                            is_walkable)
 
+
     def clear_ui(self, con):
         self._view.clear(con)
 
@@ -104,3 +105,31 @@ class Level:
             messages.add('There are no stairs here.', libtcod.orange)
         else:
             messages.add('You walk down fake stairs..', libtcod.green)
+
+    def __take_turn_monster(self, monster):
+        previous_pos = monster.position
+
+        messages = MessagesBorg()
+        if monster.confused_turns > 0:
+            monster.confused_move()
+
+            if method_check_blocks(monster.position) is False:
+                monster.move(new_pos = previous_pos)
+        else:
+            #move towards player if far away
+            if monster.distance_to(self.player) >= 2:
+                path = self._model.get_path_to_player(monster)
+                if path is not None and not self.is_blocked(path):
+                    monster.move(new_pos=path)
+            #close enough, attack! (if the player is still alive.)
+            elif self.player.hp > 0:
+                monster.attack(self.player)
+
+
+    def take_turn(self):
+        self._model.compute_path()
+
+        for monster in self.get_monsters():
+            #a basic monster takes its turn. If you can see it, it can see you
+            if not monster.died and self.is_in_fov(monster.position):
+                self.__take_turn_monster(monster)

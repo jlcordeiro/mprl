@@ -9,7 +9,19 @@ class CreatureController(ObjectController):
         raise NotImplementedError("not_implemented")
 
     def confuse(self):
+        messages = MessagesBorg()
+        messages.add('The ' + self.name + ' is confused!', libtcod.red)
         self._model.confused_turns = CONFUSE_NUM_TURNS
+
+    def confused_move(self):
+        monster.move(random.randint(-1, 1), random.randint(-1, 1))
+
+        self.confused_turns -= 1
+
+        if self.confused_turns == 0:
+            messages = MessagesBorg()
+            messages.add('The ' + monster.name + ' is no longer confused!',
+                         libtcod.red)
 
     def attack(self, target):
         #a simple formula for attack damage
