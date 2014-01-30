@@ -226,3 +226,27 @@ for y in range(num_cells):
             print "+",
         else:
             print ".",
+
+
+
+import libtcodpy as libtcod
+
+my_map = libtcod.map_new(num_cells,num_cells)
+
+for x in range(num_cells):
+    for y in range(num_cells):
+        libtcod.map_set_properties(my_map, x, y, True, True)
+
+for w in WALLS:
+    x, y = w
+    libtcod.map_set_properties(my_map, x, y, True, False)
+
+
+path = libtcod.path_new_using_map(my_map)
+
+ox, oy = START
+dx, dy = GOAL
+libtcod.path_compute(path, ox, oy, dx, dy)
+
+for i in xrange(0,libtcod.path_size(path)):
+    print libtcod.path_get(path, i) # returns x,y
