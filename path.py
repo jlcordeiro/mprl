@@ -1,89 +1,21 @@
 import random
 import libtcodpy as libtcod
 from messages import *
-from itertools import product
 
-EIGHT_NEIGHBOURS = product([-1, 0, 1], [-1, 0, 1])
-FOUR_NEIGHBOURS = [(x, y) for (x, y) in EIGHT_NEIGHBOURS if x == 0 or y == 0]
+def move_towards_creature(one, other, map_width, map_height, path):
 
-def min_neighbour(values, pos):
-    """Determine which neighbour point around pos has the minimum value.
-       * values is a bidimensional array with all the values.
-       All values must be >= 0. Negative values are ignored.
-       * pos is the position around which the minimum needs to be searched for.
-       * Returns None if no value is found. Otherwise returns the minimum in 
-       the format tuple (value, (dx, dy)) where value is the absolute value
-       at the result position. (dx, dy) is the distance vector,
-       so that pos+d = result. """
+    onex, oney = one.position
+    otherx, othery = other.position
+    libtcod.path_compute(path, onex, oney, otherx, othery)
 
-    res = None
-
-    for (dx, dy) in FOUR_NEIGHBOURS:
-        (x, y) = (pos[0]+dx, pos[1]+dy)
-
-        if (y >= 0 and y < len(values) and
-             x >= 0 and x < len(values[0]) and
-             values[y][x] >= 0 and (res is None or res[0] > values[y][x])):
-                res = (values[y][x], (dx, dy))
-
-    return res
-
-
-def build_path_map(source, width, height, method_check_blocks):
-    """ Build the path map with a certain position as reference.
-        source is the path source, beginning with the format (x, y)
-        width is the width of the map in which the path will be searched.
-        height is the height of the map in which the path will be searched.
-        method_check_blocks is a method that takes as argument one parameter,
-            a tuple (x, y) and returns True if that position can be part
-            of the path, or False if it can not.
-        Returns The path map.
-                Squares not reachable will have the value None. The other ones
-                will be an integer, with the number of steps required to get
-                to the source."""
-
-    (sx, sy) = source
-
-    # build map
-    rmap = [[-1 for x in xrange(0, width)]
-                 for y in xrange(0, height)]
-
-    for x in xrange(0, width):
-        for y in xrange(0, height):
-            rmap[y][x] = None if method_check_blocks((x, y)) else -1
-
-    rmap[sy][sx] = 0
-
-    # check how far from source it has to go
-    max_dist = max(sx, sy, width - sx, height - sy)
-
-    for dist in xrange(1, max_dist):
-
-        min_x = max(0, sx - dist)
-        max_x = min(width, sx + dist + 1)
-        min_y = max(0, sy - dist)
-        max_y = min(height, sy + dist + 1)
-
-        for tx, ty in product(xrange(min_x, max_x), xrange(min_y, max_y)):
-            minn = min_neighbour(rmap, (tx, ty))
-
-            if minn is not None and (rmap[ty][tx] is -1 or rmap[ty][tx] > minn[0]):
-                rmap[ty][tx] = minn[0]+1
-
-    return rmap
-
-def move_towards_creature(one, other, map_width, map_height, method_check_blocks):
-
-    path = min_neighbour(other._model.path_map, one.position)
-
-    if path is None:
+    if libtcod.path_is_empty(path):
         return
 
-    (dx, dy) = path[1]
-    one.move(dx, dy)
+    next_pos = libtcod.path_get(path, 0)
+    one.move(new_pos=next_pos)
 
 
-def take_turn(monster, player, map_width, map_height, method_check_blocks):
+def take_turn(monster, player, map_width, map_height, method_check_blocks, path):
     if monster.died:
         return
 
@@ -107,7 +39,7 @@ def take_turn(monster, player, map_width, map_height, method_check_blocks):
     else:
         #move towards player if far away
         if monster.distance_to(player) > 1:
-            move_towards_creature(monster, player, map_width, map_height, method_check_blocks)
+            move_towards_creature(monster, player, map_width, map_height, path)
         #close enough, attack! (if the player is still alive.)
         elif player.hp > 0:
             monster.attack(player)

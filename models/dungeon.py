@@ -95,6 +95,8 @@ class Level:
         self.stairs_up_pos = None
         self.stairs_down_pos = None
 
+        self.path = None
+
     def __add_room(self, room):
         self.rooms.append(room)
         self.num_rooms += 1
@@ -252,6 +254,15 @@ class Level:
 
             r.connected = True
 
+        # build map for path finding
+        path_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
+
+        for x in range(MAP_WIDTH):
+            for y in range(MAP_HEIGHT):
+                libtcod.map_set_properties(path_map, x, y, True, not self.is_blocked((x, y)))
+
+        self.path = libtcod.path_new_using_map(path_map)
+
         # start the player on a random position (not blocked)
         (x, y) = self.__random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
@@ -283,8 +294,6 @@ class Level:
             self.player.move(-dx, -dy)
         elif self.is_blocked(self.player.position):
             self.player.move(-dx, -dy)
-        else:
-            self.player.build_path_map(MAP_WIDTH, MAP_HEIGHT, self.is_blocked)
 
         return self.player.position
 

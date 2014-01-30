@@ -6,9 +6,13 @@ class ObjectController(object):
     def __init__(self):
         raise NotImplementedError("not_implemented")
 
-    def move(self, dx, dy):
-        self._model.x += dx
-        self._model.y += dy
+    def move(self, dx = None, dy = None, new_pos = None):
+        if new_pos is None:
+            self._model.x += dx
+            self._model.y += dy
+        else:
+            self._model.x = new_pos[0]
+            self._model.y = new_pos[1]
 
     @property
     def position(self):

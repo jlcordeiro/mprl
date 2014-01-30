@@ -311,7 +311,7 @@ while not libtcod.console_is_window_closed():
         for monster in dungeon.get_monsters():
             #a basic monster takes its turn. If you can see it, it can see you
             if dungeon.is_in_fov(monster.position):
-                take_turn(monster, dungeon.player, MAP_WIDTH, MAP_HEIGHT, dungeon.is_blocked)
+                take_turn(monster, dungeon.player, MAP_WIDTH, MAP_HEIGHT, dungeon.is_blocked, dungeon._model.path)
 
 
     if dungeon.player.died and game_state != 'dead':
