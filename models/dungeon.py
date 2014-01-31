@@ -79,6 +79,35 @@ class Room:
         return math.sqrt(dx ** 2 + dy ** 2)
 
 
+def create_room_connection(room1, room2, mode="center"):
+    """Create tunnels to connect room1 and room2.
+       When mode is "center" the tunnels are started from the
+       center of each room. When it is "random", the origin
+       points are random points inside the room."""
+
+    h_tunnel = lambda x1, x2, y: Room(min(x1, x2), y, abs(x1 - x2) + 1, 1)
+    v_tunnel = lambda y1, y2, x: Room(x, min(y1, y2), 1, abs(y1 - y2) + 1)
+
+    if mode == "center":
+        (origin1x, origin1y) = room1.center
+        (origin2x, origin2y) = room2.center
+    elif mode == "random":
+        (origin1x, origin1y) = room1.get_random_point()
+        (origin2x, origin2y) = room2.get_random_point()
+
+    #draw a coin (random number that is either 0 or 1)
+    if random.choice([True, False]):
+        #first move horizontally, then vertically
+        h_tunnel = h_tunnel(origin1x, origin2x, origin1y)
+        v_tunnel = v_tunnel(origin1y, origin2y, origin2x)
+    else:
+        #first move vertically, then horizontally
+        v_tunnel = v_tunnel(origin1y, origin2y, origin1x)
+        h_tunnel = h_tunnel(origin1x, origin2x, origin2y)
+
+    return (h_tunnel, v_tunnel)
+
+
 class Level:
     def __init__(self):
         #fill map with "unblocked" tiles
@@ -95,64 +124,18 @@ class Level:
         self.stairs_up_pos = None
         self.stairs_down_pos = None
 
+        self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
         self.path = None
 
     def __add_room(self, room):
         self.rooms.append(room)
         self.num_rooms += 1
 
-    def add_monster(self, monster):
-        self.monsters.append(monster)
-
-    def add_item(self, item):
-        self.items.append(item)
-
-    def __room_overlaps(self, room):
-        #run through the other rooms and see if they intersect with this one
-        for other_room in self.rooms:
-            if room.intersects(other_room):
-                return True
-
-        return False
-
     def __dig_room(self, room):
         #go through the tiles in the rectangle and make them passable
         for (x, y) in room.all_points:
             self.tiles[x][y].blocked = False
             self.tiles[x][y].block_sight = False
-
-    def __dig_h_tunnel(self, x1, x2, y):
-        x, w = min(x1, x2), abs(x1 - x2) + 1
-        room = Room(x, y, w, 1)
-        self.__dig_room(room)
-
-    def __dig_v_tunnel(self, y1, y2, x):
-        y, h = min(y1, y2), abs(y1 - y2) + 1
-        room = Room(x, y, 1, h)
-        self.__dig_room(room)
-
-    def __connect_two_rooms(self, room1, room2, mode="center"):
-        """Digs tunnels between room1 and room2.
-           When mode is "center" the tunnels are started from the
-           center of each room. When it is "random", the origin
-           points are random points inside the room."""
-
-        if mode == "center":
-            (origin1x, origin1y) = room1.center
-            (origin2x, origin2y) = room2.center
-        elif mode == "random":
-            (origin1x, origin1y) = room1.get_random_point()
-            (origin2x, origin2y) = room2.get_random_point()
-
-        #draw a coin (random number that is either 0 or 1)
-        if random.choice([True, False]):
-            #first move horizontally, then vertically
-            self.__dig_h_tunnel(origin1x, origin2x, origin1y)
-            self.__dig_v_tunnel(origin1y, origin2y, origin2x)
-        else:
-            #first move vertically, then horizontally
-            self.__dig_v_tunnel(origin1y, origin2y, origin1x)
-            self.__dig_h_tunnel(origin1x, origin2x, origin2y)
 
     def is_blocked(self, pos):
         x, y = pos
@@ -164,6 +147,9 @@ class Level:
         #now check for any blocking monsters
         return (self.__get_monster_in_pos(pos) is not None)
 
+    def is_in_fov(self, pos):
+        return libtcod.map_is_in_fov(self.fov_map, pos[0], pos[1]) 
+
     def __place_monsters_in_room(self, room):
         #choose random number of monsters
         num_monsters = random.randint(0, MAX_ROOM_MONSTERS)
@@ -174,7 +160,7 @@ class Level:
 
             if not self.is_blocked((x, y)):
                 monster = MonsterFactory(x, y)
-                self.add_monster(monster)
+                self.monsters.append(monster)
 
     def __place_items_in_room(self, room):
         #choose random number of items
@@ -187,7 +173,7 @@ class Level:
             #only place it if the tile is not blocked
             if not self.is_blocked((x, y)):
                 item = ItemFactory(x, y)
-                self.add_item(item)
+                self.items.append(item)
 
     def __build_complete_room(self):
         #random width and height
@@ -197,62 +183,41 @@ class Level:
         x = random.randint(1, MAP_WIDTH - w - 1)
         y = random.randint(1, MAP_HEIGHT - h - 1)
 
-        new_room = Room(x, y, w, h)
+        room = Room(x, y, w, h)
 
         #check if there are no intersections, so this room is valid
-        if self.__room_overlaps(new_room):
-            return None
+        intersection = next((r for r in self.rooms if r.intersects(room)), None)
+        if intersection is None:
+            self.__dig_room(room)
+            self.__add_room(room)
 
-        self.__dig_room(new_room)
-        #self.__connect_with_previous_room(new_room)
-
-        #append the new room to the list
-        self.__add_room(new_room)
-
-        return new_room
-
-    def closest_unconnected_room(self, room):
-        closest = None
-        min_distance = MAP_WIDTH * MAP_HEIGHT
-
-        unconnected_rooms = [r
-                             for r in self.rooms
-                             if r.connected is False and r is not room]
-
-        for r in unconnected_rooms:
-            distance = room.distance_to_room(r)
-
-            if distance < min_distance:
-                closest = r
-                min_distance = distance
-
-        return closest
+            self.__place_items_in_room(room)
+            self.__place_monsters_in_room(room)
 
     def generate(self):
-
         # build rooms
         for r in range(MAX_ROOMS):
-            new_room = self.__build_complete_room()
-
-            if new_room is not None:
-                self.__place_items_in_room(new_room)
-                self.__place_monsters_in_room(new_room)
+            self.__build_complete_room()
 
         # place stairs
         self.stairs_up_pos = self.__random_unblocked_pos()
         self.stairs_down_pos = self.__random_unblocked_pos()
 
         # connect rooms
-        for r in self.rooms:
-            if r.connected:
+        for room in self.rooms:
+            if room.connected:
                 continue
 
-            closest = self.closest_unconnected_room(r)
+            unconnected = [r for r in self.rooms if not r.connected and r != room]
 
-            if closest:
-                self.__connect_two_rooms(r,closest,"random")
+            if len(unconnected) > 0:
+                closest = min(unconnected, key = room.distance_to_room)
 
-            r.connected = True
+                (h_tunnel, v_tunnel) = create_room_connection(room, closest, "random")
+                self.__dig_room(h_tunnel)
+                self.__dig_room(v_tunnel)
+
+            room.connected = True
 
         # start the player on a random position (not blocked)
         (x, y) = self.__random_unblocked_pos()
@@ -269,38 +234,43 @@ class Level:
         return self.__random_unblocked_pos()
 
     def __get_monster_in_pos(self, pos):
-        for monster in self.monsters:
-            if monster.position == pos and monster.blocks:
-                return monster
-
-        return None
+        return next((m for m in self.monsters
+                     if m.position == pos and m.blocks), None)
 
     def move_player(self, dx, dy):
 
-        self.player.move(dx, dy)
+        old_pos = self.player.position
+        new_pos = (old_pos[0]+dx, old_pos[1]+dy)
 
-        monster = self.__get_monster_in_pos(self.player.position)
+        monster = self.__get_monster_in_pos(new_pos)
         if monster is not None:
             self.player.attack(monster)
-            self.player.move(-dx, -dy)
-        elif self.is_blocked(self.player.position):
-            self.player.move(-dx, -dy)
+        elif not self.is_blocked(self.player.position):
+            self.player.move(dx, dy)
 
-        return self.player.position
+
+        x, y = self.player.position
+
+        libtcod.map_compute_fov(self.fov_map, x, y,
+                                TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+
+        for y in range(MAP_HEIGHT):
+            for x in range(MAP_WIDTH):
+                if self.is_in_fov((x, y)):
+                    self.tiles[x][y].explored = True
 
     def closest_monster_to_player(self, max_range):
         #find closest enemy, up to a maximum range, and in the player's FOV
-        closest_enemy = None
-        closest_dist = max_range + 1
+        if len(self.monsters) < 1:
+            return None
 
-        for monster in self.monsters:
-            #calculate distance between this object and the player
-            dist = monster.distance_to(self.player)
-            if dist < closest_dist:
-                closest_enemy = monster
-                closest_dist = dist
+        closest = min(self.monsters, key = self.player.distance_to)
+        if (closest is None or
+            not self.is_in_fov(closest.position) or
+            closest.dostance_to(self.player) > max_range):
+            return None
 
-        return closest_enemy
+        return closest
 
     def compute_path(self):
         # build map for path finding
@@ -308,7 +278,8 @@ class Level:
 
         for x in range(MAP_WIDTH):
             for y in range(MAP_HEIGHT):
-                libtcod.map_set_properties(path_map, x, y, True, not self.is_blocked((x, y)))
+                libtcod.map_set_properties(path_map, x, y, True,
+                                           not self.is_blocked((x, y)))
 
         self.path = libtcod.path_new_using_map(path_map)
 
@@ -321,3 +292,12 @@ class Level:
             return None
 
         return libtcod.path_get(self.path, 0)
+
+    def compute_fov(self):
+        for y in range(MAP_HEIGHT):
+            for x in range(MAP_WIDTH):
+                tile = self.tiles[x][y]
+                libtcod.map_set_properties(self.fov_map, x, y,
+                                           not tile.block_sight,
+                                           not tile.blocked)
+

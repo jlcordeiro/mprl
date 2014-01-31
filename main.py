@@ -133,8 +133,7 @@ def handle_keys():
                                                                  item_range)
 
                 elif chosen_item.who_is_affected == 'closest':
-                    closest_one = dungeon.closest_monster_to_player_in_fov(item_range)
-
+                    closest_one = dungeon.closest_monster_to_player(item_range)
                     if closest_one is not None:
                         affected_monsters.append(closest_one)
 

@@ -25,4 +25,3 @@ class Player(Creature):
     def __init__(self, x, y):
         super(Player, self).__init__('player', x, y, 30, 2, 5)
         self.inventory = []
-        self.path_map = None

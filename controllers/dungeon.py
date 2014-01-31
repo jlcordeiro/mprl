@@ -14,40 +14,13 @@ class Level:
         self._view = views.dungeon.Level(self._model)
 
         self._model.generate()
-        self.set_fov()
+        self._model.compute_fov()
 
     def move_player(self, dx, dy):
-        x, y = self._model.move_player(dx, dy)
-
-        libtcod.map_compute_fov(self._view.fov_map,
-                                x,
-                                y,
-                                TORCH_RADIUS,
-                                FOV_LIGHT_WALLS,
-                                FOV_ALGO)
-
-        for y in range(MAP_HEIGHT):
-            for x in range(MAP_WIDTH):
-                if self.is_in_fov((x, y)):
-                    self._model.tiles[x][y].explored = True
+        self._model.move_player(dx, dy)
 
     def is_blocked(self, pos):
         return self._model.is_blocked(pos)
-
-    def is_in_fov(self, pos):
-        return libtcod.map_is_in_fov(self._view.fov_map, pos[0], pos[1]) 
-
-    def set_fov(self):
-        for y in range(MAP_HEIGHT):
-            for x in range(MAP_WIDTH):
-                is_transparent = not self._model.tiles[x][y].block_sight
-                is_walkable = not self._model.tiles[x][y].blocked
-                libtcod.map_set_properties(self._view.fov_map,
-                                           x,
-                                           y,
-                                           is_transparent,
-                                           is_walkable)
-
 
     def clear_ui(self, con):
         self._view.clear(con)
@@ -64,24 +37,12 @@ class Level:
         self._view.draw(con, draw_outside_fov)
         self.player.draw_ui(con)
 
-    def closest_monster_to_player_in_fov(self, max_range):
-        closest_enemy = self._model.closest_monster_to_player(max_range)
-
-        if closest_enemy is None:
-            return None
-
-        x, y = closest_enemy.position
-        if self.is_in_fov((x, y)):
-            return closest_enemy
-
-        return None 
+    def closest_monster_to_player(self, max_range):
+        return self._model.closest_monster_to_player(max_range)
 
     @property
     def player(self):
         return self._model.player
-
-    def get_monsters(self):
-        return self._model.monsters
 
     def take_item_from_player(self, item):
         self.player.drop_item(item)
@@ -113,7 +74,7 @@ class Level:
         if monster.confused_turns > 0:
             monster.confused_move()
 
-            if method_check_blocks(monster.position) is False:
+            if self.is_blocked(monster.position) is False:
                 monster.move(new_pos = previous_pos)
         else:
             #move towards player if far away
@@ -125,11 +86,10 @@ class Level:
             elif self.player.hp > 0:
                 monster.attack(self.player)
 
-
     def take_turn(self):
         self._model.compute_path()
 
-        for monster in self.get_monsters():
+        for monster in self._model.monsters:
             #a basic monster takes its turn. If you can see it, it can see you
-            if not monster.died and self.is_in_fov(monster.position):
+            if not monster.died and self._model.is_in_fov(monster.position):
                 self.__take_turn_monster(monster)
