@@ -286,16 +286,17 @@ class Level:
 
 class Dungeon:
     def __init__(self):
-        self.all_levels = [Level() for l in xrange(0, NUM_LEVELS)]
+        self.levels = {}
+        self.current_level = 0
 
-        for l in self.all_levels:
-            l.generate()
-            l.compute_fov()
-
-        self.level = self.all_levels[0]
+        for l in xrange(0, NUM_LEVELS):
+            new_level = Level()
+            new_level.generate()
+            new_level.compute_fov()
+            self.levels[l] = new_level
 
         # start the player on a random position (not blocked)
-        (x, y) = self.level.random_unblocked_pos()
+        (x, y) = self.levels[0].random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
 
     def move_player(self, dx, dy):
@@ -303,10 +304,12 @@ class Dungeon:
         old_pos = self.player.position
         new_pos = (old_pos[0]+dx, old_pos[1]+dy)
 
-        monster = self.level.get_monster_in_pos(new_pos)
+        cur_level = self.levels[self.current_level]
+
+        monster = cur_level.get_monster_in_pos(new_pos)
         if monster is not None:
             self.player.attack(monster)
-        elif not self.level.is_blocked(new_pos):
+        elif not cur_level.is_blocked(new_pos):
             self.player.move(dx, dy)
 
-        self.level.update_fov(self.player.position)
+        cur_level.update_fov(self.player.position)

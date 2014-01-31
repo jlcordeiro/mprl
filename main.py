@@ -21,31 +21,21 @@ def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
     #render the background first
     libtcod.console_set_default_background(panel, back_color)
     libtcod.console_rect(panel,
-                         x,
-                         y,
-                         total_width,
-                         1,
-                         False,
-                         libtcod.BKGND_SCREEN)
+                         x, y, total_width, 1,
+                         False, libtcod.BKGND_SCREEN)
 
     #now render the bar on top
     libtcod.console_set_default_background(panel, bar_color)
     if bar_width > 0:
         libtcod.console_rect(panel,
-                             x,
-                             y,
-                             bar_width,
-                             1,
-                             False,
-                             libtcod.BKGND_SCREEN)
+                             x, y, bar_width, 1,
+                             False, libtcod.BKGND_SCREEN)
 
     #finally, some centered text with the values
     libtcod.console_set_default_foreground(panel, libtcod.white)
     libtcod.console_print_ex(panel,
-                             x + total_width / 2,
-                             y,
-                             libtcod.BKGND_NONE,
-                             libtcod.CENTER,
+                             x + total_width / 2, y,
+                             libtcod.BKGND_NONE, libtcod.CENTER,
                              name + ': ' + str(value) + '/' + str(maximum))
 
 
@@ -249,8 +239,7 @@ def draw_everything():
     for (line, color) in messages.get_all():
         libtcod.console_set_default_foreground(panel, color)
         libtcod.console_print_ex(panel,
-                                 MSG_X,
-                                 y,
+                                 MSG_X, y,
                                  libtcod.BKGND_NONE,
                                  libtcod.LEFT,
                                  line)
