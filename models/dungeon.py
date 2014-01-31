@@ -306,7 +306,7 @@ class Dungeon:
         monster = self.level.get_monster_in_pos(new_pos)
         if monster is not None:
             self.player.attack(monster)
-        elif not self.level.is_blocked(self.player.position):
+        elif not self.level.is_blocked(new_pos):
             self.player.move(dx, dy)
 
         self.level.update_fov(self.player.position)

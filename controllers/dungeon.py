@@ -49,9 +49,9 @@ class Dungeon:
     def take_turn(self):
         self._model.level.compute_path()
 
-        for monster in self._model.monsters:
+        for monster in self._model.level.monsters:
             #a basic monster takes its turn. If you can see it, it can see you
-            if not monster.died and self._model.is_in_fov(monster.position):
+            if not monster.died and self._model.level.is_in_fov(monster.position):
                 self.__take_turn_monster(monster)
 
     def take_item_from_player(self, item):
@@ -69,7 +69,8 @@ class Dungeon:
                 if euclidean_distance(pos, m.position) <= radius]
 
     def climb_stairs(self):
-        valid_pos = (self._model.stairs_up_pos, self._model.stairs_down_pos)
+        valid_pos = (self._model.level.stairs_up_pos,
+                     self._model.level.stairs_down_pos)
 
         messages = MessagesBorg()
         if self.player.position not in valid_pos:
