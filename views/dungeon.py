@@ -9,31 +9,30 @@ color_light_ground = libtcod.Color(0, 25, 50)
 
 
 class Level:
-    def __init__(self, model):
-        self._model = model
+    def __init__(self):
         self.bkgd = libtcod.BKGND_NONE
 
-    def __draw_items(self, console, draw_not_in_fov=False):
-        for item in self._model.items:
+    def __draw_items(self, console, model, draw_not_in_fov=False):
+        for item in model.items:
             (x, y) = item.position
-            if libtcod.map_is_in_fov(self._model.fov_map, x, y) or draw_not_in_fov:
+            if libtcod.map_is_in_fov(model.fov_map, x, y) or draw_not_in_fov:
                 item.draw_ui(console)
 
-    def __draw_monsters(self, console, draw_dead=False, draw_not_in_fov=False):
+    def __draw_monsters(self, console, model, draw_dead=False, draw_not_in_fov=False):
         #go through all monsters
-        for monster in self._model.monsters:
+        for monster in model.monsters:
             (x, y) = monster.position
-            if libtcod.map_is_in_fov(self._model.fov_map, x, y) or draw_not_in_fov:
+            if libtcod.map_is_in_fov(model.fov_map, x, y) or draw_not_in_fov:
                 if draw_dead == monster.died:
                     monster.draw_ui(console)
 
-    def draw(self, console, draw_not_in_fov=False):
+    def draw(self, console, model, draw_not_in_fov=False):
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                wall = self._model.tiles[x][y].block_sight
-                visible = libtcod.map_is_in_fov(self._model.fov_map, x, y)
-                explored = self._model.tiles[x][y].explored
+                wall = model.tiles[x][y].block_sight
+                visible = libtcod.map_is_in_fov(model.fov_map, x, y)
+                explored = model.tiles[x][y].explored
 
                 color = color_none
                 if visible or draw_not_in_fov:
@@ -51,24 +50,24 @@ class Level:
 
                 # draw stairs
                 if visible or draw_not_in_fov:
-                    if (x, y) == self._model.stairs_up_pos:
+                    if (x, y) == model.stairs_up_pos:
                         libtcod.console_put_char(console, x, y, '<', self.bkgd)
-                    elif (x, y) == self._model.stairs_down_pos:
+                    elif (x, y) == model.stairs_down_pos:
                         libtcod.console_put_char(console, x, y, '>', self.bkgd)
 
         # start by drawing the monsters that have died
-        self.__draw_monsters(console, True, draw_not_in_fov)
+        self.__draw_monsters(console, model, True, draw_not_in_fov)
 
         #then the items on the floor
-        self.__draw_items(console, draw_not_in_fov)
+        self.__draw_items(console, model, draw_not_in_fov)
 
         #and finally, the monsters that are still alive
-        self.__draw_monsters(console, False, draw_not_in_fov)
+        self.__draw_monsters(console, model, False, draw_not_in_fov)
 
-    def clear(self, console):
+    def clear(self, console, model):
         #erase the character that represents this object
-        (x, y) = self._model.stairs_up_pos
+        (x, y) = model.stairs_up_pos
         libtcod.console_put_char(console, x, y, ' ', self.bkgd)
 
-        (x, y) = self._model.stairs_down_pos
+        (x, y) = model.stairs_down_pos
         libtcod.console_put_char(console, x, y, ' ', self.bkgd)

@@ -12,6 +12,7 @@ MSG_HEIGHT = PANEL_HEIGHT - 1
 
 LIMIT_FPS = 20  # 20 frames-per-second maximum
 
+NUM_LEVELS = 3
 MAP_WIDTH = 110
 MAP_HEIGHT = 75
 ROOM_MAX_SIZE = 20

@@ -10,7 +10,7 @@ DRAW_NOT_IN_FOV = False
 game_state = 'playing'
 player_action = None
 
-dungeon = controllers.dungeon.Level()
+dungeon = controllers.dungeon.Dungeon()
 
 
 

@@ -145,7 +145,7 @@ class Level:
             return True
 
         #now check for any blocking monsters
-        return (self.__get_monster_in_pos(pos) is not None)
+        return (self.get_monster_in_pos(pos) is not None)
 
     def is_in_fov(self, pos):
         return libtcod.map_is_in_fov(self.fov_map, pos[0], pos[1]) 
@@ -200,8 +200,8 @@ class Level:
             self.__build_complete_room()
 
         # place stairs
-        self.stairs_up_pos = self.__random_unblocked_pos()
-        self.stairs_down_pos = self.__random_unblocked_pos()
+        self.stairs_up_pos = self.random_unblocked_pos()
+        self.stairs_down_pos = self.random_unblocked_pos()
 
         # connect rooms
         for room in self.rooms:
@@ -219,11 +219,7 @@ class Level:
 
             room.connected = True
 
-        # start the player on a random position (not blocked)
-        (x, y) = self.__random_unblocked_pos()
-        self.player = controllers.creatures.Player(x, y)
-
-    def __random_unblocked_pos(self):
+    def random_unblocked_pos(self):
         #choose random spot
         pos = (random.randint(1, MAP_WIDTH - 1),
                random.randint(1, MAP_HEIGHT - 1))
@@ -231,43 +227,21 @@ class Level:
         if not self.is_blocked(pos):
             return pos
 
-        return self.__random_unblocked_pos()
+        return self.random_unblocked_pos()
 
-    def __get_monster_in_pos(self, pos):
+    def get_monster_in_pos(self, pos):
         return next((m for m in self.monsters
                      if m.position == pos and m.blocks), None)
 
-    def move_player(self, dx, dy):
-
-        old_pos = self.player.position
-        new_pos = (old_pos[0]+dx, old_pos[1]+dy)
-
-        monster = self.__get_monster_in_pos(new_pos)
-        if monster is not None:
-            self.player.attack(monster)
-        elif not self.is_blocked(self.player.position):
-            self.player.move(dx, dy)
-
-
-        x, y = self.player.position
-
-        libtcod.map_compute_fov(self.fov_map, x, y,
-                                TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
-
-        for y in range(MAP_HEIGHT):
-            for x in range(MAP_WIDTH):
-                if self.is_in_fov((x, y)):
-                    self.tiles[x][y].explored = True
-
-    def closest_monster_to_player(self, max_range):
+    def closest_monster_to_pos(self, pos, max_range):
         #find closest enemy, up to a maximum range, and in the player's FOV
         if len(self.monsters) < 1:
             return None
 
-        closest = min(self.monsters, key = self.player.distance_to)
+        closest = min(self.monsters, key = lambda x: x.distance_to(pos))
         if (closest is None or
             not self.is_in_fov(closest.position) or
-            closest.dostance_to(self.player) > max_range):
+            closest.distance_to(pos) > max_range):
             return None
 
         return closest
@@ -283,10 +257,9 @@ class Level:
 
         self.path = libtcod.path_new_using_map(path_map)
 
-    def get_path_to_player(self, monster):
+    def get_path_to_pos(self, monster, pos):
         mx, my = monster.position
-        px, py = self.player.position
-        libtcod.path_compute(self.path, mx, my, px, py)
+        libtcod.path_compute(self.path, mx, my, pos[0], pos[1])
 
         if libtcod.path_is_empty(self.path):
             return None
@@ -301,3 +274,39 @@ class Level:
                                            not tile.block_sight,
                                            not tile.blocked)
 
+    def update_fov(self, pos):
+        libtcod.map_compute_fov(self.fov_map, pos[0], pos[1],
+                                TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+
+        for y in range(MAP_HEIGHT):
+            for x in range(MAP_WIDTH):
+                if self.is_in_fov((x, y)):
+                    self.tiles[x][y].explored = True
+
+
+class Dungeon:
+    def __init__(self):
+        self.all_levels = [Level() for l in xrange(0, NUM_LEVELS)]
+
+        for l in self.all_levels:
+            l.generate()
+            l.compute_fov()
+
+        self.level = self.all_levels[0]
+
+        # start the player on a random position (not blocked)
+        (x, y) = self.level.random_unblocked_pos()
+        self.player = controllers.creatures.Player(x, y)
+
+    def move_player(self, dx, dy):
+
+        old_pos = self.player.position
+        new_pos = (old_pos[0]+dx, old_pos[1]+dy)
+
+        monster = self.level.get_monster_in_pos(new_pos)
+        if monster is not None:
+            self.player.attack(monster)
+        elif not self.level.is_blocked(self.player.position):
+            self.player.move(dx, dy)
+
+        self.level.update_fov(self.player.position)

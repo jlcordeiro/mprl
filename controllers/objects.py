@@ -31,9 +31,8 @@ class ObjectController(object):
     def name(self):
         return self._model.name
 
-    def distance_to(self, obj2):
-        return euclidean_distance(self.position,
-                                  obj2.position)
+    def distance_to(self, pos):
+        return euclidean_distance(self.position, pos)
 
     def draw_ui(self, con):
         self._view.draw(con)
