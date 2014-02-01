@@ -79,6 +79,14 @@ class CreatureController(ObjectController):
     def defense(self):
         return self._model.defense
 
+    @property
+    def target(self):
+        return self._model.target_pos
+
+    @target.setter
+    def target(self, value):
+        self._model.target_pos = value
+
 class Player(CreatureController):
     def __init__(self, x, y):
         self._model = models.creatures.Player(x, y)

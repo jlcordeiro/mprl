@@ -36,27 +36,39 @@ class Dungeon:
         previous_pos = monster.position
 
         messages = MessagesBorg()
+
         if monster.confused_turns > 0:
             monster.confused_move()
 
             if self.is_blocked(monster.position) is False:
                 monster.move(new_pos = previous_pos)
-        else:
+
+            return
+
+        #not confused
+
+        #close enough, attack! (if the player is still alive.)
+        if self.player.distance_to(monster.position) < 2 and self.player.hp > 0:
+            monster.attack(self.player)
+            return
+
+        #if the monster sees the player, update its target position
+        if self.__clevel.is_in_fov(monster.position):
+            monster.target = self.player.position
+
+        if monster.target not in (None, monster.position):
             #move towards player if far away
-            if monster.distance_to(self.player.position) >= 2:
-                path = self.__clevel.get_path_to_pos(monster, self.player.position)
+            if monster.distance_to(monster.target) >= 2:
+                path = self.__clevel.get_path_to_pos(monster, monster.target)
                 if path is not None and not self.is_blocked(path):
                     monster.move(new_pos=path)
-            #close enough, attack! (if the player is still alive.)
-            elif self.player.hp > 0:
-                monster.attack(self.player)
 
     def take_turn(self):
         self.__clevel.compute_path()
 
         for monster in self.__clevel.monsters:
             #a basic monster takes its turn. If you can see it, it can see you
-            if not monster.died and self.__clevel.is_in_fov(monster.position):
+            if not monster.died:
                 self.__take_turn_monster(monster)
 
     def take_item_from_player(self, item):
