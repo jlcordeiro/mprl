@@ -127,6 +127,13 @@ class Level:
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
         self.path = None
 
+        self.aim_target = None
+
+        # often it may be required to draw things and then remove
+        # them some turns later. This list will keep track of all
+        # of them. Format: (position, char, nturns)
+        self.temp_artifacts = []
+
     def __add_room(self, room):
         self.rooms.append(room)
         self.num_rooms += 1

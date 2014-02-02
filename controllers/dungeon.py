@@ -8,7 +8,7 @@ from creatures import MonsterFactory
 from config import *
 from messages import *
 
-class Dungeon:
+class Dungeon(object):
     def __init__(self):
         self._model = models.dungeon.Dungeon()
         self._view = views.dungeon.Level()
@@ -21,6 +21,15 @@ class Dungeon:
     def __clevel(self):
         """ Return the current level. """
         return self._model.levels[self._model.current_level]
+
+    @property
+    def aim_target(self):
+        return self.__clevel.aim_target
+
+    @aim_target.setter
+    def aim_target(self, value):
+        self.__clevel.aim_target = value
+        self.__clevel.temp_artifacts.append([value, '+', 1])
 
     def move_player(self, dx, dy):
         self._model.move_player(dx, dy)
@@ -111,7 +120,13 @@ class Dungeon:
         for item in self.__clevel.items:
             item.clear_ui(con)
 
+        #remove artifacts that are too "old"
+        self.__clevel.temp_artifacts = [v for v in self.__clevel.temp_artifacts if v[2] > 0]
+
     def draw_ui(self, con, draw_outside_fov):
         self._view.draw(con, self.__clevel, draw_outside_fov)
         self.player.draw_ui(con)
+
+        #decrement turns of all temporary artifacts
+        self.__clevel.temp_artifacts = [(p, c, t-1) for (p, c, t) in self.__clevel.temp_artifacts]
 

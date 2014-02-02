@@ -44,23 +44,22 @@ def aim():
     (x,y) = dungeon.player.position
 
     while True:
+        dungeon.aim_target = (x, y)
         draw_everything()
 
-        prev_char = libtcod.console_get_char(con, x, y)
-
-        libtcod.console_put_char(con, x, y, prev_char, libtcod.BKGND_OVERLAY)
-        libtcod.console_put_char(con, x, y, 'x', libtcod.BKGND_NONE)
-
         flush()
+        dungeon.clear_ui(con)
 
         #turn-based
         key = wait_keypress()
 
         if key_is_escape(key):
-            return None
+            dungeon.aim_target = None
+            return
 
         if key.vk == libtcod.KEY_ENTER:
-            return (x, y)
+            dungeon.aim_target = (x, y)
+            return
 
         if key_is_up_move(key):
             y -= 1
@@ -118,8 +117,8 @@ def handle_keys():
                 affected_monsters = []
 
                 if chosen_item.who_is_affected == 'aim':
-                    aim_pos = aim()
-                    affected_monsters = dungeon.monsters_in_area(aim_pos,
+                    aim()
+                    affected_monsters = dungeon.monsters_in_area(dungeon.aim_target,
                                                                  item_range)
 
                 elif chosen_item.who_is_affected == 'closest':

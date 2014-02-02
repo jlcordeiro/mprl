@@ -64,6 +64,11 @@ class Level:
         #and finally, the monsters that are still alive
         self.__draw_monsters(console, model, False, draw_not_in_fov)
 
+        #draw temporary artifacts
+        for artifact in model.temp_artifacts:
+            x, y = artifact[0]
+            libtcod.console_put_char(console, x, y, artifact[1], self.bkgd)
+
     def clear(self, console, model):
         #erase the character that represents this object
         (x, y) = model.stairs_up_pos
@@ -71,3 +76,9 @@ class Level:
 
         (x, y) = model.stairs_down_pos
         libtcod.console_put_char(console, x, y, ' ', self.bkgd)
+
+        #decrement the turns left for each temporary artifact
+        #if it becomes 0, remove them
+        for artifact in model.temp_artifacts:
+            x, y = artifact[0]
+            libtcod.console_put_char(console, x, y, ' ', self.bkgd)
