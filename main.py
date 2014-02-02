@@ -2,6 +2,7 @@ import libtcodpy as libtcod
 from path import take_turn
 from config import *
 from messages import *
+from platform.keyboard import *
 import controllers.creatures
 import controllers.dungeon
 
@@ -47,40 +48,27 @@ def aim():
 
         prev_char = libtcod.console_get_char(con, x, y)
 
-        libtcod.console_put_char(con,
-                                 x,
-                                 y,
-                                 prev_char,
-                                 libtcod.BKGND_OVERLAY)
+        libtcod.console_put_char(con, x, y, prev_char, libtcod.BKGND_OVERLAY)
+        libtcod.console_put_char(con, x, y, 'x', libtcod.BKGND_NONE)
 
         flush()
 
-        libtcod.console_put_char(con,
-                                 x,
-                                 y,
-                                 ' ',
-                                 libtcod.BKGND_NONE)
-
-
         #turn-based
-        key = libtcod.console_wait_for_keypress(True)
+        key = wait_keypress()
 
-        if key.vk == libtcod.KEY_ESCAPE:
+        if key_is_escape(key):
             return None
 
         if key.vk == libtcod.KEY_ENTER:
             return (x, y)
 
-        if libtcod.console_is_key_pressed(libtcod.KEY_UP):
+        if key_is_up_move(key):
             y -= 1
-
-        elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
+        elif key_is_down_move(key):
             y += 1
-
-        elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
+        elif key_is_left_move(key):
             x -= 1
-
-        elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
+        elif key_is_right_move(key):
             x += 1
 
 
@@ -88,24 +76,36 @@ def handle_keys():
     global DRAW_NOT_IN_FOV
 
     #turn-based
-    key = libtcod.console_wait_for_keypress(True)
+    key = wait_keypress()
 
-    if key.vk == libtcod.KEY_ESCAPE:
+    if key_is_escape(key):
         return "exit"
 
     if game_state == 'playing':
         #movement keys
-        if libtcod.console_is_key_pressed(libtcod.KEY_UP):
+        if key_is_up_move(key):
             dungeon.move_player(0, -1)
 
-        elif libtcod.console_is_key_pressed(libtcod.KEY_DOWN):
+        elif key_is_down_move(key):
             dungeon.move_player(0, 1)
 
-        elif libtcod.console_is_key_pressed(libtcod.KEY_LEFT):
+        elif key_is_left_move(key):
             dungeon.move_player(-1, 0)
 
-        elif libtcod.console_is_key_pressed(libtcod.KEY_RIGHT):
+        elif key_is_right_move(key):
             dungeon.move_player(1, 0)
+
+        elif key_is_upleft_move(key):
+            dungeon.move_player(-1, -1)
+
+        elif key_is_upright_move(key):
+            dungeon.move_player(1, -1)
+
+        elif key_is_downleft_move(key):
+            dungeon.move_player(-1, 1)
+
+        elif key_is_downright_move(key):
+            dungeon.move_player(1, 1)
 
         elif chr(key.c) == 'i':
             chosen_item = inventory_menu(con,

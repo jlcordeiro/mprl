@@ -14,7 +14,7 @@ class CreatureController(ObjectController):
         self._model.confused_turns = CONFUSE_NUM_TURNS
 
     def confused_move(self):
-        monster.move(random.randint(-1, 1), random.randint(-1, 1))
+        self.move(random.randint(-1, 1), random.randint(-1, 1))
 
         self.confused_turns -= 1
 
