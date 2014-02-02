@@ -1,4 +1,5 @@
 from objects import ObjectController
+import random
 from messages import *
 import views.creatures
 import models.creatures
@@ -20,7 +21,7 @@ class CreatureController(ObjectController):
 
         if self.confused_turns == 0:
             messages = MessagesBorg()
-            messages.add('The ' + monster.name + ' is no longer confused!',
+            messages.add('The ' + self.name + ' is no longer confused!',
                          libtcod.red)
 
     def attack(self, target):
@@ -66,6 +67,10 @@ class CreatureController(ObjectController):
     @property
     def confused_turns(self):
         return self._model.confused_turns
+
+    @confused_turns.setter
+    def confused_turns(self, value):
+        self._model.confused_turns = value
 
     @property
     def hp(self):
