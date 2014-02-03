@@ -23,7 +23,7 @@ class UIBar(object):
     def draw(self, panel, bar_rect):
         """ Draw the bar. """
 
-        x, y = bar_rect.top_left.x, bar_rect.top_left.y
+        x, y = bar_rect.top_left.coords
         width, height = bar_rect.width, bar_rect.height
 
         #first calculate the width of the bar

@@ -5,6 +5,10 @@ class Point(object):
         self.x = x
         self.y = y
 
+    @property
+    def coords(self):
+        return (self.x, self.y)
+
 class Rect(object):
     #a rectangle on the map. used to characterize a room.
     def __init__(self, x, y, w, h):

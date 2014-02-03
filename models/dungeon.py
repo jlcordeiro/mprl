@@ -119,10 +119,10 @@ class Level:
 
         for i in range(num_monsters):
             #choose random spot for this monster
-            p = room.get_random_point()
+            x, y = room.get_random_point().coords
 
-            if not self.is_blocked((p.x, p.y)):
-                monster = MonsterFactory(p.x, p.y)
+            if not self.is_blocked((x, y)):
+                monster = MonsterFactory(x, y)
                 self.monsters.append(monster)
 
     def __place_items_in_room(self, room):
@@ -131,11 +131,11 @@ class Level:
 
         for i in range(num_items):
             #choose random spot for this item
-            p = room.get_random_point()
+            x, y = room.get_random_point().coords
 
             #only place it if the tile is not blocked
-            if not self.is_blocked((p.x, p.y)):
-                item = ItemFactory(p.x, p.y)
+            if not self.is_blocked((x, y)):
+                item = ItemFactory(x, y)
                 self.items.append(item)
 
     def __build_complete_room(self):
