@@ -20,18 +20,22 @@ class UIBar(object):
         self.maximum = maximum
         self.text = "%s %s/%s" % (self.name, str(self.value), str(self.maximum))
 
-    def draw(self, panel, x, y, width):
+    def draw(self, panel, bar_rect):
         """ Draw the bar. """
+
+        x, y = bar_rect.top_left.x, bar_rect.top_left.y
+        width, height = bar_rect.width, bar_rect.height
+
         #first calculate the width of the bar
         bar_width = int(float(self.value) / self.maximum * width)
 
         #render the background first
         libtcod.console_set_default_background(panel, self.bg_colour)
-        libtcod.console_rect(panel, x, y, width, 1, False, libtcod.BKGND_SCREEN)
+        libtcod.console_rect(panel, x, y, width, height, False, libtcod.BKGND_SCREEN)
 
         #now render the bar on top
         libtcod.console_set_default_background(panel, self.fg_colour)
-        libtcod.console_rect(panel, x, y, bar_width, 1, False, libtcod.BKGND_SCREEN)
+        libtcod.console_rect(panel, x, y, bar_width, height, False, libtcod.BKGND_SCREEN)
 
         #finally, some centered text with the values
         libtcod.console_set_default_foreground(panel, libtcod.white)

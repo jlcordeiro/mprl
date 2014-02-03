@@ -4,6 +4,7 @@ from config import *
 from messages import *
 from platform.ui import *
 from platform.keyboard import *
+from utilities.geometry import Rect
 import controllers.creatures
 import controllers.dungeon
 
@@ -14,6 +15,8 @@ player_action = None
 
 dungeon = controllers.dungeon.Dungeon()
 
+
+HP_RECT = Rect(1, 1, BAR_WIDTH, 1)
 HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
 
 def aim():
@@ -137,7 +140,7 @@ def draw_everything():
 
     #show the player's stats
     HP_BAR.update(dungeon.player.hp, dungeon.player.max_hp)
-    HP_BAR.draw(panel, 1, 1, BAR_WIDTH)
+    HP_BAR.draw(panel, HP_RECT)
 
     #print the game messages, one line at a time
     y = 1

@@ -25,6 +25,14 @@ class Rect(object):
         center_y = (self.tleft.y + self.bright.y) / 2
         return Point(center_x, center_y)
  
+    @property
+    def width(self):
+        return self.bright.x - self.tleft.x
+
+    @property
+    def height(self):
+        return self.bright.y - self.tleft.y
+
     def x_distance_to_rect(self, other):
         s1x, s2x = self.tleft.x, self.bright.x
         o1x, o2x = other.tleft.x, other.bright.x
