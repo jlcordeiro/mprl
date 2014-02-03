@@ -2,6 +2,7 @@ import libtcodpy as libtcod
 from path import take_turn
 from config import *
 from messages import *
+from platform.ui import *
 from platform.keyboard import *
 import controllers.creatures
 import controllers.dungeon
@@ -13,35 +14,10 @@ player_action = None
 
 dungeon = controllers.dungeon.Dungeon()
 
-
-
-def render_bar(x, y, total_width, name, value, maximum, bar_color, back_color):
-    #render a bar (HP, experience, etc). first calculate the width of the bar
-    bar_width = int(float(value) / maximum * total_width)
-
-    #render the background first
-    libtcod.console_set_default_background(panel, back_color)
-    libtcod.console_rect(panel,
-                         x, y, total_width, 1,
-                         False, libtcod.BKGND_SCREEN)
-
-    #now render the bar on top
-    libtcod.console_set_default_background(panel, bar_color)
-    if bar_width > 0:
-        libtcod.console_rect(panel,
-                             x, y, bar_width, 1,
-                             False, libtcod.BKGND_SCREEN)
-
-    #finally, some centered text with the values
-    libtcod.console_set_default_foreground(panel, libtcod.white)
-    libtcod.console_print_ex(panel,
-                             x + total_width / 2, y,
-                             libtcod.BKGND_NONE, libtcod.CENTER,
-                             name + ': ' + str(value) + '/' + str(maximum))
-
+HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
 
 def aim():
-    (x,y) = dungeon.player.position
+    (x, y) = dungeon.player.position
 
     while True:
         dungeon.aim_target = (x, y)
@@ -150,64 +126,6 @@ def handle_keys():
             return 'did-not-take-turn'
 
 
-def menu(con, header, options, width):
-    if len(options) > 26:
-        raise ValueError('Cannot have a menu with more than 26 options.')
-
-    #calculate total height for the header (after auto-wrap)
-    header_height = libtcod.console_get_height_rect(con,
-                                                    0,
-                                                    0,
-                                                    width,
-                                                    SCREEN_HEIGHT,
-                                                    header)
-    height = len(options) + header_height
-
-    #create an off-screen console that represents the menu's window
-    window = libtcod.console_new(width, height)
-
-    #print the header, with auto-wrap
-    libtcod.console_set_default_foreground(window, libtcod.white)
-    libtcod.console_print_rect_ex(window,
-                                  0,
-                                  0,
-                                  width,
-                                  height,
-                                  libtcod.BKGND_NONE,
-                                  libtcod.LEFT,
-                                  header)
-
-    #print all the options
-    y = header_height
-    letter_index = ord('a')
-    for option_text in options:
-        text = '(' + chr(letter_index) + ') ' + option_text
-        libtcod.console_print_ex(window,
-                                 0,
-                                 y,
-                                 libtcod.BKGND_NONE,
-                                 libtcod.LEFT,
-                                 text)
-        y += 1
-        letter_index += 1
-
-    #blit the contents of "window" to the root console
-    x = SCREEN_WIDTH / 2 - width / 2
-    y = SCREEN_HEIGHT / 2 - height / 2
-    libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
-
-    #wait for a key-press
-    libtcod.console_flush()
-    key = libtcod.console_wait_for_keypress(True)
-
-    #convert the ASCII code to an index;
-    index = key.c - ord('a')
-    #if it corresponds to an option, return it
-    if index >= 0 and index < len(options):
-        return index
-
-    return None
-
 
 def inventory_menu(console, header):
     #show a menu with each item of the inventory as an option
@@ -217,7 +135,7 @@ def inventory_menu(console, header):
         messages.add('Inventory is empty.', libtcod.orange)
         return
 
-    index = menu(console, header, options, INVENTORY_WIDTH)
+    index = menu(console, header, options, INVENTORY_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT)
 
     #if an item was chosen, return it
     if index is None:
@@ -233,6 +151,10 @@ def draw_everything():
     libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)
 
+    #show the player's stats
+    HP_BAR.update(dungeon.player.hp, dungeon.player.max_hp)
+    HP_BAR.draw(panel, 1, 1, BAR_WIDTH)
+
     #print the game messages, one line at a time
     y = 1
     for (line, color) in messages.get_all():
@@ -243,11 +165,6 @@ def draw_everything():
                                  libtcod.LEFT,
                                  line)
         y += 1
-
-    #show the player's stats
-    render_bar(1, 1, BAR_WIDTH, 'HP',
-               dungeon.player.hp, dungeon.player.max_hp,
-               libtcod.light_red, libtcod.darker_red)
 
 def flush():
     #blit the contents of "console" to the root console
@@ -282,7 +199,6 @@ messages = MessagesBorg()
 messages.add('Welcome stranger!', libtcod.red)
 
 while not libtcod.console_is_window_closed():
-
     draw_everything()
     flush()
 
