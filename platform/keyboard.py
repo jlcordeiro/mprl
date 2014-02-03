@@ -37,3 +37,30 @@ def key_is_downleft_move(key):
 def key_is_downright_move(key):
     return (key.vk in (libtcod.KEY_3, libtcod.KEY_KP3) or
             (key.vk == libtcod.KEY_CHAR and key.c == ord('n')))
+
+def get_key_direction(key):
+    """ Return a tuple (dx, dy) with the movement vector
+        associated with the key that was pressed.
+        For instance, clicking '4' will return (-1, 0).
+        If the key is not a movement key, returns None """
+
+    result = None
+
+    if key_is_up_move(key):
+        result = (0, -1)
+    elif key_is_down_move(key):
+        result = (0, 1)
+    elif key_is_left_move(key):
+        result = (-1, 0)
+    elif key_is_right_move(key):
+        result = (1, 0)
+    elif key_is_upleft_move(key):
+        result = (-1, -1)
+    elif key_is_upright_move(key):
+        result = (1, -1)
+    elif key_is_downleft_move(key):
+        result = (-1, 1)
+    elif key_is_downright_move(key):
+        result = (1, 1)
+
+    return result

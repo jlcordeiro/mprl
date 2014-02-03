@@ -23,9 +23,6 @@ def aim():
         dungeon.aim_target = (x, y)
         draw_everything()
 
-        flush()
-        dungeon.clear_ui(con)
-
         #turn-based
         key = wait_keypress()
 
@@ -37,14 +34,10 @@ def aim():
             dungeon.aim_target = (x, y)
             return
 
-        if key_is_up_move(key):
-            y -= 1
-        elif key_is_down_move(key):
-            y += 1
-        elif key_is_left_move(key):
-            x -= 1
-        elif key_is_right_move(key):
-            x += 1
+        movement = get_key_direction(key)
+        if movement is not None:
+            dx, dy = movement
+            (x, y) = (x + dx, y + dy)
 
 
 def handle_keys():
@@ -58,29 +51,10 @@ def handle_keys():
 
     if game_state == 'playing':
         #movement keys
-        if key_is_up_move(key):
-            dungeon.move_player(0, -1)
-
-        elif key_is_down_move(key):
-            dungeon.move_player(0, 1)
-
-        elif key_is_left_move(key):
-            dungeon.move_player(-1, 0)
-
-        elif key_is_right_move(key):
-            dungeon.move_player(1, 0)
-
-        elif key_is_upleft_move(key):
-            dungeon.move_player(-1, -1)
-
-        elif key_is_upright_move(key):
-            dungeon.move_player(1, -1)
-
-        elif key_is_downleft_move(key):
-            dungeon.move_player(-1, 1)
-
-        elif key_is_downright_move(key):
-            dungeon.move_player(1, 1)
+        movement = get_key_direction(key)
+        if movement is not None:
+            dx, dy = movement
+            dungeon.move_player(dx, dy)
 
         elif chr(key.c) == 'i':
             chosen_item = inventory_menu(con,
@@ -143,6 +117,16 @@ def inventory_menu(console, header):
 
     return items[index]
 
+def flush():
+    #blit the contents of "console" to the root console
+    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+
+    #blit the contents of "panel" to the root console
+    libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
+
+    libtcod.console_flush()
+    dungeon.clear_ui(con)
+
 def draw_everything():
     #render the screen
     dungeon.draw_ui(con, DRAW_NOT_IN_FOV)
@@ -166,21 +150,7 @@ def draw_everything():
                                  line)
         y += 1
 
-def flush():
-    #blit the contents of "console" to the root console
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
-
-    #blit the contents of "panel" to the root console
-    libtcod.console_blit(panel,
-                         0,
-                         0,
-                         SCREEN_WIDTH,
-                         PANEL_HEIGHT,
-                         0,
-                         0,
-                         PANEL_Y)
-
-    libtcod.console_flush()
+    flush()
 
 #############################################
 # Initialization & Main Loop
@@ -200,9 +170,6 @@ messages.add('Welcome stranger!', libtcod.red)
 
 while not libtcod.console_is_window_closed():
     draw_everything()
-    flush()
-
-    dungeon.clear_ui(con)
 
     #handle keys and exit game if needed
     player_action = handle_keys()
