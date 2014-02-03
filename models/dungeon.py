@@ -1,10 +1,11 @@
 import libtcodpy as libtcod
-import math
 import random
 from config import *
 import controllers
 from controllers.items import ItemFactory
 from controllers.creatures import MonsterFactory
+from utilities.geometry import Rect
+from utilities.geometry import Point
 
 
 class Tile:
@@ -17,66 +18,17 @@ class Tile:
         self.block_sight = blocked if block_sight is None else block_sight
 
 
-class Room:
+class Room(Rect):
     #a rectangle on the map. used to characterize a room.
     def __init__(self, x, y, w, h):
-        self.x1 = x
-        self.y1 = y
-        self.x2 = x + w
-        self.y2 = y + h
+        super(Room, self).__init__(x, y, w, h)
         self.connected = False
 
-    @property
-    def all_points(self):
-        return [(x, y)
-                for x in range(self.x1, self.x2)
-                for y in range(self.y1, self.y2)]
-
-    @property
-    def center(self):
-        center_x = (self.x1 + self.x2) / 2
-        center_y = (self.y1 + self.y2) / 2
-        return (center_x, center_y)
-
     def get_random_point(self):
-        x = random.randint(self.x1 + 1, self.x2 - 1)
-        y = random.randint(self.y1 + 1, self.y2 - 1)
+        x = random.randint(self.top_left.x + 1, self.bottom_right.x - 1)
+        y = random.randint(self.top_left.y + 1, self.bottom_right.y - 1)
 
-        return (x, y)
- 
-    def x_distance_to_room(self, other):
-        if (self.x1 >= other.x1 and self.x1 <= other.x2) or \
-           (self.x2 >= other.x1 and self.x2 <= other.x2):
-            return 0
-
-        if self.x2 < other.x1:
-            return other.x1 - self.x2
-
-        return self.x1 - other.x2
-
-    def y_distance_to_room(self, other):
-        if (self.y1 >= other.y1 and self.y1 <= other.y2) or \
-           (self.y2 >= other.y1 and self.y2 <= other.y2):
-            return 0
-
-        if self.y2 < other.y1:
-            return other.y1 - self.y2
-
-        return self.y1 - other.y2
-
-    def intersects(self, other):
-        #returns true if this rectangle intersects with another one
-        return (self.x_distance_to_room(other) <= 1 and
-                self.y_distance_to_room(other) <= 1)
-
-    def distance_to_room(self, other):
-        if self.intersects(other):
-            return 1
-
-        dx = self.x_distance_to_room(other)
-        dy = self.y_distance_to_room(other)
-
-        return math.sqrt(dx ** 2 + dy ** 2)
+        return Point(x, y)
 
 
 def create_room_connection(room1, room2, mode="center"):
@@ -89,21 +41,21 @@ def create_room_connection(room1, room2, mode="center"):
     v_tunnel = lambda y1, y2, x: Room(x, min(y1, y2), 1, abs(y1 - y2) + 1)
 
     if mode == "center":
-        (origin1x, origin1y) = room1.center
-        (origin2x, origin2y) = room2.center
+        origin1 = room1.center
+        origin2 = room2.center
     elif mode == "random":
-        (origin1x, origin1y) = room1.get_random_point()
-        (origin2x, origin2y) = room2.get_random_point()
+        origin1 = room1.get_random_point()
+        origin2 = room2.get_random_point()
 
     #draw a coin (random number that is either 0 or 1)
     if random.choice([True, False]):
         #first move horizontally, then vertically
-        h_tunnel = h_tunnel(origin1x, origin2x, origin1y)
-        v_tunnel = v_tunnel(origin1y, origin2y, origin2x)
+        h_tunnel = h_tunnel(origin1.x, origin2.x, origin1.y)
+        v_tunnel = v_tunnel(origin1.y, origin2.y, origin2.x)
     else:
         #first move vertically, then horizontally
-        v_tunnel = v_tunnel(origin1y, origin2y, origin1x)
-        h_tunnel = h_tunnel(origin1x, origin2x, origin2y)
+        v_tunnel = v_tunnel(origin1.y, origin2.y, origin1.x)
+        h_tunnel = h_tunnel(origin1.x, origin2.x, origin2.y)
 
     return (h_tunnel, v_tunnel)
 
@@ -140,9 +92,13 @@ class Level:
 
     def __dig_room(self, room):
         #go through the tiles in the rectangle and make them passable
-        for (x, y) in room.all_points:
-            self.tiles[x][y].blocked = False
-            self.tiles[x][y].block_sight = False
+
+        tl = room.top_left
+        br = room.bottom_right
+        for x in range(tl.x, br.x):
+            for y in range(tl.y, br.y):
+                self.tiles[x][y].blocked = False
+                self.tiles[x][y].block_sight = False
 
     def is_blocked(self, pos):
         x, y = pos
@@ -163,10 +119,10 @@ class Level:
 
         for i in range(num_monsters):
             #choose random spot for this monster
-            (x, y) = room.get_random_point()
+            p = room.get_random_point()
 
-            if not self.is_blocked((x, y)):
-                monster = MonsterFactory(x, y)
+            if not self.is_blocked((p.x, p.y)):
+                monster = MonsterFactory(p.x, p.y)
                 self.monsters.append(monster)
 
     def __place_items_in_room(self, room):
@@ -175,11 +131,11 @@ class Level:
 
         for i in range(num_items):
             #choose random spot for this item
-            (x, y) = room.get_random_point()
+            p = room.get_random_point()
 
             #only place it if the tile is not blocked
-            if not self.is_blocked((x, y)):
-                item = ItemFactory(x, y)
+            if not self.is_blocked((p.x, p.y)):
+                item = ItemFactory(p.x, p.y)
                 self.items.append(item)
 
     def __build_complete_room(self):
@@ -218,7 +174,7 @@ class Level:
             unconnected = [r for r in self.rooms if not r.connected and r != room]
 
             if len(unconnected) > 0:
-                closest = min(unconnected, key = room.distance_to_room)
+                closest = min(unconnected, key = room.distance_to_rect)
 
                 (h_tunnel, v_tunnel) = create_room_connection(room, closest, "random")
                 self.__dig_room(h_tunnel)
