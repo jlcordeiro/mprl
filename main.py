@@ -1,5 +1,4 @@
 import libtcodpy as libtcod
-from path import take_turn
 from config import *
 from messages import *
 from platform.ui import *
