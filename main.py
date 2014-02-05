@@ -18,6 +18,9 @@ dungeon = controllers.dungeon.Dungeon()
 HP_RECT = Rect(1, 1, BAR_WIDTH, 1)
 HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
 
+gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
+SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
+
 def aim():
     (x, y) = dungeon.player.position
 
@@ -59,10 +62,7 @@ def handle_keys():
             dungeon.move_player(dx, dy)
 
         elif chr(key.c) == 'i':
-            chosen_item = inventory_menu(con,
-                                         "Press the key next to an item " +
-                                         " to use it," +
-                                         "or any other to cancel.\n")
+            chosen_item = inventory_menu(con)
 
             if chosen_item is not None:
                 item_range = chosen_item.affects_range
@@ -83,10 +83,7 @@ def handle_keys():
 
         elif chr(key.c) == 'd':
             #show the inventory; if an item is selected, drop it
-            chosen_item = inventory_menu(con,
-                                         "Press the key next to an item " +
-                                         "to drop it," +
-                                         "or any other to cancel.\n")
+            chosen_item = inventory_menu(con)
             if chosen_item is not None:
                 dungeon.take_item_from_player(chosen_item)
 
@@ -101,9 +98,7 @@ def handle_keys():
 
             return 'did-not-take-turn'
 
-
-
-def inventory_menu(console, header):
+def inventory_menu(console):
     #show a menu with each item of the inventory as an option
     items = dungeon.player.items
     options = [i.name for i in items]
@@ -111,7 +106,8 @@ def inventory_menu(console, header):
         messages.add('Inventory is empty.', libtcod.orange)
         return
 
-    index = menu(console, header, options, INVENTORY_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT)
+    header = "Press the key next to an item to drop it, or any other to cancel.\n"
+    index = option_menu(console, header, options, SCREEN_RECT)
 
     #if an item was chosen, return it
     if index is None:

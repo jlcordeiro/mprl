@@ -43,23 +43,28 @@ class UIBar(object):
                                  libtcod.BKGND_NONE, libtcod.CENTER, self.text)
 
 
-def menu(con, header, options, width, total_width, total_height):
+def show_menu(con, header, options, rect):
+    """ Show menu with header and options in the screen. """
+
     if len(options) > 26:
         raise ValueError('Cannot have a menu with more than 26 options.')
 
+    height = rect.bottom_right.y - rect.top_left.y
+    width = rect.bottom_right.x - rect.top_left.x
+
     #calculate total height for the header (after auto-wrap)
     header_height = libtcod.console_get_height_rect(con, 0, 0, width,
-                                                    total_height, header)
-    height = len(options) + header_height
+                                                    height, header)
+
+    needed_height = len(options) + header_height
+    height = max(height, needed_height)
 
     #create an off-screen console that represents the menu's window
     window = libtcod.console_new(width, height)
-
     #print the header, with auto-wrap
     libtcod.console_set_default_foreground(window, libtcod.white)
     libtcod.console_print_rect_ex(window, 0, 0, width, height,
-                                  libtcod.BKGND_NONE, libtcod.LEFT,
-                                  header)
+                                  libtcod.BKGND_NONE, libtcod.LEFT, header)
 
     #print all the options
     y = header_height
@@ -67,15 +72,16 @@ def menu(con, header, options, width, total_width, total_height):
     for option_text in options:
         text = '(' + chr(letter_index) + ') ' + option_text
         libtcod.console_print_ex(window, 0, y,
-                                 libtcod.BKGND_NONE, libtcod.LEFT,
-                                 text)
+                                 libtcod.BKGND_NONE, libtcod.LEFT, text)
         y += 1
         letter_index += 1
 
     #blit the contents of "window" to the root console
-    x = total_width / 2 - width / 2
-    y = total_height / 2 - height / 2
+    x, y = rect.top_left.coords
     libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
+
+def option_menu(con, header, options, rect):
+    show_menu(con, header, options, rect)
 
     #wait for a key-press
     libtcod.console_flush()
