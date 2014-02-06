@@ -24,3 +24,13 @@ class ObjectView(object):
                                  self._model.y,
                                  ' ',
                                  libtcod.BKGND_NONE)
+
+
+class Potion(ObjectView):
+    def __init__(self, model):
+        super(Potion, self).__init__(model, '!', libtcod.light_green)
+
+
+class Scroll(ObjectView):
+    def __init__(self, model):
+        super(Scroll, self).__init__(model, '#', libtcod.light_yellow)
