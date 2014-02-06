@@ -3,7 +3,7 @@ from utils import euclidean_distance
 import random
 import views.dungeon
 import models.dungeon
-from items import ItemFactory
+from objects import ItemFactory
 from creatures import MonsterFactory
 from config import *
 from messages import *

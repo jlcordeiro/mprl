@@ -58,7 +58,6 @@ class CreatureController(ObjectController):
         self._view.char = '%'
         self._model.confused_turns = 0
         self._model.blocks = False
-        self._model.uid += " (dead)"
 
     @property
     def died(self):

@@ -2,7 +2,7 @@ import libtcodpy as libtcod
 import random
 from config import *
 import controllers
-from controllers.items import ItemFactory
+from controllers.objects import ItemFactory
 from controllers.creatures import MonsterFactory
 from utilities.geometry import Rect
 from utilities.geometry import Point
