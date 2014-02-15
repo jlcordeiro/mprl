@@ -10,6 +10,7 @@ class Creature(ObjectModel):
         self.power = power
         self.confused_turns = 0
         self.target_pos = None
+        self.weapon = None
 
 
 class Orc(Creature):

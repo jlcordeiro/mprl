@@ -28,6 +28,9 @@ class CreatureController(ObjectController):
         #a simple formula for attack damage
         damage = self._model.power - target.defense
 
+        if self._model.weapon is not None:
+            damage += self._model.weapon.max_damage
+
         messages = MessagesBorg()
         if damage > 0:
             #make the target take some damage
@@ -119,6 +122,21 @@ class Player(CreatureController):
 
         messages = MessagesBorg()
         messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
+
+    def equip(self, weapon):
+        """Replace equipped weapon by a new one."""
+
+        previous_weapon = self._model.weapon
+
+        messages = MessagesBorg()
+        messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
+
+        self._model.weapon = weapon
+        self.remove_item(weapon)
+
+        if previous_weapon is not None:
+            self.pick_item(previous_weapon)
+
 
     @property
     def items(self):

@@ -55,14 +55,18 @@ class Item(ObjectController):
         raise NotImplementedError("not_implemented")
 
     @property
+    def type(self):
+        return "cast"
+
+    @property
     def who_is_affected(self):
         return self._model.affects
 
     @property
-    def affects_range(self):
+    def range(self):
         return self._model.range
 
-    def cast(self, player, monsters):
+    def use(self, player, monsters):
         raise NotImplementedError("not_implemented")
 
 
@@ -71,7 +75,7 @@ class HealingPotion(Item):
         self._model = models.objects.HealingPotion(x, y)
         self._view = views.objects.Potion(self._model)
 
-    def cast(self, player, monsters):
+    def use(self, player, monsters):
         messages = MessagesBorg()
         messages.add('Your wounds start to feel better!', libtcod.light_violet)
         player.heal(HEAL_AMOUNT)
@@ -83,7 +87,7 @@ class LightningBolt(Item):
         self._model = models.objects.LightningBolt(x, y)
         self._view = views.objects.Scroll(self._model)
 
-    def cast(self, player, monsters):
+    def use(self, player, monsters):
         messages = MessagesBorg()
 
         if len(monsters) < 1:
@@ -105,7 +109,7 @@ class ConfusionScroll(Item):
         self._model = models.objects.ConfusionScroll(x, y)
         self._view = views.objects.Scroll(self._model)
 
-    def cast(self, player, monsters):
+    def use(self, player, monsters):
         messages = MessagesBorg()
 
         if len(monsters) < 1:
@@ -121,16 +125,6 @@ class ConfusionScroll(Item):
         return True
 
 
-def ItemFactory(x, y):
-    dice = libtcod.random_get_int(0, 0, 100)
-    if dice < 30:
-        return HealingPotion(x, y)
-    elif dice < 60:
-        return LightningBolt(x, y)
-    else:
-        return ConfusionScroll(x, y)
-
-
 ################ Weapons
 
 class Weapon(ObjectController):
@@ -138,6 +132,10 @@ class Weapon(ObjectController):
         self._model = None
         self._views = None
         raise NotImplementedError("not_implemented")
+
+    @property
+    def type(self):
+        return "melee"
 
     @property
     def min_damage(self):
@@ -151,18 +149,25 @@ class Weapon(ObjectController):
 class Stick(Weapon):
     def __init__(self, x, y):
         self._model = models.objects.Stick(x, y)
-        self._view = views.objects.Weapon()
+        self._view = views.objects.Weapon(self._model)
 
 
 class Crowbar(Weapon):
     def __init__(self, x, y):
         self._model = models.objects.Crowbar(x, y)
-        self._view = views.objects.Weapon()
+        self._view = views.objects.Weapon(self._model)
 
 
-def WeaponFactory(x, y):
+
+def ItemFactory(x, y):
     dice = libtcod.random_get_int(0, 0, 100)
-    if dice < 50:
+    if dice < 30:
+        return HealingPotion(x, y)
+    elif dice < 60:
+        return LightningBolt(x, y)
+    elif dice < 80:
+        return ConfusionScroll(x, y)
+    elif dice < 90:
         return Stick(x, y)
     else:
         return Crowbar(x, y)

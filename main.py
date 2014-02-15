@@ -64,8 +64,11 @@ def handle_keys():
         elif chr(key.c) == 'i':
             chosen_item = inventory_menu(con)
 
-            if chosen_item is not None:
-                item_range = chosen_item.affects_range
+            if chosen_item is None:
+                return
+
+            if chosen_item.type == "cast":
+                item_range = chosen_item.range
                 affected_monsters = []
 
                 if chosen_item.who_is_affected == 'aim':
@@ -78,8 +81,11 @@ def handle_keys():
                     if closest_one is not None:
                         affected_monsters.append(closest_one)
 
-                if chosen_item.cast(dungeon.player, affected_monsters) is True:
+                if chosen_item.use(dungeon.player, affected_monsters) is True:
                     dungeon.player.remove_item(chosen_item)
+
+            elif chosen_item.type == "melee":
+                dungeon.player.equip(chosen_item)
 
         elif chr(key.c) == 'd':
             #show the inventory; if an item is selected, drop it
