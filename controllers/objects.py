@@ -183,7 +183,7 @@ class WoodenShield(Weapon):
         self._view = views.objects.Weapon(self._model)
 
 
-class Cloak(Weapon):
+class Cloak(Armour):
     def __init__(self, x, y):
         self._model = models.objects.Cloak(x, y)
         self._view = views.objects.Armour(self._model)
