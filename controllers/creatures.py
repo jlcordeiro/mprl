@@ -24,12 +24,16 @@ class CreatureController(ObjectController):
             messages.add('The ' + self.name + ' is no longer confused!',
                          libtcod.red)
 
+    @property
+    def power(self):
+        if self._model.weapon:
+            return self._model.base_power + self._model.weapon.max_damage
+
+        return self._model.base_power
+
     def attack(self, target):
         #a simple formula for attack damage
-        damage = self._model.power - target.defense
-
-        if self._model.weapon is not None:
-            damage += self._model.weapon.max_damage
+        damage = self.power - target.defense
 
         messages = MessagesBorg()
         if damage > 0:

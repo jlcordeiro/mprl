@@ -143,14 +143,18 @@ def draw_everything():
     HP_BAR.update(dungeon.player.hp, dungeon.player.max_hp)
     HP_BAR.draw(panel, HP_RECT)
 
+    libtcod.console_print_ex(panel, 1, 2, libtcod.BKGND_NONE, libtcod.LEFT,
+                             "Attack: " + str(dungeon.player.power))
+
+    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT,
+                             "Defense: " + str(dungeon.player.defense))
+
     #print the game messages, one line at a time
     y = 1
     for (line, color) in messages.get_all():
         libtcod.console_set_default_foreground(panel, color)
-        libtcod.console_print_ex(panel,
-                                 MSG_X, y,
-                                 libtcod.BKGND_NONE,
-                                 libtcod.LEFT,
+        libtcod.console_print_ex(panel, MSG_X, y,
+                                 libtcod.BKGND_NONE, libtcod.LEFT,
                                  line)
         y += 1
 
