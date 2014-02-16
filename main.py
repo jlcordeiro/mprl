@@ -62,12 +62,23 @@ def handle_keys():
             dungeon.move_player(dx, dy)
 
         elif chr(key.c) == 'i':
-            chosen_item = inventory_menu(con)
+            header = "Press the key next to an item to drop it, or any other to cancel.\n"
+            chosen_item = inventory_menu(con, header)
 
             if chosen_item is None:
                 return
 
-            if chosen_item.type == "cast":
+
+            #show a menu with each item of the inventory as an option
+            item_options = {
+                    "cast": ["Use"],
+                    "melee": ["Equip in right hand", "Equip in left hand"],
+                    "armour": ["Wear"]
+                    }
+
+            index = option_menu(con, "Do what?", item_options[chosen_item.type], SCREEN_RECT)
+
+            if chosen_item.type == "cast" and index == 0:
                 item_range = chosen_item.range
                 affected_monsters = []
 
@@ -84,12 +95,18 @@ def handle_keys():
                 if chosen_item.use(dungeon.player, affected_monsters) is True:
                     dungeon.player.remove_item(chosen_item)
 
+            elif chosen_item.type == "armour" and index == 0:
+                dungeon.player.wear(chosen_item)
             elif chosen_item.type == "melee":
-                dungeon.player.equip(chosen_item)
+                if index == 0:
+                    dungeon.player.equip("right", chosen_item)
+                elif index == 1:
+                    dungeon.player.equip("left", chosen_item)
 
         elif chr(key.c) == 'd':
             #show the inventory; if an item is selected, drop it
-            chosen_item = inventory_menu(con)
+            header = "Press the key next to an item to choose it, or any other to cancel.\n"
+            chosen_item = inventory_menu(con, header)
             if chosen_item is not None:
                 dungeon.take_item_from_player(chosen_item)
 
@@ -104,7 +121,7 @@ def handle_keys():
 
             return 'did-not-take-turn'
 
-def inventory_menu(console):
+def inventory_menu(console, header):
     #show a menu with each item of the inventory as an option
     items = dungeon.player.items
     options = [i.name for i in items]
@@ -112,7 +129,6 @@ def inventory_menu(console):
         messages.add('Inventory is empty.', libtcod.orange)
         return
 
-    header = "Press the key next to an item to drop it, or any other to cancel.\n"
     index = option_menu(console, header, options, SCREEN_RECT)
 
     #if an item was chosen, return it

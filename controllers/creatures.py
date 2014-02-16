@@ -24,6 +24,18 @@ class CreatureController(ObjectController):
             messages.add('The ' + self.name + ' is no longer confused!',
                          libtcod.red)
 
+    @property
+    def power(self):
+        total = self._model.base_power
+
+        r_weapon = self._model.weaponr
+        l_weapon = self._model.weaponl
+
+        r_dmg = 0 if r_weapon is None else r_weapon.damage
+        l_dmg = 0 if l_weapon is None else l_weapon.damage
+
+        return total + max(r_dmg, l_dmg)
+
     def attack(self, target):
         #a simple formula for attack damage
         damage = self._model.power - target.defense
@@ -84,7 +96,18 @@ class CreatureController(ObjectController):
 
     @property
     def defense(self):
-        return self._model.defense
+        total = self._model.defense
+
+        r_weapon = self._model.weaponr
+        l_weapon = self._model.weaponl
+
+        if self._model.armour is not None:
+            total += self._model.armour.defense
+
+        r_def = 0 if r_weapon is None else r_weapon.defense
+        l_def = 0 if l_weapon is None else l_weapon.defense
+
+        return total + max(r_def, l_def)
 
     @property
     def target(self):
@@ -123,20 +146,41 @@ class Player(CreatureController):
         messages = MessagesBorg()
         messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
 
-    def equip(self, weapon):
+    def equip(self, hand, weapon):
         """Replace equipped weapon by a new one."""
 
-        previous_weapon = self._model.weapon
-
-        messages = MessagesBorg()
-        messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
-
-        self._model.weapon = weapon
-        self.remove_item(weapon)
+        if hand == "right":
+            previous_weapon = self._model.weaponr
+            self._model.weaponr = weapon
+        else:
+            previous_weapon = self._model.weaponl
+            self._model.weaponl = weapon
 
         if previous_weapon is not None:
             self.pick_item(previous_weapon)
 
+        self.remove_item(weapon)
+
+        messages = MessagesBorg()
+        messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
+
+    def wear(self, armour):
+        """Replace equipped armour by a new one."""
+
+        messages = MessagesBorg()
+        if armour.type != "armour":
+            messages.add('You can\'t wear a ' + armour.name + '.', libtcod.red)
+            return
+
+        messages.add('You are now wearing a ' + armour.name + '.', libtcod.green)
+
+        previous = self._model.armour
+        self._model.armour = armour
+
+        if previous is not None:
+            self.pick_item(previous)
+
+        self.remove_item(armour)
 
     @property
     def items(self):

@@ -138,12 +138,31 @@ class Weapon(ObjectController):
         return "melee"
 
     @property
-    def min_damage(self):
-        return self._model.min_damage
+    def damage(self):
+        return self._model.damage
 
     @property
-    def max_damage(self):
-        return self._model.max_damage
+    def defense(self):
+        return self._model.defense
+
+
+class Armour(ObjectController):
+    def __init__(self, x, y):
+        self._model = None
+        self._views = None
+        raise NotImplementedError("not_implemented")
+
+    @property
+    def type(self):
+        return "armour"
+
+    @property
+    def damage(self):
+        return self._model.damage
+
+    @property
+    def defense(self):
+        return self._model.defense
 
 
 class Stick(Weapon):
@@ -158,15 +177,30 @@ class Crowbar(Weapon):
         self._view = views.objects.Weapon(self._model)
 
 
+class WoodenShield(Weapon):
+    def __init__(self, x, y):
+        self._model = models.objects.WoodenShield(x, y)
+        self._view = views.objects.Weapon(self._model)
+
+
+class Cloak(Weapon):
+    def __init__(self, x, y):
+        self._model = models.objects.Cloak(x, y)
+        self._view = views.objects.Armour(self._model)
+
 
 def ItemFactory(x, y):
     dice = libtcod.random_get_int(0, 0, 100)
-    if dice < 30:
+    if dice < 20:
         return HealingPotion(x, y)
-    elif dice < 60:
+    elif dice < 20:
         return LightningBolt(x, y)
-    elif dice < 80:
+    elif dice < 60:
         return ConfusionScroll(x, y)
+    elif dice < 70:
+        return WoodenShield(x, y)
+    elif dice < 80:
+        return Cloak(x, y)
     elif dice < 90:
         return Stick(x, y)
     else:

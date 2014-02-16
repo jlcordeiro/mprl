@@ -38,3 +38,7 @@ class Scroll(ObjectView):
 class Weapon(ObjectView):
     def __init__(self, model):
         super(Weapon, self).__init__(model, '|', libtcod.light_red)
+
+class Armour(ObjectView):
+    def __init__(self, model):
+        super(Armour, self).__init__(model, '[', libtcod.light_red)

@@ -10,8 +10,10 @@ class Creature(ObjectModel):
         self.power = power
         self.confused_turns = 0
         self.target_pos = None
-        self.weapon = None
 
+        self.weaponr = None
+        self.weaponl = None
+        self.armour = None
 
 class Orc(Creature):
     def __init__(self, x, y):

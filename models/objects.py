@@ -47,18 +47,28 @@ class ConfusionScroll(Scroll):
 
 
 class Weapon(ObjectModel):
-    def __init__(self, name, x, y, min_damage, max_damage):
+    def __init__(self, name, x, y, damage, defense):
         super(Weapon, self).__init__(name, x, y, False)
-        self.min_damage = min_damage
-        self.max_damage = max_damage
+        self.damage = damage
+        self.defense = defense
 
 
 class Stick(Weapon):
     def __init__(self, x, y):
-        super(Stick, self).__init__('Stick', x, y, STICK_MIND, STICK_MAXD)
+        super(Stick, self).__init__('Stick', x, y, STICK_DMG, STICK_DEF)
 
 
 class Crowbar(Weapon):
     def __init__(self, x, y):
-        super(Crowbar, self).__init__('Crowbar', x, y,
-                                      CROWBAR_MIND, CROWBAR_MAXD)
+        super(Crowbar, self).__init__('Crowbar', x, y, CROWBAR_DMG, CROWBAR_DEF)
+
+
+class WoodenShield(Weapon):
+    def __init__(self, x, y):
+        super(WoodenShield, self).__init__('Wooden Shield', x, y,
+                                           WOODEN_SHIELD_DMG, WOODEN_SHIELD_DEF)
+
+
+class Cloak(Weapon):
+    def __init__(self, x, y):
+        super(Cloak, self).__init__('Cloak', x, y, CLOAK_DMG, CLOAK_DEF)
