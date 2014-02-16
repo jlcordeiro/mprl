@@ -177,9 +177,9 @@ class Player(CreatureController):
             self._model.weaponl = weapon
 
         if previous_weapon is not None:
-            self.pick_item(previous_weapon)
+            previous_weapon.used = False
 
-        self.remove_item(weapon)
+        weapon.used = True
 
         messages = MessagesBorg()
         messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
@@ -198,9 +198,9 @@ class Player(CreatureController):
         self._model.armour = armour
 
         if previous is not None:
-            self.pick_item(previous)
+            previous.used = False
 
-        self.remove_item(armour)
+        armour.used = True
 
     @property
     def items(self):

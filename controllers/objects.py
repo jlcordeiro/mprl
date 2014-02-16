@@ -37,6 +37,14 @@ class ObjectController(object):
     def name(self):
         return self._model.name
 
+    @property
+    def used(self):
+        return self._model.used
+
+    @used.setter
+    def used(self, value):
+        self._model.used = value
+
     def distance_to(self, pos):
         return euclidean_distance(self.position, pos)
 

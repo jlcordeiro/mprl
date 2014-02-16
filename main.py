@@ -119,10 +119,14 @@ def handle_keys():
 def inventory_menu(console, header):
     #show a menu with each item of the inventory as an option
     items = dungeon.player.items
-    options = [(i.key, i.name) for i in items]
-    if len(options) == 0:
+    if len(items) == 0:
         messages.add('Inventory is empty.', libtcod.orange)
         return
+
+    options = []
+    for item in items:
+        text = "(*) " + item.name if item.used else item.name
+        options.append((item.key, text))
 
     item_key = option_menu(console, SCREEN_RECT, header, options)
 
