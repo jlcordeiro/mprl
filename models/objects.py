@@ -4,7 +4,9 @@ class ObjectModel(object):
     def __init__(self, name, x, y, blocks):
         self.x = x
         self.y = y
+        self.key = '_'
         self.name = name
+        self.used = False
         self.blocks = blocks
 
 

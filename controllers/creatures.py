@@ -119,17 +119,40 @@ class Player(CreatureController):
         self._model = models.creatures.Player(x, y)
         self._view = views.creatures.Player(self._model)
 
+    def __key_is_used(self, key):
+        for item in self._model.inventory:
+            if item.key == key:
+                return True
+
+        return False
+
+    def __get_unused_key(self):
+        for key in ITEM_KEYS:
+            if not self.__key_is_used(key):
+                return key
+
     def pick_item(self, item):
         #add to the player's inventory and remove from the map
         messages = MessagesBorg()
-        if len(self._model.inventory) >= 26:
+        if len(self._model.inventory) >= len(ITEM_KEYS):
             messages.add('Your inventory is full, cannot pick up ' +
                          item.name + '.', libtcod.red)
             return False
 
+        item.key = self.__get_unused_key()
+
         self._model.inventory.append(item)
-        messages.add('You picked up a ' + item.name + '!', libtcod.green)
+        messages.add('You picked up a ' + item.name + '! (' + item.key + ')', libtcod.green)
+
+        #sort inventory by item key
+        self._model.inventory.sort(key=lambda i: i.key)
+
         return True
+
+    def get_item_with_key(self, key):
+        for item in self._model.inventory:
+            if item.key == key:
+                return item
 
     def remove_item(self, item):
         self._model.inventory.remove(item)

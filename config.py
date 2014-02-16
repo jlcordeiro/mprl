@@ -1,3 +1,6 @@
+import string
+
+ITEM_KEYS = string.ascii_lowercase
 
 #actual size of the window
 SCREEN_WIDTH = 80
