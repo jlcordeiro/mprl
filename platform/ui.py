@@ -1,6 +1,7 @@
 """ Module to wrap UI interfaces and hide it from the game. """
 
 import libtcodpy as libtcod
+from config import *
 
 class UIBar(object):
     """ Class representing a horizontal bar. """
@@ -93,3 +94,33 @@ def option_menu(con, rect, header, options, hide_options = False):
         return chr(key.c)
 
     return None
+
+def inventory_menu(con, rect, header, player):
+    #show a menu with each item of the inventory as an option
+    items = player.items
+    if len(items) == 0:
+        messages.add('Inventory is empty.', libtcod.orange)
+        return
+
+    options = []
+    for item in items:
+        text = "(*) " + item.name if item.used else item.name
+        options.append((item.key, text))
+
+    item_key = option_menu(con, rect, header, options)
+
+    #if an item was chosen, return it
+    if item_key is None:
+        return None
+
+    chosen_item = player.get_item_with_key(item_key)
+
+    if chosen_item is None:
+        return (None, None)
+
+    #show a menu with each item of the inventory as an option
+    option = option_menu(con, rect, chosen_item.name + ":\n",
+                         ITEM_TYPE_OPTIONS[chosen_item.type], True)
+
+    return (chosen_item, option)
+

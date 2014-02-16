@@ -63,20 +63,10 @@ def handle_keys():
 
         elif chr(key.c) == 'i':
             header = "Press the key next to an item to choose it, or any other to cancel.\n"
-            chosen_item = inventory_menu(con, header)
+            (chosen_item, option) = inventory_menu(con, SCREEN_RECT, header, dungeon.player)
 
             if chosen_item is None:
                 return
-
-            #show a menu with each item of the inventory as an option
-            item_options = {
-                    "cast": [('u', "(U)se"), ('d', "(D)rop")],
-                    "melee": [('r', "Equip in (r)ight hand"), ('l', "Equip in (l)eft hand"), ('d', "(D)rop")],
-                    "armour": [('w', "(W)ear"), ('d', "(D)rop")]
-                    }
-
-            option = option_menu(con, SCREEN_RECT, "Do what?",
-                                 item_options[chosen_item.type], True)
 
             if option == 'd':
                 dungeon.take_item_from_player(chosen_item)
@@ -115,26 +105,6 @@ def handle_keys():
                 dungeon.climb_stairs()
 
             return 'did-not-take-turn'
-
-def inventory_menu(console, header):
-    #show a menu with each item of the inventory as an option
-    items = dungeon.player.items
-    if len(items) == 0:
-        messages.add('Inventory is empty.', libtcod.orange)
-        return
-
-    options = []
-    for item in items:
-        text = "(*) " + item.name if item.used else item.name
-        options.append((item.key, text))
-
-    item_key = option_menu(console, SCREEN_RECT, header, options)
-
-    #if an item was chosen, return it
-    if item_key is None:
-        return None
-
-    return dungeon.player.get_item_with_key(item_key)
 
 def flush():
     #blit the contents of "console" to the root console
