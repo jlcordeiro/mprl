@@ -7,7 +7,7 @@ class Creature(ObjectModel):
         self.max_hp = hp
         self.hp = hp
         self.defense = defense
-        self.power = power
+        self.base_power = power
         self.confused_turns = 0
         self.target_pos = None
 
