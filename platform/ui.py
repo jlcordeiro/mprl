@@ -43,11 +43,8 @@ class UIBar(object):
                                  libtcod.BKGND_NONE, libtcod.CENTER, self.text)
 
 
-def show_menu(con, header, options, rect):
+def show_menu(con, header, options, rect, hide_options = False):
     """ Show menu with header and options in the screen. """
-
-    if len(options) > 26:
-        raise ValueError('Cannot have a menu with more than 26 options.')
 
     height = rect.bottom_right.y - rect.top_left.y
     width = rect.bottom_right.x - rect.top_left.x
@@ -68,29 +65,31 @@ def show_menu(con, header, options, rect):
 
     #print all the options
     y = header_height
-    letter_index = ord('a')
-    for option_text in options:
-        text = '(' + chr(letter_index) + ') ' + option_text
+    for (option_key, option_text) in options:
+        if hide_options is True:
+            text = option_text
+        else:
+            text = '(' + option_key + ') ' + option_text
         libtcod.console_print_ex(window, 0, y,
                                  libtcod.BKGND_NONE, libtcod.LEFT, text)
         y += 1
-        letter_index += 1
 
     #blit the contents of "window" to the root console
     x, y = rect.top_left.coords
     libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
 
-def option_menu(con, header, options, rect):
-    show_menu(con, header, options, rect)
+def option_menu(con, rect, header, options, hide_options = False):
+    show_menu(con, header, options, rect, hide_options)
 
     #wait for a key-press
     libtcod.console_flush()
     key = libtcod.console_wait_for_keypress(True)
 
     #convert the ASCII code to an index;
-    index = key.c - ord('a')
+    valid_keys = [o[0] for o in options]
+
     #if it corresponds to an option, return it
-    if index >= 0 and index < len(options):
-        return index
+    if chr(key.c) in valid_keys:
+        return chr(key.c)
 
     return None

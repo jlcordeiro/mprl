@@ -68,18 +68,19 @@ def handle_keys():
             if chosen_item is None:
                 return
 
-
             #show a menu with each item of the inventory as an option
             item_options = {
-                    "cast": ["Use", "Drop"],
-                    "melee": ["Equip in right hand", "Equip in left hand", "Drop"],
-                    "armour": ["Wear", "Drop"]
+                    "cast": [('u', "(U)se"), ('d', "(D)rop")],
+                    "melee": [('r', "Equip in (r)ight hand"), ('l', "Equip in (l)eft hand"), ('d', "(D)rop")],
+                    "armour": [('w', "(W)ear"), ('d', "(D)rop")]
                     }
 
-            index = option_menu(con, "Do what?", item_options[chosen_item.type], SCREEN_RECT)
-            print item_options[chosen_item.type][index]
+            option = option_menu(con, SCREEN_RECT, "Do what?",
+                                 item_options[chosen_item.type], True)
 
-            if chosen_item.type == "cast" and index == 0:
+            if option == 'd':
+                dungeon.take_item_from_player(chosen_item)
+            elif chosen_item.type == "cast" and option == 'u':
                 item_range = chosen_item.range
                 affected_monsters = []
 
@@ -96,12 +97,12 @@ def handle_keys():
                 if chosen_item.use(dungeon.player, affected_monsters) is True:
                     dungeon.player.remove_item(chosen_item)
 
-            elif chosen_item.type == "armour" and index == 0:
+            elif chosen_item.type == "armour" and option == 'w':
                 dungeon.player.wear(chosen_item)
             elif chosen_item.type == "melee":
-                if index == 0:
+                if option == 'r':
                     dungeon.player.equip("right", chosen_item)
-                elif index == 1:
+                elif option == 'l':
                     dungeon.player.equip("left", chosen_item)
 
         elif chr(key.c) == 'g':
@@ -118,18 +119,18 @@ def handle_keys():
 def inventory_menu(console, header):
     #show a menu with each item of the inventory as an option
     items = dungeon.player.items
-    options = [i.name for i in items]
+    options = [(i.key, i.name) for i in items]
     if len(options) == 0:
         messages.add('Inventory is empty.', libtcod.orange)
         return
 
-    index = option_menu(console, header, options, SCREEN_RECT)
+    item_key = option_menu(console, SCREEN_RECT, header, options)
 
     #if an item was chosen, return it
-    if index is None:
+    if item_key is None:
         return None
 
-    return items[index]
+    return dungeon.player.get_item_with_key(item_key)
 
 def flush():
     #blit the contents of "console" to the root console
