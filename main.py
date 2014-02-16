@@ -62,7 +62,7 @@ def handle_keys():
             dungeon.move_player(dx, dy)
 
         elif chr(key.c) == 'i':
-            header = "Press the key next to an item to drop it, or any other to cancel.\n"
+            header = "Press the key next to an item to choose it, or any other to cancel.\n"
             chosen_item = inventory_menu(con, header)
 
             if chosen_item is None:
@@ -71,12 +71,13 @@ def handle_keys():
 
             #show a menu with each item of the inventory as an option
             item_options = {
-                    "cast": ["Use"],
-                    "melee": ["Equip in right hand", "Equip in left hand"],
-                    "armour": ["Wear"]
+                    "cast": ["Use", "Drop"],
+                    "melee": ["Equip in right hand", "Equip in left hand", "Drop"],
+                    "armour": ["Wear", "Drop"]
                     }
 
             index = option_menu(con, "Do what?", item_options[chosen_item.type], SCREEN_RECT)
+            print item_options[chosen_item.type][index]
 
             if chosen_item.type == "cast" and index == 0:
                 item_range = chosen_item.range
@@ -102,13 +103,6 @@ def handle_keys():
                     dungeon.player.equip("right", chosen_item)
                 elif index == 1:
                     dungeon.player.equip("left", chosen_item)
-
-        elif chr(key.c) == 'd':
-            #show the inventory; if an item is selected, drop it
-            header = "Press the key next to an item to choose it, or any other to cancel.\n"
-            chosen_item = inventory_menu(con, header)
-            if chosen_item is not None:
-                dungeon.take_item_from_player(chosen_item)
 
         elif chr(key.c) == 'g':
             #pick up an item
