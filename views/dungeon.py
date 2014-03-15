@@ -50,10 +50,14 @@ class Level:
 
                 # draw stairs
                 if visible or draw_not_in_fov:
-                    if (x, y) == model.stairs_up_pos:
-                        libtcod.console_put_char(console, x, y, '<', self.bkgd)
-                    elif (x, y) == model.stairs_down_pos:
-                        libtcod.console_put_char(console, x, y, '>', self.bkgd)
+                    stairs = next((s for s in model.stairs if s.pos_i == (x, y)),
+                                   None)
+
+                    if stairs == None:
+                        continue
+
+                    char = '<' if stairs.type == "STAIRS_UP" else '>'
+                    libtcod.console_put_char(console, x, y, char, self.bkgd)
 
         # start by drawing the monsters that have died
         self.__draw_monsters(console, model, True, draw_not_in_fov)
@@ -71,11 +75,9 @@ class Level:
 
     def clear(self, console, model):
         #erase the character that represents this object
-        (x, y) = model.stairs_up_pos
-        libtcod.console_put_char(console, x, y, ' ', self.bkgd)
-
-        (x, y) = model.stairs_down_pos
-        libtcod.console_put_char(console, x, y, ' ', self.bkgd)
+        for s in model.stairs:
+            (x, y) = s.pos_i
+            libtcod.console_put_char(console, x, y, ' ', self.bkgd)
 
         #decrement the turns left for each temporary artifact
         #if it becomes 0, remove them

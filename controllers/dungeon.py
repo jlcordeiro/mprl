@@ -12,7 +12,7 @@ class Dungeon(object):
     def __init__(self):
         self._model = models.dungeon.Dungeon()
         self._view = views.dungeon.Level()
-    
+   
     @property
     def player(self):
         return self._model.player
@@ -20,7 +20,7 @@ class Dungeon(object):
     @property
     def __clevel(self):
         """ Return the current level. """
-        return self._model.levels[self._model.current_level]
+        return self._model.current_level
 
     @property
     def aim_target(self):
@@ -96,18 +96,18 @@ class Dungeon(object):
 
     def climb_stairs(self):
         messages = MessagesBorg()
-        if self.player.position == self.__clevel.stairs_up_pos:
-            messages.add('You climb up some stairs..', libtcod.green)
-            self._model.current_level -= 1
-            self.player.move(new_pos = self.__clevel.stairs_down_pos)
-            self.move_player(0, 0)
-        elif self.player.position == self.__clevel.stairs_down_pos:
-            messages.add('You climb down some stairs..', libtcod.green)
-            self._model.current_level += 1
-            self.player.move(new_pos = self.__clevel.stairs_up_pos)
-            self.move_player(0, 0)
-        else:
+
+        pos = self.player.position
+        stairs = next((s for s in self.__clevel.stairs if s.pos_i == pos), None)
+
+        if stairs == None:
             messages.add('There are no stairs here.', libtcod.orange)
+            return
+
+        messages.add('You climb some stairs..', libtcod.green)
+        self._model.current_level = stairs.destiny
+        self.player.move(new_pos = stairs.pos_f)
+        self.move_player(0, 0)
 
     def clear_ui(self, con):
         self._view.clear(con, self.__clevel)

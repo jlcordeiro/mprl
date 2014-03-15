@@ -2,10 +2,13 @@ import libtcodpy as libtcod
 import random
 from config import *
 import controllers
+from collections import namedtuple
 from controllers.objects import ItemFactory
 from controllers.creatures import MonsterFactory
 from utilities.geometry import Rect
 from utilities.geometry import Point
+
+Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
 
 
 class Tile:
@@ -73,8 +76,7 @@ class Level:
         self.items = []
         self.monsters = []
 
-        self.stairs_up_pos = None
-        self.stairs_down_pos = None
+        self.stairs = []
 
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
         self.path = None
@@ -162,10 +164,6 @@ class Level:
         for r in range(MAX_ROOMS):
             self.__build_complete_room()
 
-        # place stairs
-        self.stairs_up_pos = self.random_unblocked_pos()
-        self.stairs_down_pos = self.random_unblocked_pos()
-
         # connect rooms
         for room in self.rooms:
             if room.connected:
@@ -250,13 +248,26 @@ class Level:
 class Dungeon:
     def __init__(self):
         self.levels = {}
-        self.current_level = 0
 
         for l in xrange(0, NUM_LEVELS):
             new_level = Level()
             new_level.generate()
             new_level.compute_fov()
             self.levels[l] = new_level
+ 
+        for i in self.levels:
+            tl = self.levels[i]
+
+            if i+1 < len(self.levels):
+                nl = self.levels[i+1]
+
+                from_pos = tl.random_unblocked_pos()
+                to_pos = nl.random_unblocked_pos()
+
+                tl.stairs.append(Stairs(from_pos, to_pos, "STAIRS_DOWN", nl))
+                nl.stairs.append(Stairs(to_pos, from_pos, "STAIRS_UP", tl))
+
+        self.current_level = self.levels[0]
 
         # start the player on a random position (not blocked)
         (x, y) = self.levels[0].random_unblocked_pos()
@@ -267,7 +278,7 @@ class Dungeon:
         old_pos = self.player.position
         new_pos = (old_pos[0]+dx, old_pos[1]+dy)
 
-        cur_level = self.levels[self.current_level]
+        cur_level = self.current_level
 
         monster = cur_level.get_monster_in_pos(new_pos)
         if monster is not None:
