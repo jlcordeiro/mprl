@@ -88,6 +88,9 @@ class Level:
         # of them. Format: (position, char, nturns)
         self.temp_artifacts = []
 
+        self._generate()
+        self._compute_fov()
+
     def __add_room(self, room):
         self.rooms.append(room)
         self.num_rooms += 1
@@ -159,7 +162,7 @@ class Level:
             self.__place_items_in_room(room)
             self.__place_monsters_in_room(room)
 
-    def generate(self):
+    def _generate(self):
         # build rooms
         for r in range(MAX_ROOMS):
             self.__build_complete_room()
@@ -227,7 +230,7 @@ class Level:
 
         return libtcod.path_get(self.path, 0)
 
-    def compute_fov(self):
+    def _compute_fov(self):
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
                 tile = self.tiles[x][y]
@@ -245,33 +248,52 @@ class Level:
                     self.tiles[x][y].explored = True
 
 
+# M (Main level)
+# |
+# |--- Branch 1 -- (...)
+# |
+# |--- Branch 2 -- (...)
+# |
+# |--- Branch 3 -- (...)
+# |
+# (...)
+
 class Dungeon:
     def __init__(self):
         self.levels = {}
 
-        for l in xrange(0, NUM_LEVELS):
-            new_level = Level()
-            new_level.generate()
-            new_level.compute_fov()
-            self.levels[l] = new_level
- 
-        for i in self.levels:
-            tl = self.levels[i]
+        # main level
+        main_level = Level()
 
-            if i+1 < len(self.levels):
-                nl = self.levels[i+1]
+        self.levels["MAIN"] = main_level
+        self.current_level = self.levels["MAIN"]
 
-                from_pos = tl.random_unblocked_pos()
-                to_pos = nl.random_unblocked_pos()
-
-                tl.stairs.append(Stairs(from_pos, to_pos, "STAIRS_DOWN", nl))
-                nl.stairs.append(Stairs(to_pos, from_pos, "STAIRS_UP", tl))
-
-        self.current_level = self.levels[0]
+        self._create_branch("Branch 1", NUM_LEVELS, main_level)
+        self._create_branch("Branch 2", NUM_LEVELS, main_level)
 
         # start the player on a random position (not blocked)
-        (x, y) = self.levels[0].random_unblocked_pos()
+        (x, y) = self.current_level.random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
+
+    def _create_branch(self, name, n_levels, origin_level):
+        levels = {}
+
+        from_pos = origin_level.random_unblocked_pos()
+
+        for l in xrange(0, NUM_LEVELS):
+            new_level = Level()
+            to_pos = new_level.random_unblocked_pos()
+
+            levels[name + str(l)] = new_level
+
+            down_stairs = Stairs(from_pos, to_pos, "STAIRS_DOWN", new_level)
+            up_stairs = Stairs(to_pos, from_pos, "STAIRS_UP", origin_level)
+
+            origin_level.stairs.append(down_stairs)
+            new_level.stairs.append(up_stairs)
+
+            origin_level = new_level
+            from_pos = origin_level.random_unblocked_pos()
 
     def move_player(self, dx, dy):
 
