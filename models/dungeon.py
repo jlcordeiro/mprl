@@ -9,6 +9,25 @@ from utilities.geometry import Rect
 from utilities.geometry import Point
 
 Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
+LevelColours = namedtuple('LevelColours', ['dark_wall',
+                                           'light_wall',
+                                           'dark_ground',
+                                           'light_ground'])
+
+DEFAULT_LEVEL_COLOURS = LevelColours(libtcod.Color(0, 0, 200),
+                                     libtcod.Color(200, 200, 200),
+                                     libtcod.Color(0, 0, 70),
+                                     libtcod.Color(0, 25, 50))
+
+FOREST_COLOURS = LevelColours(libtcod.Color(140, 180, 140),
+                              libtcod.Color(180, 220, 180),
+                              libtcod.Color(36,62,42),
+                              libtcod.Color(26,42,32))
+
+MINE_COLOURS = LevelColours(libtcod.Color(180, 140, 140),
+                            libtcod.Color(220, 180, 180),
+                            libtcod.desaturated_orange,
+                            libtcod.darkest_red)
 
 
 class Tile:
@@ -64,7 +83,7 @@ def create_room_connection(room1, room2, mode="center"):
 
 
 class BasicLevel(object):
-    def __init__(self, name, n_rooms, theme_colour = libtcod.white):
+    def __init__(self, name, n_rooms, colours = DEFAULT_LEVEL_COLOURS):
         #fill map with "unblocked" tiles
         self.tiles = [[Tile(True)
                        for y in range(MAP_HEIGHT)]
@@ -90,7 +109,7 @@ class BasicLevel(object):
         # of them. Format: (position, char, nturns)
         self.temp_artifacts = []
 
-        self.theme_colour = theme_colour
+        self.colours = colours
 
     def dig_room(self, room):
         #go through the tiles in the rectangle and make them passable
@@ -208,8 +227,8 @@ class Town(BasicLevel):
 
 
 class Level(BasicLevel):
-    def __init__(self, name, n_rooms, theme_colour):
-        super(Level, self).__init__(name, n_rooms, theme_colour)
+    def __init__(self, name, n_rooms, colours):
+        super(Level, self).__init__(name, n_rooms, colours)
         self.__generate(n_rooms)
         self._compute_fov()
 
@@ -293,6 +312,9 @@ class Level(BasicLevel):
 # (...)
 
 class Dungeon:
+
+
+
     def __init__(self):
         self.levels = {}
 
@@ -302,8 +324,8 @@ class Dungeon:
         self.levels[main_level.name] = main_level
         self.current_level = self.levels[main_level.name]
 
-        self._create_branch("Forest", NUM_LEVELS, main_level, libtcod.green)
-        self._create_branch("Mines", NUM_LEVELS, main_level, libtcod.lighter_red)
+        self._create_branch("Forest", NUM_LEVELS, main_level, FOREST_COLOURS)
+        self._create_branch("Mines", NUM_LEVELS, main_level, MINE_COLOURS)
 
         # start the player on a random position (not blocked)
         (x, y) = self.current_level.random_unblocked_pos()

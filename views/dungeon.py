@@ -1,12 +1,6 @@
 import libtcodpy as libtcod
 from config import *
 
-color_none = libtcod.Color(0, 0, 0)
-color_dark_wall = libtcod.Color(0, 0, 200)
-color_light_wall = libtcod.Color(200, 200, 200)
-color_dark_ground = libtcod.Color(0, 0, 70)
-color_light_ground = libtcod.Color(0, 25, 50)
-
 
 class Level:
     def __init__(self, model):
@@ -54,11 +48,11 @@ class Level:
                 visible = libtcod.map_is_in_fov(level.fov_map, x, y)
                 explored = level.tiles[x][y].explored
 
-                color = color_none
+                color = libtcod.black
                 if visible or draw_not_in_fov:
-                    color = color_light_wall if wall else color_light_ground
+                    color = level.colours.light_wall if wall else level.colours.light_ground
                 elif explored:
-                    color = color_dark_wall if wall else color_dark_ground
+                    color = level.colours.dark_wall if wall else level.colours.dark_ground
 
                 libtcod.console_set_char_background(console,
                                                     x,
@@ -87,7 +81,7 @@ class Level:
     def draw_name(self, console, x, y):
         level = self._model.current_level
 
-        libtcod.console_set_default_foreground(console, level.theme_colour)
+        libtcod.console_set_default_foreground(console, level.colours.light_wall)
         libtcod.console_print_ex(console, x, y, libtcod.BKGND_NONE, libtcod.LEFT,
                                  str(level.name))
 
