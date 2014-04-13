@@ -130,6 +130,5 @@ class Dungeon(object):
         #decrement turns of all temporary artifacts
         self.__clevel.temp_artifacts = [(p, c, t-1) for (p, c, t) in self.__clevel.temp_artifacts]
 
-    @property
-    def level_name(self):
-        return self.__clevel.name
+    def draw_name(self, con, x, y):
+        self._view.draw_name(con, self.__clevel, x, y)

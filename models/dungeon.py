@@ -64,7 +64,7 @@ def create_room_connection(room1, room2, mode="center"):
 
 
 class BasicLevel(object):
-    def __init__(self, name, n_rooms):
+    def __init__(self, name, n_rooms, theme_colour = libtcod.white):
         #fill map with "unblocked" tiles
         self.tiles = [[Tile(True)
                        for y in range(MAP_HEIGHT)]
@@ -89,6 +89,8 @@ class BasicLevel(object):
         # them some turns later. This list will keep track of all
         # of them. Format: (position, char, nturns)
         self.temp_artifacts = []
+
+        self.theme_colour = theme_colour
 
     def dig_room(self, room):
         #go through the tiles in the rectangle and make them passable
@@ -202,8 +204,8 @@ class Town(BasicLevel):
 
 
 class Level(BasicLevel):
-    def __init__(self, name, n_rooms):
-        super(Level, self).__init__(name, n_rooms)
+    def __init__(self, name, n_rooms, theme_colour):
+        super(Level, self).__init__(name, n_rooms, theme_colour)
         self.__generate(n_rooms)
         self._compute_fov()
 
@@ -296,14 +298,14 @@ class Dungeon:
         self.levels[main_level.name] = main_level
         self.current_level = self.levels[main_level.name]
 
-        self._create_branch("Forest", NUM_LEVELS, main_level)
-        self._create_branch("Mines", NUM_LEVELS, main_level)
+        self._create_branch("Forest", NUM_LEVELS, main_level, libtcod.green)
+        self._create_branch("Mines", NUM_LEVELS, main_level, libtcod.lighter_red)
 
         # start the player on a random position (not blocked)
         (x, y) = self.current_level.random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
 
-    def _create_branch(self, branch_name, n_levels, origin_level):
+    def _create_branch(self, branch_name, n_levels, origin_level, theme_colour):
         levels = {}
 
         from_pos = origin_level.random_unblocked_pos()
@@ -311,7 +313,7 @@ class Dungeon:
         for l in xrange(0, NUM_LEVELS):
             level_name = branch_name + " (" + str(l+1)  + ")"
 
-            new_level = Level(level_name, MAX_ROOMS)
+            new_level = Level(level_name, MAX_ROOMS, theme_colour)
             to_pos = new_level.random_unblocked_pos()
 
             levels[level_name] = new_level

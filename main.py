@@ -124,8 +124,7 @@ def draw_everything():
     libtcod.console_clear(panel)
 
     #draw level name
-    libtcod.console_print_ex(panel, 1, 1, libtcod.BKGND_NONE, libtcod.LEFT,
-                             str(dungeon.level_name))
+    dungeon.draw_name(panel, 1, 1)
 
     #show the player's stats
     hp_rect = Rect(1, 2, BAR_WIDTH, 1)

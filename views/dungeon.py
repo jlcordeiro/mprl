@@ -75,6 +75,11 @@ class Level:
             x, y = artifact[0]
             libtcod.console_put_char(console, x, y, artifact[1], self.bkgd)
 
+    def draw_name(self, console, model, x, y):
+        libtcod.console_set_default_foreground(console, model.theme_colour)
+        libtcod.console_print_ex(console, x, y, libtcod.BKGND_NONE, libtcod.LEFT,
+                                 str(model.name))
+
     def clear(self, console, model):
         #erase the character that represents this object
         for s in model.stairs:
