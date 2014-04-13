@@ -64,11 +64,13 @@ def create_room_connection(room1, room2, mode="center"):
 
 
 class Level:
-    def __init__(self):
+    def __init__(self, name):
         #fill map with "unblocked" tiles
         self.tiles = [[Tile(True)
                        for y in range(MAP_HEIGHT)]
                       for x in range(MAP_WIDTH)]
+
+        self.name = name
 
         self.rooms = []
         self.num_rooms = 0
@@ -263,28 +265,30 @@ class Dungeon:
         self.levels = {}
 
         # main level
-        main_level = Level()
+        main_level = Level("Town")
 
-        self.levels["MAIN"] = main_level
-        self.current_level = self.levels["MAIN"]
+        self.levels[main_level.name] = main_level
+        self.current_level = self.levels[main_level.name]
 
-        self._create_branch("Branch 1", NUM_LEVELS, main_level)
-        self._create_branch("Branch 2", NUM_LEVELS, main_level)
+        self._create_branch("Forest", NUM_LEVELS, main_level)
+        self._create_branch("Mines", NUM_LEVELS, main_level)
 
         # start the player on a random position (not blocked)
         (x, y) = self.current_level.random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
 
-    def _create_branch(self, name, n_levels, origin_level):
+    def _create_branch(self, branch_name, n_levels, origin_level):
         levels = {}
 
         from_pos = origin_level.random_unblocked_pos()
 
         for l in xrange(0, NUM_LEVELS):
-            new_level = Level()
+            level_name = branch_name + " (" + str(l+1)  + ")"
+
+            new_level = Level(level_name)
             to_pos = new_level.random_unblocked_pos()
 
-            levels[name + str(l)] = new_level
+            levels[level_name] = new_level
 
             down_stairs = Stairs(from_pos, to_pos, "STAIRS_DOWN", new_level)
             up_stairs = Stairs(to_pos, from_pos, "STAIRS_UP", origin_level)

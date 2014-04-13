@@ -15,7 +15,6 @@ player_action = None
 dungeon = controllers.dungeon.Dungeon()
 
 
-HP_RECT = Rect(1, 1, BAR_WIDTH, 1)
 HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
 
 gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
@@ -124,14 +123,19 @@ def draw_everything():
     libtcod.console_set_default_background(panel, libtcod.black)
     libtcod.console_clear(panel)
 
-    #show the player's stats
-    HP_BAR.update(dungeon.player.hp, dungeon.player.max_hp)
-    HP_BAR.draw(panel, HP_RECT)
+    #draw level name
+    libtcod.console_print_ex(panel, 1, 1, libtcod.BKGND_NONE, libtcod.LEFT,
+                             str(dungeon.level_name))
 
-    libtcod.console_print_ex(panel, 1, 2, libtcod.BKGND_NONE, libtcod.LEFT,
-                             "Attack: " + str(dungeon.player.power))
+    #show the player's stats
+    hp_rect = Rect(1, 2, BAR_WIDTH, 1)
+    HP_BAR.update(dungeon.player.hp, dungeon.player.max_hp)
+    HP_BAR.draw(panel, hp_rect)
 
     libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT,
+                             "Attack: " + str(dungeon.player.power))
+
+    libtcod.console_print_ex(panel, 1, 4, libtcod.BKGND_NONE, libtcod.LEFT,
                              "Defense: " + str(dungeon.player.defense))
 
     #print the game messages, one line at a time
