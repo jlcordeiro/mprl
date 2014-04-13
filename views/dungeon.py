@@ -26,6 +26,17 @@ class Level:
                 if draw_dead == monster.died:
                     monster.draw_ui(console)
 
+    def __draw_stairs(self, console, model, draw_not_in_fov=False):
+        for stairs in model.stairs:
+            (x, y) = stairs.pos_i
+            visible = libtcod.map_is_in_fov(model.fov_map, x, y)
+
+            # draw stairs
+            if visible or draw_not_in_fov:
+
+                char = '<' if stairs.type == "STAIRS_UP" else '>'
+                libtcod.console_put_char(console, x, y, char, self.bkgd)
+
     def draw(self, console, model, draw_not_in_fov=False):
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
@@ -47,23 +58,14 @@ class Level:
                                                     libtcod.BKGND_SET)
 
 
-
-                # draw stairs
-                if visible or draw_not_in_fov:
-                    stairs = next((s for s in model.stairs if s.pos_i == (x, y)),
-                                   None)
-
-                    if stairs == None:
-                        continue
-
-                    char = '<' if stairs.type == "STAIRS_UP" else '>'
-                    libtcod.console_put_char(console, x, y, char, self.bkgd)
-
         # start by drawing the monsters that have died
         self.__draw_monsters(console, model, True, draw_not_in_fov)
 
         #then the items on the floor
         self.__draw_items(console, model, draw_not_in_fov)
+
+        #draw stairs
+        self.__draw_stairs(console, model, draw_not_in_fov)
 
         #and finally, the monsters that are still alive
         self.__draw_monsters(console, model, False, draw_not_in_fov)
