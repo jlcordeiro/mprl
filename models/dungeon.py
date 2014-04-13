@@ -182,6 +182,10 @@ class BasicLevel(object):
                 if self.is_in_fov((x, y)):
                     self.tiles[x][y].explored = True
 
+    def update_artifacts(self):
+        #remove artifacts that are too "old"
+        self.temp_artifacts = [v for v in self.temp_artifacts if v[2] > 0]
+
 
 class Town(BasicLevel):
     def __init__(self):

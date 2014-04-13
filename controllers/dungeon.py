@@ -11,16 +11,16 @@ from messages import *
 class Dungeon(object):
     def __init__(self):
         self._model = models.dungeon.Dungeon()
-        self._view = views.dungeon.Level()
+        self._view = views.dungeon.Level(self._model)
    
-    @property
-    def player(self):
-        return self._model.player
-
     @property
     def __clevel(self):
         """ Return the current level. """
         return self._model.current_level
+
+    @property
+    def player(self):
+        return self._model.player
 
     @property
     def aim_target(self):
@@ -110,25 +110,16 @@ class Dungeon(object):
         self.move_player(0, 0)
 
     def clear_ui(self, con):
-        self._view.clear(con, self.__clevel)
-
+        self._view.clear(con)
         self.player.clear_ui(con)
-
-        for monster in self.__clevel.monsters:
-            monster.clear_ui(con)
-
-        for item in self.__clevel.items:
-            item.clear_ui(con)
-
-        #remove artifacts that are too "old"
-        self.__clevel.temp_artifacts = [v for v in self.__clevel.temp_artifacts if v[2] > 0]
+        self.__clevel.update_artifacts()
 
     def draw_ui(self, con, draw_outside_fov):
-        self._view.draw(con, self.__clevel, draw_outside_fov)
+        self._view.draw(con, draw_outside_fov)
         self.player.draw_ui(con)
 
         #decrement turns of all temporary artifacts
         self.__clevel.temp_artifacts = [(p, c, t-1) for (p, c, t) in self.__clevel.temp_artifacts]
 
     def draw_name(self, con, x, y):
-        self._view.draw_name(con, self.__clevel, x, y)
+        self._view.draw_name(con, x, y)

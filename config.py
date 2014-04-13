@@ -2,12 +2,6 @@ import string
 
 ITEM_KEYS = string.ascii_lowercase
 
-ITEM_TYPE_OPTIONS = {
-        "cast": [('u', "(U)se"), ('d', "(D)rop")],
-        "melee": [('r', "Equip in (r)ight hand"), ('l', "Equip in (l)eft hand"), ('d', "(D)rop")],
-        "armour": [('w', "(W)ear"), ('d', "(D)rop")]
-        }
-
 #actual size of the window
 SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 40

@@ -3,6 +3,12 @@
 import libtcodpy as libtcod
 from config import *
 
+ITEM_TYPE_OPTIONS = {
+        "cast": [('u', "(U)se"), ('d', "(D)rop")],
+        "melee": [('r', "Equip in (r)ight hand"), ('l', "Equip in (l)eft hand"), ('d', "(D)rop")],
+        "armour": [('w', "(W)ear"), ('d', "(D)rop")]
+        }
+
 class UIBar(object):
     """ Class representing a horizontal bar. """
     def __init__(self, name, bg_colour, fg_colour, maximum = 0):
