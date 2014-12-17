@@ -68,13 +68,13 @@ class Level:
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                wall = level.tiles[x][y].blocked
+                wall = level.blocked[x][y]
                 visible = libtcod.map_is_in_fov(level.fov_map, x, y)
 
                 color = libtcod.black
                 if visible or draw_not_in_fov:
                     color = colours.light_wall if wall else colours.light_ground
-                elif level.tiles[x][y].explored:
+                elif level.explored[x][y]:
                     color = colours.dark_wall if wall else colours.dark_ground
 
                 libtcod.console_set_char_background(console,

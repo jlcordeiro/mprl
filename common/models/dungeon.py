@@ -10,12 +10,6 @@ from utilities.geometry import Point
 
 Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
 
-class Tile:
-   #a tile of the map and its properties
-    def __init__(self, blocked):
-        self.blocked = blocked
-        self.explored = False
-
 
 class Room(Rect):
     #a rectangle on the map. used to characterize a room.
@@ -62,9 +56,8 @@ def create_room_connection(room1, room2, mode="center"):
 class BasicLevel(object):
     def __init__(self, branch_name, name, n_rooms):
         #fill map with "unblocked" tiles
-        self.tiles = [[Tile(True)
-                       for y in range(MAP_HEIGHT)]
-                      for x in range(MAP_WIDTH)]
+        self.blocked = [[True for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+        self.explored = [[False for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
 
         self.branch_name = branch_name
         self.name = name
@@ -93,7 +86,7 @@ class BasicLevel(object):
         br = room.bottom_right
         for x in range(tl.x, br.x):
             for y in range(tl.y, br.y):
-                self.tiles[x][y].blocked = False
+                self.blocked[x][y] = False
 
     def add_room(self, room):
         self.rooms.append(room)
@@ -103,7 +96,7 @@ class BasicLevel(object):
         x, y = pos
 
         #first test the map tile
-        if self.tiles[x][y].blocked:
+        if self.blocked[x][y]:
             return True
 
         #now check for any blocking monsters
@@ -162,10 +155,10 @@ class BasicLevel(object):
     def _compute_fov(self):
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                tile = self.tiles[x][y]
+                blocked = self.blocked[x][y]
                 libtcod.map_set_properties(self.fov_map, x, y,
-                                           not tile.blocked,
-                                           not tile.blocked)
+                                           not blocked,
+                                           not blocked)
 
     def update_fov(self, pos):
         libtcod.map_compute_fov(self.fov_map, pos[0], pos[1],
@@ -174,7 +167,7 @@ class BasicLevel(object):
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
                 if self.is_in_fov((x, y)):
-                    self.tiles[x][y].explored = True
+                    self.explored[x][y] = True
 
     def update_artifacts(self):
         #remove artifacts that are too "old"
