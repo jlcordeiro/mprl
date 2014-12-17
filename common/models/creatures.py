@@ -15,6 +15,10 @@ class Creature(ObjectModel):
         self.weaponl = None
         self.armour = None
 
+    def __str__(self):
+        return str(self.__dict__)
+
+
 class Orc(Creature):
     def __init__(self, x, y):
         super(Orc, self).__init__('orc', x, y, 10, 0, 3)

@@ -2,7 +2,7 @@ from objects import ObjectController
 import random
 from messages import *
 import views.creatures
-import models.creatures
+import common.models.creatures
 
 
 class CreatureController(ObjectController):
@@ -114,9 +114,12 @@ class CreatureController(ObjectController):
     def target(self, value):
         self._model.target_pos = value
 
+    def json(self):
+        return {}
+
 class Player(CreatureController):
     def __init__(self, x, y):
-        self._model = models.creatures.Player(x, y)
+        self._model = common.models.creatures.Player(x, y)
         self._view = views.creatures.Player(self._model)
 
     def __key_is_used(self, key):
@@ -209,13 +212,13 @@ class Player(CreatureController):
 
 class Orc(CreatureController):
     def __init__(self, x, y):
-        self._model = models.creatures.Orc(x, y)
+        self._model = common.models.creatures.Orc(x, y)
         self._view = views.creatures.Orc(self._model)
 
 
 class Troll(CreatureController):
     def __init__(self, x, y):
-        self._model = models.creatures.Troll(x, y)
+        self._model = common.models.creatures.Troll(x, y)
         self._view = views.creatures.Troll(self._model)
 
 

@@ -9,35 +9,12 @@ from utilities.geometry import Rect
 from utilities.geometry import Point
 
 Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
-LevelColours = namedtuple('LevelColours', ['dark_wall',
-                                           'light_wall',
-                                           'dark_ground',
-                                           'light_ground'])
-
-DEFAULT_LEVEL_COLOURS = LevelColours(libtcod.Color(0, 0, 200),
-                                     libtcod.Color(200, 200, 200),
-                                     libtcod.Color(0, 0, 70),
-                                     libtcod.Color(0, 25, 50))
-
-FOREST_COLOURS = LevelColours(libtcod.Color(140, 180, 140),
-                              libtcod.Color(180, 220, 180),
-                              libtcod.Color(36,62,42),
-                              libtcod.Color(26,42,32))
-
-MINE_COLOURS = LevelColours(libtcod.Color(180, 140, 140),
-                            libtcod.Color(220, 180, 180),
-                            libtcod.desaturated_orange,
-                            libtcod.darkest_red)
-
 
 class Tile:
    #a tile of the map and its properties
-    def __init__(self, blocked, block_sight=None):
+    def __init__(self, blocked):
         self.blocked = blocked
         self.explored = False
-
-        #by default, if a tile is blocked, it also blocks sight
-        self.block_sight = blocked if block_sight is None else block_sight
 
 
 class Room(Rect):
@@ -83,12 +60,13 @@ def create_room_connection(room1, room2, mode="center"):
 
 
 class BasicLevel(object):
-    def __init__(self, name, n_rooms, colours = DEFAULT_LEVEL_COLOURS):
+    def __init__(self, branch_name, name, n_rooms):
         #fill map with "unblocked" tiles
         self.tiles = [[Tile(True)
                        for y in range(MAP_HEIGHT)]
                       for x in range(MAP_WIDTH)]
 
+        self.branch_name = branch_name
         self.name = name
 
         self.rooms = []
@@ -109,8 +87,6 @@ class BasicLevel(object):
         # of them. Format: (position, char, nturns)
         self.temp_artifacts = []
 
-        self.colours = colours
-
     def dig_room(self, room):
         #go through the tiles in the rectangle and make them passable
         tl = room.top_left
@@ -118,7 +94,6 @@ class BasicLevel(object):
         for x in range(tl.x, br.x):
             for y in range(tl.y, br.y):
                 self.tiles[x][y].blocked = False
-                self.tiles[x][y].block_sight = False
 
     def add_room(self, room):
         self.rooms.append(room)
@@ -189,7 +164,7 @@ class BasicLevel(object):
             for x in range(MAP_WIDTH):
                 tile = self.tiles[x][y]
                 libtcod.map_set_properties(self.fov_map, x, y,
-                                           not tile.block_sight,
+                                           not tile.blocked,
                                            not tile.blocked)
 
     def update_fov(self, pos):
@@ -208,7 +183,7 @@ class BasicLevel(object):
 
 class Town(BasicLevel):
     def __init__(self):
-        super(Town, self).__init__("Town", 1)
+        super(Town, self).__init__("Town", "Town", 1)
 
         self.__build_empty_room()
         self._compute_fov()
@@ -227,8 +202,8 @@ class Town(BasicLevel):
 
 
 class Level(BasicLevel):
-    def __init__(self, name, n_rooms, colours):
-        super(Level, self).__init__(name, n_rooms, colours)
+    def __init__(self, branch_name, name, n_rooms):
+        super(Level, self).__init__(branch_name, name, n_rooms)
         self.__generate(n_rooms)
         self._compute_fov()
 
@@ -312,9 +287,6 @@ class Level(BasicLevel):
 # (...)
 
 class Dungeon:
-
-
-
     def __init__(self):
         self.levels = {}
 
@@ -324,14 +296,14 @@ class Dungeon:
         self.levels[main_level.name] = main_level
         self.current_level = self.levels[main_level.name]
 
-        self._create_branch("Forest", NUM_LEVELS, main_level, FOREST_COLOURS)
-        self._create_branch("Mines", NUM_LEVELS, main_level, MINE_COLOURS)
+        self._create_branch("Forest", NUM_LEVELS, main_level)
+        self._create_branch("Mines", NUM_LEVELS, main_level)
 
         # start the player on a random position (not blocked)
         (x, y) = self.current_level.random_unblocked_pos()
         self.player = controllers.creatures.Player(x, y)
 
-    def _create_branch(self, branch_name, n_levels, origin_level, theme_colour):
+    def _create_branch(self, branch_name, n_levels, origin_level):
         levels = {}
 
         from_pos = origin_level.random_unblocked_pos()
@@ -339,7 +311,7 @@ class Dungeon:
         for l in xrange(0, NUM_LEVELS):
             level_name = branch_name + " (" + str(l+1)  + ")"
 
-            new_level = Level(level_name, MAX_ROOMS, theme_colour)
+            new_level = Level(branch_name, level_name, MAX_ROOMS)
             to_pos = new_level.random_unblocked_pos()
 
             levels[level_name] = new_level

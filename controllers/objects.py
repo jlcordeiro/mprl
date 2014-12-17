@@ -1,6 +1,6 @@
 import math
 import views.objects
-import models.objects
+import common.models.objects
 import libtcodpy as libtcod
 from messages import *
 from utils import euclidean_distance
@@ -11,6 +11,9 @@ class ObjectController(object):
         self._model = None
         self._view = None
         raise NotImplementedError("not_implemented")
+
+    def __str__(self):
+        return str(self.json())
 
     def move(self, dx = None, dy = None, new_pos = None):
         if new_pos is None:
@@ -77,10 +80,16 @@ class Item(ObjectController):
     def use(self, player, monsters):
         raise NotImplementedError("not_implemented")
 
+    def json(self):
+        return {'type': self.type,
+                'x': self._model.x,
+                'y': self._model.y
+               }
+
 
 class HealingPotion(Item):
     def __init__(self, x, y):
-        self._model = models.objects.HealingPotion(x, y)
+        self._model = common.models.objects.HealingPotion(x, y)
         self._view = views.objects.Potion(self._model)
 
     def use(self, player, monsters):
@@ -114,7 +123,7 @@ class LightningBolt(Item):
 
 class ConfusionScroll(Item):
     def __init__(self, x, y):
-        self._model = models.objects.ConfusionScroll(x, y)
+        self._model = common.models.objects.ConfusionScroll(x, y)
         self._view = views.objects.Scroll(self._model)
 
     def use(self, player, monsters):
@@ -152,6 +161,14 @@ class Weapon(ObjectController):
     @property
     def defense(self):
         return self._model.defense
+ 
+    def json(self):
+        return {'type': self.type,
+                'x': self._model.x,
+                'y': self._model.y,
+                'dmg': self.damage,
+                'def': self.defense
+               }
 
 
 class Armour(ObjectController):
@@ -171,29 +188,37 @@ class Armour(ObjectController):
     @property
     def defense(self):
         return self._model.defense
+ 
+    def json(self):
+        return {'type': self.type,
+                'x': self._model.x,
+                'y': self._model.y,
+                'dmg': self.damage,
+                'def': self.defense
+               }
 
 
 class Stick(Weapon):
     def __init__(self, x, y):
-        self._model = models.objects.Stick(x, y)
+        self._model = common.models.objects.Stick(x, y)
         self._view = views.objects.Weapon(self._model)
 
 
 class Crowbar(Weapon):
     def __init__(self, x, y):
-        self._model = models.objects.Crowbar(x, y)
+        self._model = common.models.objects.Crowbar(x, y)
         self._view = views.objects.Weapon(self._model)
 
 
 class WoodenShield(Weapon):
     def __init__(self, x, y):
-        self._model = models.objects.WoodenShield(x, y)
+        self._model = common.models.objects.WoodenShield(x, y)
         self._view = views.objects.Weapon(self._model)
 
 
 class Cloak(Armour):
     def __init__(self, x, y):
-        self._model = models.objects.Cloak(x, y)
+        self._model = common.models.objects.Cloak(x, y)
         self._view = views.objects.Armour(self._model)
 
 

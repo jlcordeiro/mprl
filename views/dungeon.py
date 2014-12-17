@@ -1,6 +1,28 @@
 import libtcodpy as libtcod
 from config import *
+from collections import namedtuple
 
+LevelColours = namedtuple('LevelColours', ['dark_wall',
+                                           'light_wall',
+                                           'dark_ground',
+                                           'light_ground'])
+
+DEFAULT_LEVEL_COLOURS = LevelColours(libtcod.Color(0, 0, 200),
+                                     libtcod.Color(200, 200, 200),
+                                     libtcod.Color(0, 0, 70),
+                                     libtcod.Color(0, 25, 50))
+
+FOREST_COLOURS = LevelColours(libtcod.Color(140, 180, 140),
+                              libtcod.Color(180, 220, 180),
+                              libtcod.Color(36,62,42),
+                              libtcod.Color(26,42,32))
+
+MINE_COLOURS = LevelColours(libtcod.Color(180, 140, 140),
+                            libtcod.Color(220, 180, 180),
+                            libtcod.desaturated_orange,
+                            libtcod.darkest_red)
+
+COLOURS = {"Town": DEFAULT_LEVEL_COLOURS, "Forest": FOREST_COLOURS, "Mines": MINE_COLOURS}
 
 class Level:
     def __init__(self, model):
@@ -41,18 +63,19 @@ class Level:
     def draw(self, console, draw_not_in_fov=False):
         level = self._model.current_level
 
+        colours = COLOURS[level.branch_name]
+
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                wall = level.tiles[x][y].block_sight
+                wall = level.tiles[x][y].blocked
                 visible = libtcod.map_is_in_fov(level.fov_map, x, y)
-                explored = level.tiles[x][y].explored
 
                 color = libtcod.black
                 if visible or draw_not_in_fov:
-                    color = level.colours.light_wall if wall else level.colours.light_ground
-                elif explored:
-                    color = level.colours.dark_wall if wall else level.colours.dark_ground
+                    color = colours.light_wall if wall else colours.light_ground
+                elif level.tiles[x][y].explored:
+                    color = colours.dark_wall if wall else colours.dark_ground
 
                 libtcod.console_set_char_background(console,
                                                     x,
@@ -81,7 +104,8 @@ class Level:
     def draw_name(self, console, x, y):
         level = self._model.current_level
 
-        libtcod.console_set_default_foreground(console, level.colours.light_wall)
+        colours = COLOURS[level.branch_name]
+        libtcod.console_set_default_foreground(console, colours.light_wall)
         libtcod.console_print_ex(console, x, y, libtcod.BKGND_NONE, libtcod.LEFT,
                                  str(level.name))
 

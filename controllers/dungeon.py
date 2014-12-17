@@ -2,7 +2,7 @@ import libtcodpy as libtcod
 from utils import euclidean_distance
 import random
 import views.dungeon
-import models.dungeon
+import common.models.dungeon
 from objects import ItemFactory
 from creatures import MonsterFactory
 from config import *
@@ -10,7 +10,7 @@ from messages import *
 
 class Dungeon(object):
     def __init__(self):
-        self._model = models.dungeon.Dungeon()
+        self._model = common.models.dungeon.Dungeon()
         self._view = views.dungeon.Level(self._model)
    
     @property
