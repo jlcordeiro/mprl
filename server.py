@@ -6,6 +6,13 @@ from platform.keyboard import *
 from common.utilities.geometry import Rect
 import controllers.creatures
 import controllers.dungeon
+import time
+import json
+from sockets import TCPServer
+from Queue import Queue
+from threading import Thread
+
+TCP_SERVER = TCPServer('localhost', 4446)
 
 DRAW_NOT_IN_FOV = False
 
@@ -148,6 +155,30 @@ def draw_everything():
 
     flush()
 
+    level = dungeon._model.current_level
+
+    data = {}
+    data['dungeon'] = {}
+    data['dungeon']['walls'] = [[1 if b else 0 for b in row] for row in level.blocked]
+    data['dungeon']['stairs'] = [str(stairs) for stairs in dungeon._model.current_level.stairs]
+    data['player'] = dungeon.player.json()
+#    print "+++"
+#    for stairs in dungeon._model.current_level.stairs:
+#        print str(stairs)
+
+#    print str({'monsters': [m.json() for m in level.monsters]})
+#    print str({'items': [i.json() for i in level.items]})
+
+#    print str({'walls': [[1 if b else 0 for b in row] for row in level.blocked]})
+#    print str({'explored': [[1 if e else 0 for e in row] for row in explored]})
+#    print level.fov_map
+
+#    print str(messages.get_all())
+#    print "---"
+
+    send_data = json.dumps(data)
+    TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
+
 #############################################
 # Initialization & Main Loop
 #############################################
@@ -164,6 +195,17 @@ dungeon.move_player(0, 0)
 messages = MessagesBorg()
 messages.add('Welcome stranger!', libtcod.red)
 
+message_queue = Queue()
+
+def recv_forever(put_queue):
+    while True:
+        TCP_SERVER.receive(put_queue)
+        time.sleep(1)
+
+RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
+RECV_THREAD.daemon = True
+RECV_THREAD.start()
+
 while not libtcod.console_is_window_closed():
     draw_everything()
 
@@ -179,3 +221,6 @@ while not libtcod.console_is_window_closed():
     if dungeon.player.died and game_state != 'dead':
         messages.add("YOU DIED!", libtcod.red)
         game_state = 'dead'
+
+TCP_SERVER.close()
+#RECV_THREAD.join()

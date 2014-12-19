@@ -1,22 +1,75 @@
 from config import *
 
 class ObjectModel(object):
-    def __init__(self, name, x, y, blocks):
+    def __init__(self, name, type, x, y, blocks):
         self.x = x
         self.y = y
         self.key = '_'
         self.name = name
-        self.used = False
         self.blocks = blocks
+        self.type = type
 
+    @property
+    def position(self):
+        return (self.x, self.y)
 
-################ Potions
+    @position.setter
+    def position(self, value):
+        self.x = value[0]
+        self.y = value[1]
+
+    def json(self):
+        return {'type': self.type,
+                'x': self.x,
+                'y': self.y
+               }
+
 
 class Potion(ObjectModel):
     def __init__(self, name, x, y, range, affects):
-        super(Potion, self).__init__(name, x, y, False)
+        super(Potion, self).__init__(name, "cast", x, y, False)
         self.range = range
         self.affects = affects
+
+
+class Scroll(ObjectModel):
+    def __init__(self, name, x, y, range, affects):
+        super(Scroll, self).__init__(name, "cast", x, y, False)
+        self.range = range
+        self.affects = affects
+
+
+class Weapon(ObjectModel):
+    def __init__(self, name, x, y, damage, defense):
+        super(Weapon, self).__init__(name, "melee", x, y, False)
+        self.damage = damage
+        self.defense = defense
+ 
+    def json(self):
+        return {'type': self.type,
+                'x': self.x,
+                'y': self.y,
+                'damage': self.damage,
+                'defense': self.defense
+               }
+
+
+class Armour(ObjectModel):
+    def __init__(self, name, x, y, damage, defense):
+        super(Armour, self).__init__(name, "armour", x, y, False)
+        self.damage = damage
+        self.defense = defense
+ 
+    def json(self):
+        return {'type': self.type,
+                'x': self.x,
+                'y': self.y,
+                'damage': self.damage,
+                'defense': self.defense
+               }
+
+
+################ Potions
 
 
 class HealingPotion(Potion):
@@ -25,12 +78,6 @@ class HealingPotion(Potion):
 
 
 ################ Scrolls
-
-class Scroll(ObjectModel):
-    def __init__(self, name, x, y, range, affects):
-        super(Scroll, self).__init__(name, x, y, False)
-        self.range = range
-        self.affects = affects
 
 
 class LightningBolt(Scroll):
@@ -46,14 +93,6 @@ class ConfusionScroll(Scroll):
 
 
 ################ Weapons
-
-
-class Weapon(ObjectModel):
-    def __init__(self, name, x, y, damage, defense):
-        super(Weapon, self).__init__(name, x, y, False)
-        self.damage = damage
-        self.defense = defense
-
 
 class Stick(Weapon):
     def __init__(self, x, y):

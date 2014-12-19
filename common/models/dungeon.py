@@ -5,8 +5,8 @@ import controllers
 from collections import namedtuple
 from controllers.objects import ItemFactory
 from controllers.creatures import MonsterFactory
-from utilities.geometry import Rect
-from utilities.geometry import Point
+from common.utilities.geometry import Rect
+from common.utilities.geometry import Point
 
 Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
 

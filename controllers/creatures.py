@@ -1,123 +1,24 @@
-from objects import ObjectController
 import random
 from messages import *
 import views.creatures
 import common.models.creatures
 
 
-class CreatureController(ObjectController):
-    def __init__(self):
-        raise NotImplementedError("not_implemented")
+def attack(source, target):
+    damage = max(0, source.power - target.defense)
+    target.hp -= damage
 
-    def confuse(self):
-        messages = MessagesBorg()
-        messages.add('The ' + self.name + ' is confused!', libtcod.red)
-        self._model.confused_turns = CONFUSE_NUM_TURNS
+    messages = MessagesBorg()
+    messages.add(source.name + ' attacks ' + target.name + ' for '
+                 + str(damage) + ' hit points.')
 
-    def confused_move(self):
-        self.move(random.randint(-1, 1), random.randint(-1, 1))
 
-        self.confused_turns -= 1
+def confused_move(source):
+    source.move(random.randint(-1, 1), random.randint(-1, 1))
+    source.confused_turns -= 1
 
-        if self.confused_turns == 0:
-            messages = MessagesBorg()
-            messages.add('The ' + self.name + ' is no longer confused!',
-                         libtcod.red)
 
-    @property
-    def power(self):
-        total = self._model.base_power
-
-        r_weapon = self._model.weaponr
-        l_weapon = self._model.weaponl
-
-        r_dmg = 0 if r_weapon is None else r_weapon.damage
-        l_dmg = 0 if l_weapon is None else l_weapon.damage
-
-        return total + max(r_dmg, l_dmg)
-
-    def attack(self, target):
-        #a simple formula for attack damage
-        damage = self.power - target.defense
-
-        messages = MessagesBorg()
-        if damage > 0:
-            #make the target take some damage
-            messages.add(self.name + ' attacks ' + target.name + ' for '
-                         + str(damage) + ' hit points.')
-            target.take_damage(damage)
-        else:
-            messages.add(self.name + ' attacks ' + target.name +
-                         ' but it has no effect!')
-
-    def take_damage(self, damage):
-        #apply damage if possible
-        if damage > 0:
-            self._model.hp -= damage
-
-        if self._model.hp <= 0:
-            self.die()
-
-    def heal(self, amount):
-        #heal by the given amount, without going over the maximum
-        self._model.hp = max(self._model.hp + amount, self._model.max_hp)
-
-    def die(self):
-        #transform it into a nasty corpse! it doesn't block, can't be
-        #attacked and doesn't move
-        messages = MessagesBorg()
-        messages.add(self.name + ' is dead!', libtcod.white)
-        self._view.char = '%'
-        self._model.confused_turns = 0
-        self._model.blocks = False
-
-    @property
-    def died(self):
-        return (self._model.hp <= 0)
-
-    @property
-    def confused_turns(self):
-        return self._model.confused_turns
-
-    @confused_turns.setter
-    def confused_turns(self, value):
-        self._model.confused_turns = value
-
-    @property
-    def hp(self):
-        return self._model.hp
-
-    @property
-    def max_hp(self):
-        return self._model.max_hp
-
-    @property
-    def defense(self):
-        total = self._model.defense
-
-        r_weapon = self._model.weaponr
-        l_weapon = self._model.weaponl
-
-        if self._model.armour is not None:
-            total += self._model.armour.defense
-
-        r_def = 0 if r_weapon is None else r_weapon.defense
-        l_def = 0 if l_weapon is None else l_weapon.defense
-
-        return total + max(r_def, l_def)
-
-    @property
-    def target(self):
-        return self._model.target_pos
-
-    @target.setter
-    def target(self, value):
-        self._model.target_pos = value
-
-    def json(self):
-        return {}
-
-class Player(CreatureController):
+class Player(object):
     def __init__(self, x, y):
         self._model = common.models.creatures.Player(x, y)
         self._view = views.creatures.Player(self._model)
@@ -173,16 +74,9 @@ class Player(CreatureController):
         """Replace equipped weapon by a new one."""
 
         if hand == "right":
-            previous_weapon = self._model.weaponr
             self._model.weaponr = weapon
         else:
-            previous_weapon = self._model.weaponl
             self._model.weaponl = weapon
-
-        if previous_weapon is not None:
-            previous_weapon.used = False
-
-        weapon.used = True
 
         messages = MessagesBorg()
         messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
@@ -197,35 +91,15 @@ class Player(CreatureController):
 
         messages.add('You are now wearing a ' + armour.name + '.', libtcod.green)
 
-        previous = self._model.armour
         self._model.armour = armour
-
-        if previous is not None:
-            previous.used = False
-
-        armour.used = True
-
-    @property
-    def items(self):
-        return self._model.inventory
-
-
-class Orc(CreatureController):
-    def __init__(self, x, y):
-        self._model = common.models.creatures.Orc(x, y)
-        self._view = views.creatures.Orc(self._model)
-
-
-class Troll(CreatureController):
-    def __init__(self, x, y):
-        self._model = common.models.creatures.Troll(x, y)
-        self._view = views.creatures.Troll(self._model)
 
 
 def MonsterFactory(x, y):
     dice = libtcod.random_get_int(0, 0, 100)
 
     if dice < 80:
-        return Orc(x, y)
+        model = common.models.creatures.Creature('Orc', x, y, 10, 0, 3)
+    else:
+        model = common.models.creatures.Creature('Troll', x, y, 16, 1, 4)
 
-    return Troll(x, y)
+    return model

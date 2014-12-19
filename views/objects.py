@@ -1,13 +1,26 @@
 import libtcodpy as libtcod
 
+def get_symbol(model):
+    SYMBOLS = {'melee':     ('|', libtcod.light_red),
+               'armour':    ('[', libtcod.light_red),
+               'cast':      ('!', libtcod.light_green),
+               'scroll':    ('#', libtcod.light_yellow),
+               'Orc':       ('O', libtcod.light_orange),
+               'Troll':     ('T', libtcod.light_orange),
+               'player':    ('@', libtcod.white)
+              }
+
+    if model.type == 'creature':
+        return SYMBOLS[model.name]
+
+    return SYMBOLS[model.type]
 
 class ObjectView(object):
     """Base class for a view of any object. Potions, weapons, etc."""
 
     def __init__(self, model, char, colour):
         self._model = model
-        self.char = char
-        self.colour = colour
+        (self.char, self.colour) = get_symbol(model)
 
     def _put(self, console, char):
         """Put char on the current position."""
@@ -18,27 +31,9 @@ class ObjectView(object):
         """Set the colour."""
         libtcod.console_set_default_foreground(console, self.colour)
         #draw the character that represents this object at its position
-        self._put(console, self.char)
+        char = self.char if self._model.died is False else '%'
+        self._put(console, char)
 
     def clear(self, console):
         """Erase the character that represents this object."""
         self._put(console, ' ')
-
-
-class Potion(ObjectView):
-    def __init__(self, model):
-        super(Potion, self).__init__(model, '!', libtcod.light_green)
-
-
-class Scroll(ObjectView):
-    def __init__(self, model):
-        super(Scroll, self).__init__(model, '#', libtcod.light_yellow)
-
-
-class Weapon(ObjectView):
-    def __init__(self, model):
-        super(Weapon, self).__init__(model, '|', libtcod.light_red)
-
-class Armour(ObjectView):
-    def __init__(self, model):
-        super(Armour, self).__init__(model, '[', libtcod.light_red)

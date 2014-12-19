@@ -63,12 +63,12 @@ class Dungeon(object):
 
         #if the monster sees the player, update its target position
         if self.__clevel.is_in_fov(monster.position):
-            monster.target = self.player.position
+            monster.target_pos = self.player.position
 
-        if monster.target not in (None, monster.position):
+        if monster.target_pos not in (None, monster.position):
             #move towards player if far away
-            if monster.distance_to(monster.target) >= 2:
-                path = self.__clevel.get_path_to_pos(monster, monster.target)
+            if monster.distance_to(monster.target_pos) >= 2:
+                path = self.__clevel.get_path_to_pos(monster, monster.target_pos)
                 if path is not None and not self.is_blocked(path):
                     monster.move(new_pos=path)
 

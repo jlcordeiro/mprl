@@ -103,14 +103,14 @@ def option_menu(con, rect, header, options, hide_options = False):
 
 def inventory_menu(con, rect, header, player):
     #show a menu with each item of the inventory as an option
-    items = player.items
+    items = player.inventory
     if len(items) == 0:
         messages.add('Inventory is empty.', libtcod.orange)
         return
 
     options = []
     for item in items:
-        text = "(*) " + item.name if item.used else item.name
+        text = "(*) " + item.name if False else item.name #TODO: fix
         options.append((item.key, text))
 
     item_key = option_menu(con, rect, header, options)
