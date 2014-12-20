@@ -5,8 +5,10 @@ import controllers
 from collections import namedtuple
 from controllers.objects import ItemFactory
 from controllers.creatures import MonsterFactory
+import common.models.creatures
 from common.utilities.geometry import Rect
 from common.utilities.geometry import Point
+from controllers.creatures import attack
 
 Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
 
@@ -107,8 +109,8 @@ class BasicLevel(object):
 
     def random_unblocked_pos(self):
         #choose random spot
-        pos = (random.randint(1, MAP_WIDTH - 1),
-               random.randint(1, MAP_HEIGHT - 1))
+        pos = Point(random.randint(1, MAP_WIDTH - 1),
+                    random.randint(1, MAP_HEIGHT - 1))
 
         if not self.is_blocked(pos):
             return pos
@@ -124,10 +126,10 @@ class BasicLevel(object):
         if len(self.monsters) < 1:
             return None
 
-        closest = min(self.monsters, key = lambda x: x.distance_to(pos))
+        closest = min(self.monsters, key = lambda x: euclidean_distance(x.position, pos))
         if (closest is None or
             not self.is_in_fov(closest.position) or
-            closest.distance_to(pos) > max_range):
+            euclidean_distance(closest.position, pos) > max_range):
             return None
 
         return closest
@@ -294,7 +296,7 @@ class Dungeon:
 
         # start the player on a random position (not blocked)
         (x, y) = self.current_level.random_unblocked_pos()
-        self.player = controllers.creatures.Player(x, y)
+        self.player = common.models.creatures.Player(x, y)
 
     def _create_branch(self, branch_name, n_levels, origin_level):
         levels = {}
@@ -321,14 +323,14 @@ class Dungeon:
     def move_player(self, dx, dy):
 
         old_pos = self.player.position
-        new_pos = (old_pos[0]+dx, old_pos[1]+dy)
+        new_pos = old_pos.add(Point(dx, dy))
 
         cur_level = self.current_level
 
         monster = cur_level.get_monster_in_pos(new_pos)
         if monster is not None:
-            self.player.attack(monster)
+            attack(self.player, monster)
         elif not cur_level.is_blocked(new_pos):
-            self.player.move(dx, dy)
+            self.player.position = self.player.position.add((dx, dy))
 
         cur_level.update_fov(self.player.position)

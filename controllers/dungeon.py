@@ -5,6 +5,9 @@ import views.dungeon
 import common.models.dungeon
 from objects import ItemFactory
 from creatures import MonsterFactory
+from controllers.creatures import attack
+from views.objects import draw_object, erase_object
+from common.utilities.geometry import Point
 from config import *
 from messages import *
 
@@ -50,15 +53,15 @@ class Dungeon(object):
             monster.confused_move()
 
             if self.is_blocked(monster.position) is False:
-                monster.move(new_pos = previous_pos)
+                monster.position = previous_pos
 
             return
 
         #not confused
 
         #close enough, attack! (if the player is still alive.)
-        if self.player.distance_to(monster.position) < 2 and self.player.hp > 0:
-            monster.attack(self.player)
+        if euclidean_distance(self.player.position, monster.position) < 2 and self.player.hp > 0:
+            attack(monster, self.player)
             return
 
         #if the monster sees the player, update its target position
@@ -67,10 +70,10 @@ class Dungeon(object):
 
         if monster.target_pos not in (None, monster.position):
             #move towards player if far away
-            if monster.distance_to(monster.target_pos) >= 2:
+            if euclidean_distance(monster.position, monster.target_pos) >= 2:
                 path = self.__clevel.get_path_to_pos(monster, monster.target_pos)
                 if path is not None and not self.is_blocked(path):
-                    monster.move(new_pos=path)
+                    monster.position = Point(path[0], path[1])
 
     def take_turn(self):
         self.__clevel.compute_path()
@@ -81,14 +84,22 @@ class Dungeon(object):
                 self.__take_turn_monster(monster)
 
     def take_item_from_player(self, item):
-        self.player.drop_item(item)
+        messages = MessagesBorg()
+        messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
+        self.player.remove_item(item)
+        item.position = self.player.position
         self.__clevel.items.append(item)
 
     def give_item_to_player(self):
+        messages = MessagesBorg()
         for item in self.__clevel.items:
             if item.position == self.player.position:
-                if self.player.pick_item(item) is True:
+                if self.player.add_item(item) is True:
+                    messages.add('You picked up a ' + item.name + '! (' + item.key + ')', libtcod.green)
                     self.__clevel.items.remove(item)
+                else:
+                    messages.add('Your inventory is full, cannot pick up ' +
+                             item.name + '.', libtcod.red)
 
     def monsters_in_area(self, pos, radius):
         return [m for m in self.__clevel.monsters
@@ -106,17 +117,18 @@ class Dungeon(object):
 
         messages.add('You climb some stairs..', libtcod.green)
         self._model.current_level = stairs.destiny
-        self.player.move(new_pos = stairs.pos_f)
+        self.player.position = stairs.pos_f
         self.move_player(0, 0)
 
     def clear_ui(self, con):
         self._view.clear(con)
-        self.player.clear_ui(con)
+        erase_object(con, self.player)
         self.__clevel.update_artifacts()
 
     def draw_ui(self, con, draw_outside_fov):
         self._view.draw(con, draw_outside_fov)
-        self.player.draw_ui(con)
+
+        draw_object(con, self.player)
 
         #decrement turns of all temporary artifacts
         self.__clevel.temp_artifacts = [(p, c, t-1) for (p, c, t) in self.__clevel.temp_artifacts]

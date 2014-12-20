@@ -1,13 +1,16 @@
 import math
+from collections import namedtuple
 
-class Point(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+class Point(namedtuple('Point', 'x y')):
+    __slots__ = ()
+
+    def add(self, other):
+            return Point(self.x + other[0], self.y + other[1])
 
     @property
     def coords(self):
         return (self.x, self.y)
+
 
 class Rect(object):
     #a rectangle on the map. used to characterize a room.

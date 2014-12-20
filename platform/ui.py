@@ -119,7 +119,7 @@ def inventory_menu(con, rect, header, player):
     if item_key is None:
         return None
 
-    chosen_item = player.get_item_with_key(item_key)
+    chosen_item = player.get_item(item_key)
 
     if chosen_item is None:
         return (None, None)

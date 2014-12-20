@@ -1,22 +1,13 @@
 from config import *
+from common.utilities.geometry import Point
 
 class ObjectModel(object):
     def __init__(self, name, type, x, y, blocks):
-        self.x = x
-        self.y = y
+        self.position = Point(x, y)
         self.key = '_'
         self.name = name
         self.blocks = blocks
         self.type = type
-
-    @property
-    def position(self):
-        return (self.x, self.y)
-
-    @position.setter
-    def position(self, value):
-        self.x = value[0]
-        self.y = value[1]
 
     def json(self):
         return {'type': self.type,

@@ -1,6 +1,7 @@
 import libtcodpy as libtcod
 from config import *
 from collections import namedtuple
+from views.objects import draw_object, erase_object
 
 LevelColours = namedtuple('LevelColours', ['dark_wall',
                                            'light_wall',
@@ -35,7 +36,7 @@ class Level:
         for item in level.items:
             (x, y) = item.position
             if libtcod.map_is_in_fov(level.fov_map, x, y) or draw_not_in_fov:
-                item.draw_ui(console)
+                draw_object(console, item)
 
     def __draw_monsters(self, console, draw_dead=False, draw_not_in_fov=False):
         level = self._model.current_level
@@ -45,7 +46,7 @@ class Level:
             (x, y) = monster.position
             if libtcod.map_is_in_fov(level.fov_map, x, y) or draw_not_in_fov:
                 if draw_dead == monster.died:
-                    monster.draw_ui(console)
+                    draw_object(console, monster)
 
     def __draw_stairs(self, console, draw_not_in_fov=False):
         level = self._model.current_level
@@ -123,8 +124,5 @@ class Level:
             x, y = artifact[0]
             libtcod.console_put_char(console, x, y, ' ', self._bkgd)
 
-        for monster in level.monsters:
-            monster.clear_ui(console)
-
-        for item in level.items:
-            item.clear_ui(console)
+        for object in level.monsters + level.items:
+            erase_object(console, object)

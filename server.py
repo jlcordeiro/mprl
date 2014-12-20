@@ -94,12 +94,17 @@ def handle_keys():
                     dungeon.player.remove_item(chosen_item)
 
             elif chosen_item.type == "armour" and option == 'w':
-                dungeon.player.wear(chosen_item)
+                if chosen_item.type != "armour":
+                    messages.add('You can\'t wear a ' + chosen_item.name + '.', libtcod.red)
+                else:
+                    messages.add('You are now wearing a ' + chosen_item.name + '.', libtcod.green)
+                    dungeon.player.armour = chosen_item
             elif chosen_item.type == "melee":
+                messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
                 if option == 'r':
-                    dungeon.player.equip("right", chosen_item)
+                    dungeon.player.weapon_right = chosen_item
                 elif option == 'l':
-                    dungeon.player.equip("left", chosen_item)
+                    dungeon.player.weapon_left = chosen_item
 
         elif chr(key.c) == 'g':
             #pick up an item

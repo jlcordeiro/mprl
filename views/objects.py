@@ -15,25 +15,14 @@ def get_symbol(model):
 
     return SYMBOLS[model.type]
 
-class ObjectView(object):
-    """Base class for a view of any object. Potions, weapons, etc."""
+def draw_object(console, model):
+    (char, colour) = get_symbol(model)
+    char = char if model.type != "creature" or model.died is False else '%'
+    pos = model.position
 
-    def __init__(self, model, char, colour):
-        self._model = model
-        (self.char, self.colour) = get_symbol(model)
+    libtcod.console_set_default_foreground(console, colour)
+    libtcod.console_put_char(console, pos.x, pos.y, char, libtcod.BKGND_NONE)
 
-    def _put(self, console, char):
-        """Put char on the current position."""
-        libtcod.console_put_char(console, self._model.x, self._model.y,
-                                 char, libtcod.BKGND_NONE)
-
-    def draw(self, console):
-        """Set the colour."""
-        libtcod.console_set_default_foreground(console, self.colour)
-        #draw the character that represents this object at its position
-        char = self.char if self._model.died is False else '%'
-        self._put(console, char)
-
-    def clear(self, console):
-        """Erase the character that represents this object."""
-        self._put(console, ' ')
+def erase_object(console, model):
+    pos = model.position
+    libtcod.console_put_char(console, pos.x, pos.y, ' ', libtcod.BKGND_NONE)
