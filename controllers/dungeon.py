@@ -32,7 +32,7 @@ class Dungeon(object):
     @aim_target.setter
     def aim_target(self, value):
         self.__clevel.aim_target = value
-        self.__clevel.temp_artifacts.append([value, '+', 1])
+        self.__clevel.temp_artifacts.append((value, '+', 1))
 
     def move_player(self, dx, dy):
         self._model.move_player(dx, dy)
@@ -109,7 +109,7 @@ class Dungeon(object):
         messages = MessagesBorg()
 
         pos = self.player.position
-        stairs = next((s for s in self.__clevel.stairs if s.pos_i == pos), None)
+        stairs = next((s for s in self.__clevel.stairs if s.position == pos), None)
 
         if stairs == None:
             messages.add('There are no stairs here.', libtcod.orange)
@@ -117,7 +117,6 @@ class Dungeon(object):
 
         messages.add('You climb some stairs..', libtcod.green)
         self._model.current_level = stairs.destiny
-        self.player.position = stairs.pos_f
         self.move_player(0, 0)
 
     def clear_ui(self, con):

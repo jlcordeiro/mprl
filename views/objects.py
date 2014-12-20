@@ -1,13 +1,15 @@
 import libtcodpy as libtcod
 
 def get_symbol(model):
-    SYMBOLS = {'melee':     ('|', libtcod.light_red),
-               'armour':    ('[', libtcod.light_red),
-               'cast':      ('!', libtcod.light_green),
-               'scroll':    ('#', libtcod.light_yellow),
-               'Orc':       ('O', libtcod.light_orange),
-               'Troll':     ('T', libtcod.light_orange),
-               'player':    ('@', libtcod.white)
+    SYMBOLS = {'melee':         ('|', libtcod.light_red),
+               'armour':        ('[', libtcod.light_red),
+               'cast':          ('!', libtcod.light_green),
+               'scroll':        ('#', libtcod.light_yellow),
+               'Orc':           ('O', libtcod.light_orange),
+               'Troll':         ('T', libtcod.light_orange),
+               'player':        ('@', libtcod.white),
+               'stairs_up':     ('<', libtcod.white),
+               'stairs_down':   ('>', libtcod.white)
               }
 
     if model.type == 'creature':

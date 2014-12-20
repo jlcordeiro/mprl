@@ -30,36 +30,12 @@ class Level:
         self._bkgd = libtcod.BKGND_NONE
         self._model = model
 
-    def __draw_items(self, console, draw_not_in_fov=False):
+    def __draw_objects(self, console, objects, draw_not_in_fov=False):
         level = self._model.current_level
-
-        for item in level.items:
-            (x, y) = item.position
+        for o in objects:
+            (x, y) = o.position
             if libtcod.map_is_in_fov(level.fov_map, x, y) or draw_not_in_fov:
-                draw_object(console, item)
-
-    def __draw_monsters(self, console, draw_dead=False, draw_not_in_fov=False):
-        level = self._model.current_level
-
-        #go through all monsters
-        for monster in level.monsters:
-            (x, y) = monster.position
-            if libtcod.map_is_in_fov(level.fov_map, x, y) or draw_not_in_fov:
-                if draw_dead == monster.died:
-                    draw_object(console, monster)
-
-    def __draw_stairs(self, console, draw_not_in_fov=False):
-        level = self._model.current_level
-
-        for stairs in level.stairs:
-            (x, y) = stairs.pos_i
-            visible = libtcod.map_is_in_fov(level.fov_map, x, y)
-
-            # draw stairs
-            if visible or draw_not_in_fov:
-
-                char = '<' if stairs.type == "STAIRS_UP" else '>'
-                libtcod.console_put_char(console, x, y, char, self._bkgd)
+                draw_object(console, o)
 
     def draw(self, console, draw_not_in_fov=False):
         level = self._model.current_level
@@ -85,17 +61,9 @@ class Level:
                                                     libtcod.BKGND_SET)
 
 
-        # start by drawing the monsters that have died
-        self.__draw_monsters(console, True, draw_not_in_fov)
-
-        #then the items on the floor
-        self.__draw_items(console, draw_not_in_fov)
-
-        #draw stairs
-        self.__draw_stairs(console, draw_not_in_fov)
-
-        #and finally, the monsters that are still alive
-        self.__draw_monsters(console, False, draw_not_in_fov)
+        #draw stairs, then the items on the floor and finally, the monsters that are still alive
+        objects = level.items + level.stairs + level.monsters
+        self.__draw_objects(console, objects, draw_not_in_fov)
 
         #draw temporary artifacts
         for artifact in level.temp_artifacts:
@@ -115,7 +83,7 @@ class Level:
 
         #erase the character that represents this object
         for s in level.stairs:
-            (x, y) = s.pos_i
+            (x, y) = s.position
             libtcod.console_put_char(console, x, y, ' ', self._bkgd)
 
         #decrement the turns left for each temporary artifact

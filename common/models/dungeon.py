@@ -10,7 +10,7 @@ from common.utilities.geometry import Rect
 from common.utilities.geometry import Point
 from controllers.creatures import attack
 
-Stairs = namedtuple('Stairs', ['pos_i', 'pos_f', 'type', 'destiny'])
+Stairs = namedtuple('Stairs', ['position', 'type', 'destiny'])
 
 
 class Room(Rect):
@@ -301,24 +301,23 @@ class Dungeon:
     def _create_branch(self, branch_name, n_levels, origin_level):
         levels = {}
 
-        from_pos = origin_level.random_unblocked_pos()
-
         for l in xrange(0, NUM_LEVELS):
             level_name = branch_name + " (" + str(l+1)  + ")"
-
             new_level = Level(branch_name, level_name, MAX_ROOMS)
-            to_pos = new_level.random_unblocked_pos()
-
             levels[level_name] = new_level
 
-            down_stairs = Stairs(from_pos, to_pos, "STAIRS_DOWN", new_level)
-            up_stairs = Stairs(to_pos, from_pos, "STAIRS_UP", origin_level)
+            while True:
+                stairs_pos = origin_level.random_unblocked_pos()
+                if new_level.is_blocked(stairs_pos) is False:
+                    break
+
+            down_stairs = Stairs(stairs_pos, "stairs_down", new_level)
+            up_stairs = Stairs(stairs_pos, "stairs_up", origin_level)
 
             origin_level.stairs.append(down_stairs)
             new_level.stairs.append(up_stairs)
 
             origin_level = new_level
-            from_pos = origin_level.random_unblocked_pos()
 
     def move_player(self, dx, dy):
 
