@@ -20,30 +20,6 @@ HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
 gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
 SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
 
-def aim():
-    (x, y) = dungeon.player.position
-
-    while True:
-        dungeon.aim_target = (x, y)
-        draw_everything()
-
-        #turn-based
-        key = wait_keypress()
-
-        if key_is_escape(key):
-            dungeon.aim_target = None
-            return
-
-        if key.vk == libtcod.KEY_ENTER:
-            dungeon.aim_target = (x, y)
-            return
-
-        movement = get_key_direction(key)
-        if movement is not None:
-            dx, dy = movement
-            (x, y) = (x + dx, y + dy)
-
-
 def handle_keys():
     global DRAW_NOT_IN_FOV
 
@@ -73,12 +49,7 @@ def handle_keys():
                 item_range = chosen_item.range
                 affected_monsters = []
 
-                if chosen_item.affects == 'aim':
-                    aim()
-                    affected_monsters = dungeon.monsters_in_area(dungeon.aim_target,
-                                                                 item_range)
-
-                elif chosen_item.affects == 'closest':
+                if chosen_item.affects == 'closest':
                     closest_one = dungeon.closest_monster_to_player(item_range)
                     if closest_one is not None:
                         affected_monsters.append(closest_one)

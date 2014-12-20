@@ -65,11 +65,6 @@ class Level:
         objects = level.items + level.stairs + level.monsters
         self.__draw_objects(console, objects, draw_not_in_fov)
 
-        #draw temporary artifacts
-        for artifact in level.temp_artifacts:
-            x, y = artifact[0]
-            libtcod.console_put_char(console, x, y, artifact[1], self._bkgd)
-
     def draw_name(self, console, x, y):
         level = self._model.current_level
 
@@ -84,12 +79,6 @@ class Level:
         #erase the character that represents this object
         for s in level.stairs:
             (x, y) = s.position
-            libtcod.console_put_char(console, x, y, ' ', self._bkgd)
-
-        #decrement the turns left for each temporary artifact
-        #if it becomes 0, remove them
-        for artifact in level.temp_artifacts:
-            x, y = artifact[0]
             libtcod.console_put_char(console, x, y, ' ', self._bkgd)
 
         for object in level.monsters + level.items:

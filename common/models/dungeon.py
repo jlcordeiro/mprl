@@ -75,12 +75,6 @@ class BasicLevel(object):
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
         self.path = None
 
-        self.aim_target = None
-
-        # often it may be required to draw things and then remove
-        # them some turns later. This list will keep track of all
-        # of them. Format: (position, char, nturns)
-        self.temp_artifacts = []
 
     def dig_room(self, room):
         #go through the tiles in the rectangle and make them passable
@@ -170,10 +164,6 @@ class BasicLevel(object):
             for x in range(MAP_WIDTH):
                 if self.is_in_fov((x, y)):
                     self.explored[x][y] = True
-
-    def update_artifacts(self):
-        #remove artifacts that are too "old"
-        self.temp_artifacts = [v for v in self.temp_artifacts if v[2] > 0]
 
 
 class Town(BasicLevel):
