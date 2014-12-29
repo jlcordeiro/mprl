@@ -133,9 +133,10 @@ class Dungeon:
             while True:
                 stairs_pos = Point(random.randint(1, MAP_WIDTH - 1),
                                    random.randint(1, MAP_HEIGHT - 1))
-                if new_level.is_blocked(stairs_pos) is False:
+                if new_level.is_blocked(stairs_pos) is False and origin_level.is_blocked(stairs_pos) is False:
                     break
 
+            print origin_level.name, stairs_pos, " <<<"
             down_stairs = Stairs(stairs_pos, "stairs_down", new_level)
             up_stairs = Stairs(stairs_pos, "stairs_up", origin_level)
 
