@@ -30,13 +30,6 @@ class Level:
         self._bkgd = libtcod.BKGND_NONE
         self._model = model
 
-    def __draw_objects(self, console, objects, draw_not_in_fov=False):
-        level = self._model.current_level
-        for o in objects:
-            (x, y) = o.position
-            if libtcod.map_is_in_fov(level.fov_map, x, y) or draw_not_in_fov:
-                draw_object(console, o)
-
     def draw(self, console, draw_not_in_fov=False):
         level = self._model.current_level
 
@@ -60,10 +53,10 @@ class Level:
                                                     color,
                                                     libtcod.BKGND_SET)
 
-
-        #draw stairs, then the items on the floor and finally, the monsters that are still alive
-        objects = level.items + level.stairs + level.monsters
-        self.__draw_objects(console, objects, draw_not_in_fov)
+        #draw stairs
+        for s in level.stairs:
+            if level.is_in_fov(s.position) or draw_not_in_fov:
+                draw_object(console, s)
 
     def draw_name(self, console, x, y):
         level = self._model.current_level
@@ -80,6 +73,3 @@ class Level:
         for s in level.stairs:
             (x, y) = s.position
             libtcod.console_put_char(console, x, y, ' ', self._bkgd)
-
-        for object in level.monsters + level.items:
-            erase_object(console, object)

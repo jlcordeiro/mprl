@@ -1,4 +1,5 @@
 import math
+import random
 from collections import namedtuple
 
 class Point(namedtuple('Point', 'x y')):
@@ -39,6 +40,12 @@ class Rect(object):
     @property
     def height(self):
         return self.bright.y - self.tleft.y
+
+    def get_random_point(self):
+        x = random.randint(self.top_left.x + 1, self.bottom_right.x - 1)
+        y = random.randint(self.top_left.y + 1, self.bottom_right.y - 1)
+
+        return Point(x, y)
 
     def x_distance_to_rect(self, other):
         s1x, s2x = self.tleft.x, self.bright.x
