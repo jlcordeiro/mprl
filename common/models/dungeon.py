@@ -86,13 +86,16 @@ class Level(object):
             if room not in unconnected:
                 continue
 
+            unconnected.remove(room)
+
+            if len(unconnected) == 0:
+                break
+
             closest = min(unconnected, key = room.distance_to_rect)
 
             (h_tunnel, v_tunnel) = create_room_connection(room, closest)
             self.dig_room(h_tunnel)
             self.dig_room(v_tunnel)
-
-            unconnected.remove(room)
 
     def __build_complete_room(self):
         #random width and height
