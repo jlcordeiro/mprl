@@ -2,19 +2,115 @@ import libtcodpy as libtcod
 import random
 import views.dungeon
 import common.models.dungeon
-from common.utilities.geometry import Point
+from common.models.dungeon import Stairs, Level
+from common.utilities.geometry import Rect, Point
 from config import *
 from messages import *
 
+def create_room_connection(room1, room2):
+    """Create tunnels to connect room1 and room2.
+       The origin points are random points inside the room."""
+
+    h_tunnel = lambda x1, x2, y: Rect(min(x1, x2), y, abs(x1 - x2) + 1, 1)
+    v_tunnel = lambda y1, y2, x: Rect(x, min(y1, y2), 1, abs(y1 - y2) + 1)
+
+    origin1 = room1.get_random_point()
+    origin2 = room2.get_random_point()
+
+    #draw a coin (random number that is either 0 or 1)
+    if random.choice([True, False]):
+        #first move horizontally, then vertically
+        h_tunnel = h_tunnel(origin1.x, origin2.x, origin1.y)
+        v_tunnel = v_tunnel(origin1.y, origin2.y, origin2.x)
+    else:
+        #first move vertically, then horizontally
+        v_tunnel = v_tunnel(origin1.y, origin2.y, origin1.x)
+        h_tunnel = h_tunnel(origin1.x, origin2.x, origin2.y)
+
+    return (h_tunnel, v_tunnel)
+
+def get_room_connections(rooms):
+    connections = []
+
+    # keep track of which rooms aren't connected yet
+    unconnected = list(rooms)
+
+    for room in rooms:
+        # connect rooms
+        if room not in unconnected:
+            continue
+
+        unconnected.remove(room)
+
+        if len(unconnected) == 0:
+            break
+
+        closest = min(unconnected, key = room.distance_to_rect)
+
+        (h_tunnel, v_tunnel) = create_room_connection(room, closest)
+        connections += [h_tunnel, v_tunnel]
+
+    return connections
+
+def generate_rooms(n_rooms):
+    rooms = []
+
+    for _ in xrange(0, n_rooms):
+        #random width and height
+        w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        #random position without going out of the boundaries of the map
+        x = random.randint(1, MAP_WIDTH - w - 1)
+        y = random.randint(1, MAP_HEIGHT - h - 1)
+
+        room = Rect(x, y, w, h)
+
+        #check if there are no intersections, so this room is valid
+        if next((r for r in rooms if r.intersects(room)), None) is None:
+            rooms.append(room)
+
+    return rooms
+
+def generate_random_walls(n_rooms):
+    result = [[True for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+
+    rooms = generate_rooms(n_rooms)
+
+    for room in rooms + get_room_connections(rooms):
+        for x in range(room.top_left.x, room.bottom_right.x):
+            for y in range(room.top_left.y, room.bottom_right.y):
+                result[x][y] = False
+
+    return result
+
+def generate_random_levels():
+    levels = {idx: Level(generate_random_walls(MAX_ROOMS)) for idx in xrange(0, NUM_LEVELS)}
+
+    #build stairs
+    for idx in xrange(0, NUM_LEVELS - 1):
+        while True:
+            stairs_pos = Point(random.randint(1, MAP_WIDTH - 1),
+                               random.randint(1, MAP_HEIGHT - 1))
+            if not levels[idx].is_blocked(stairs_pos) and \
+               not levels[idx + 1].is_blocked(stairs_pos):
+                break
+
+        levels[idx].stairs = Stairs(stairs_pos, "stairs_down")
+
+    return levels
+
+
 class Dungeon(object):
-    def __init__(self):
-        self._model = common.models.dungeon.Dungeon()
-        self._view = views.dungeon.Level(self._model)
-   
+    def __init__(self, levels = None):
+        if levels is None:
+            levels = generate_random_levels()
+        self._model = common.models.dungeon.Dungeon(levels)
+        self._view = views.dungeon.Level()
+
     @property
     def __clevel(self):
         """ Return the current level. """
-        return self._model.current_level
+        return self._model.levels[self._model.current_level]
 
     def is_blocked(self, pos):
         #first test the map tile
@@ -43,10 +139,10 @@ class Dungeon(object):
         tx, ty = target_pos
         libtcod.path_compute(self.path, sx, sy, tx, ty)
 
-        if libtcod.path_is_empty(self.__clevel.path):
+        if libtcod.path_is_empty(self.path):
             return None
 
-        return libtcod.path_get(self.__clevel.path, 0)
+        return libtcod.path_get(self.path, 0)
 
     def update_fov(self, pos):
         libtcod.map_compute_fov(self.__clevel.fov_map, pos[0], pos[1],
@@ -66,24 +162,22 @@ class Dungeon(object):
                 libtcod.map_set_properties(path_map, x, y, True,
                                            not self.is_blocked((x, y)))
 
-        self.__clevel.path = libtcod.path_new_using_map(path_map)
+        self.path = libtcod.path_new_using_map(path_map)
 
     def climb_stairs(self, pos):
         messages = MessagesBorg()
 
-        stairs = next((s for s in self.__clevel.stairs if s.position == pos), None)
-
-        if stairs == None:
+        if self.__clevel.stairs.position != pos:
             messages.add('There are no stairs here.', libtcod.orange)
         else:
             messages.add('You climb some stairs..', libtcod.green)
-            self._model.current_level = stairs.destiny
+            self._model.current_level += 1
 
     def clear_ui(self, con):
-        self._view.clear(con)
+        self._view.clear(con, self.__clevel)
 
     def draw_ui(self, con, draw_outside_fov):
-        self._view.draw(con, draw_outside_fov)
+        self._view.draw(con, self.__clevel, draw_outside_fov)
 
     def draw_name(self, con, x, y):
-        self._view.draw_name(con, x, y)
+        self._view.draw_name(con, self.__clevel, x, y)

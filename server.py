@@ -3,8 +3,7 @@ from config import *
 from messages import *
 from platform.ui import *
 from platform.keyboard import *
-from common.utilities.geometry import Rect
-from common.utilities.geometry import Point
+from common.utilities.geometry import Rect, Point
 import controllers.creatures
 import controllers.dungeon
 import common.models.creatures
@@ -240,29 +239,30 @@ def draw_everything():
 
     flush()
 
-    level = dungeon._model.current_level
+    level = dungeon._model.levels[dungeon._model.current_level]
 
     data = {}
     data['dungeon'] = {}
-    data['dungeon']['walls'] = [[1 if b else 0 for b in row] for row in level.blocked]
-    data['dungeon']['stairs'] = [str(stairs) for stairs in dungeon._model.current_level.stairs]
+    data['dungeon']['current_level'] = dungeon._model.current_level
+    data['dungeon']['levels'] = {}
+    for idx, level in dungeon._model.levels.items():
+        level_repr = {}
+        level_repr['walls'] = [[b for b in row] for row in level.walls]
+        level_repr['stairs'] = level.stairs.position if level.stairs is not None else None
+        data['dungeon']['levels'][idx] = level_repr
+
     data['player'] = player.json()
-#    print "+++"
-#    for stairs in dungeon._model.current_level.stairs:
-#        print str(stairs)
 
 #    print str({'monsters': [m.json() for m in level.monsters]})
 #    print str({'items': [i.json() for i in level.items]})
 
-#    print str({'walls': [[1 if b else 0 for b in row] for row in level.blocked]})
 #    print str({'explored': [[1 if e else 0 for e in row] for row in explored]})
 #    print level.fov_map
 
 #    print str(messages.get_all())
-#    print "---"
 
-#    send_data = json.dumps(data)
-#    TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
+    send_data = json.dumps(data)
+    TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
 
 #############################################
 # Initialization & Main Loop

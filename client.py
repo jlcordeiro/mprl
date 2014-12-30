@@ -3,95 +3,33 @@ from config import *
 from messages import *
 from platform.ui import *
 from platform.keyboard import *
-from common.utilities.geometry import Rect
+from common.models.dungeon import Stairs, Level
+from common.utilities.geometry import Rect, Point
+from views.objects import draw_object, erase_object
 import common.models.creatures
 import controllers.creatures
 import controllers.dungeon
-import views.creatures
-from views.dungeon import COLOURS
+from views.dungeon import LEVEL_COLOURS
 
 DRAW_NOT_IN_FOV = False
-
-game_state = 'playing'
-player_action = None
-
-dungeon = controllers.dungeon.Dungeon()
-
-
-HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
-
-gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
-SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
-
 
 def flush():
     #blit the contents of "console" to the root console
     libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
-    #blit the contents of "panel" to the root console
-    libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
-
     libtcod.console_flush()
     dungeon.clear_ui(con)
-
-def draw_client(console, branch_name, blocked, draw_not_in_fov=False):
-    colours = COLOURS[branch_name]
-
-    #go through all tiles, and set their background color
-    for y in range(MAP_HEIGHT):
-        for x in range(MAP_WIDTH):
-            wall = blocked[x][y]
-            #visible = libtcod.map_is_in_fov(level.fov_map, x, y)
-            visible = True
-
-            color = libtcod.black
-            if visible or draw_not_in_fov:
-                color = colours.light_wall if wall else colours.light_ground
-            #elif explored[x][y]:
-            #    color = colours.dark_wall if wall else colours.dark_ground
-
-            libtcod.console_set_char_background(console,
-                                                x,
-                                                y,
-                                                color,
-                                                libtcod.BKGND_SET)
+    erase_object(con, player)
 
 
-def draw_everything(walls, player):
+def draw_everything(dungeon, player):
     #render the screen
-    draw_client(con, "Town", walls, False)
+    dungeon.draw_ui(con, DRAW_NOT_IN_FOV)
 
-    player_view = views.creatures.Player(player)
-    player_view.draw(con)
-
-    #prepare to render the GUI panel
-    libtcod.console_set_default_background(panel, libtcod.black)
-    libtcod.console_clear(panel)
-
-    #draw level name
-    #dungeon.draw_name(panel, 1, 1)
-
-    #show the player's stats
-    hp_rect = Rect(1, 2, BAR_WIDTH, 1)
-    HP_BAR.update(player.hp, player.max_hp)
-    HP_BAR.draw(panel, hp_rect)
-
-    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT,
-                             "Attack: " + str(player.power))
-
-    libtcod.console_print_ex(panel, 1, 4, libtcod.BKGND_NONE, libtcod.LEFT,
-                             "Defense: " + str(player.defense))
-
-    #print the game messages, one line at a time
-    #y = 1
-    #for (line, color) in messages.get_all():
-    #    libtcod.console_set_default_foreground(panel, color)
-    #    libtcod.console_print_ex(panel, MSG_X, y,
-    #                             libtcod.BKGND_NONE, libtcod.LEFT,
-    #                             line)
-    #    y += 1
+    draw_object(con, player)
 
     flush()
+
 
 #############################################
 # Initialization & Main Loop
@@ -103,9 +41,6 @@ libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'mprl', False)
 libtcod.sys_set_fps(LIMIT_FPS)
 con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
 panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
-
-#messages = MessagesBorg()
-#messages.add('Welcome stranger!', libtcod.red)
 
 import socket
 import json
@@ -144,7 +79,18 @@ try:
                                                   data['player']['defense'],
                                                   data['player']['power'])
 
-        draw_everything(data['dungeon']['walls'], player)
+        levels = {}
+        for idx, ldata in data['dungeon']['levels'].items():
+            sdata = ldata['stairs']
+            stairs = None
+            if sdata is not None:
+                stairs = Stairs(Point(sdata[0], sdata[1]), "stairs_down")
+
+            levels[int(idx)] = Level(ldata['walls'], stairs)
+
+        dungeon = controllers.dungeon.Dungeon(levels)
+
+        draw_everything(dungeon, player)
 finally:
     sock.close()
 
