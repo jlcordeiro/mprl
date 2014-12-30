@@ -1,4 +1,5 @@
 import libtcodpy as libtcod
+from draw import Draw
 from config import *
 from messages import *
 from platform.ui import *
@@ -10,45 +11,15 @@ import common.models.creatures
 import controllers.creatures
 import controllers.dungeon
 from views.dungeon import LEVEL_COLOURS
-
-DRAW_NOT_IN_FOV = False
-
-def flush():
-    #blit the contents of "console" to the root console
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
-
-    libtcod.console_flush()
-    dungeon.clear_ui(con)
-    erase_object(con, player)
-
-
-def draw_everything(dungeon, player):
-    #render the screen
-    dungeon.draw_ui(con, DRAW_NOT_IN_FOV)
-
-    draw_object(con, player)
-
-    flush()
-
-
-#############################################
-# Initialization & Main Loop
-#############################################
-
-flags = libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD
-libtcod.console_set_custom_font('./resources/fonts/arial10x10.png', flags)
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'mprl', False)
-libtcod.sys_set_fps(LIMIT_FPS)
-con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
-panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
-
 import socket
 import json
 import sys
 
+draw = Draw()
+DRAW_NOT_IN_FOV = False
+
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 # Connect the socket to the port where the server is listening
 server_address = ('localhost', 4446)
 print 'connecting to %s port %s' % server_address
@@ -72,12 +43,13 @@ try:
 
         (player_x, player_y) = data['player']['position']
 
-        player = common.models.creatures.Creature('player',
-                                                  player_x,
-                                                  player_y,
-                                                  data['player']['hp'],
-                                                  data['player']['defense'],
-                                                  data['player']['power'])
+        player = common.models.creatures.Player(player_x, player_y)
+#        player = common.models.creatures.Creature('player',
+#                                                  player_x,
+#                                                  player_y,
+#                                                  data['player']['hp'],
+#                                                  data['player']['defense'],
+#                                                  data['player']['power'])
 
         levels = {}
         for idx, ldata in data['dungeon']['levels'].items():
@@ -90,7 +62,7 @@ try:
 
         dungeon = controllers.dungeon.Dungeon(levels)
 
-        draw_everything(dungeon, player)
+        draw.draw(dungeon, player, None, True)
 finally:
     sock.close()
 

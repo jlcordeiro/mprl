@@ -13,18 +13,19 @@ import json
 from sockets import TCPServer
 from Queue import Queue
 from threading import Thread
-from views.objects import draw_object, erase_object
+from draw import Draw
 
 TCP_SERVER = TCPServer('localhost', 4446)
+
+draw = Draw()
 
 DRAW_NOT_IN_FOV = False
 
 game_state = 'playing'
 player_action = None
 
-dungeon = controllers.dungeon.Dungeon()
-
 # start the player on a random position (not blocked)
+dungeon = controllers.dungeon.Dungeon()
 (x, y) = dungeon.random_unblocked_pos()
 player = common.models.creatures.Player(x, y)
 
@@ -113,12 +114,8 @@ def closest_monster_to_pos(pos, monsters, max_range):
 
     return closest
 
-
-HP_BAR = UIBar('HP', libtcod.darker_red, libtcod.light_red)
-
 gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
 SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
-
 
 def handle_keys():
     global DRAW_NOT_IN_FOV
@@ -182,62 +179,27 @@ def handle_keys():
 
             return 'did-not-take-turn'
 
-def flush():
-    #blit the contents of "console" to the root console
-    libtcod.console_blit(con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
+#############################################
+# Initialization & Main Loop
+#############################################
 
-    #blit the contents of "panel" to the root console
-    libtcod.console_blit(panel, 0, 0, SCREEN_WIDTH, PANEL_HEIGHT, 0, 0, PANEL_Y)
+move_player(0, 0)
 
-    libtcod.console_flush()
-    dungeon.clear_ui(con)
+messages = MessagesBorg()
 
-    for obj in monsters + items:
-        erase_object(con, obj)
+message_queue = Queue()
 
-    erase_object(con, player)
+def recv_forever(put_queue):
+    while True:
+        TCP_SERVER.receive(put_queue)
+        time.sleep(1)
 
-def draw_everything():
-    #render the screen
+RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
+RECV_THREAD.daemon = True
+RECV_THREAD.start()
 
-    dungeon.draw_ui(con, DRAW_NOT_IN_FOV)
-
-    #draw stairs, then the items on the floor and finally, the monsters that are still alive
-    objects = items + monsters
-    for obj in objects:
-        if dungeon.is_in_fov(obj.position) or DRAW_NOT_IN_FOV:
-            draw_object(con, obj)
-
-    draw_object(con, player)
-
-    #prepare to render the GUI panel
-    libtcod.console_set_default_background(panel, libtcod.black)
-    libtcod.console_clear(panel)
-
-    #draw level name
-    dungeon.draw_name(panel, 1, 1)
-
-    #show the player's stats
-    hp_rect = Rect(1, 2, BAR_WIDTH, 1)
-    HP_BAR.update(player.hp, player.max_hp)
-    HP_BAR.draw(panel, hp_rect)
-
-    libtcod.console_print_ex(panel, 1, 3, libtcod.BKGND_NONE, libtcod.LEFT,
-                             "Attack: " + str(player.power))
-
-    libtcod.console_print_ex(panel, 1, 4, libtcod.BKGND_NONE, libtcod.LEFT,
-                             "Defense: " + str(player.defense))
-
-    #print the game messages, one line at a time
-    y = 1
-    for (line, color) in messages.get_all():
-        libtcod.console_set_default_foreground(panel, color)
-        libtcod.console_print_ex(panel, MSG_X, y,
-                                 libtcod.BKGND_NONE, libtcod.LEFT,
-                                 line)
-        y += 1
-
-    flush()
+while not libtcod.console_is_window_closed():
+    draw.draw(dungeon, player, messages, DRAW_NOT_IN_FOV)
 
     level = dungeon._model.levels[dungeon._model.current_level]
 
@@ -253,46 +215,9 @@ def draw_everything():
 
     data['player'] = player.json()
 
-#    print str({'monsters': [m.json() for m in level.monsters]})
-#    print str({'items': [i.json() for i in level.items]})
-
-#    print str({'explored': [[1 if e else 0 for e in row] for row in explored]})
-#    print level.fov_map
-
-#    print str(messages.get_all())
-
     send_data = json.dumps(data)
     TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
 
-#############################################
-# Initialization & Main Loop
-#############################################
-
-flags = libtcod.FONT_TYPE_GREYSCALE | libtcod.FONT_LAYOUT_TCOD
-libtcod.console_set_custom_font('./resources/fonts/arial10x10.png', flags)
-libtcod.console_init_root(SCREEN_WIDTH, SCREEN_HEIGHT, 'mprl', False)
-libtcod.sys_set_fps(LIMIT_FPS)
-con = libtcod.console_new(MAP_WIDTH, MAP_HEIGHT)
-panel = libtcod.console_new(SCREEN_WIDTH, PANEL_HEIGHT)
-
-move_player(0, 0)
-
-messages = MessagesBorg()
-messages.add('Welcome stranger!', libtcod.red)
-
-message_queue = Queue()
-
-def recv_forever(put_queue):
-    while True:
-        TCP_SERVER.receive(put_queue)
-        time.sleep(1)
-
-RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
-RECV_THREAD.daemon = True
-RECV_THREAD.start()
-
-while not libtcod.console_is_window_closed():
-    draw_everything()
 
     #handle keys and exit game if needed
     player_action = handle_keys()
