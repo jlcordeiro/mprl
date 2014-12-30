@@ -202,20 +202,9 @@ RECV_THREAD.start()
 while not libtcod.console_is_window_closed():
     draw.draw(dungeon, player, messages, DRAW_NOT_IN_FOV)
 
-    level = dungeon._model.levels[dungeon._model.current_level]
-
     data = {}
-    data['dungeon'] = {}
-    data['dungeon']['current_level'] = dungeon._model.current_level
-    data['dungeon']['levels'] = {}
-    for idx, level in dungeon._model.levels.items():
-        level_repr = {}
-        level_repr['walls'] = [[b for b in row] for row in level.walls]
-        level_repr['stairs'] = level.stairs.position if level.stairs is not None else None
-        data['dungeon']['levels'][idx] = level_repr
-
+    data['dungeon'] = dungeon._model.json()
     data['player'] = player.json()
-
     send_data = json.dumps(data)
     TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
 
