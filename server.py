@@ -27,7 +27,7 @@ player_action = None
 # start the player on a random position (not blocked)
 dungeon = controllers.dungeon.Dungeon()
 (x, y) = dungeon.random_unblocked_pos()
-player = common.models.creatures.Player(x, y)
+player = common.models.creatures.Player(dungeon, x, y)
 
 items = []
 monsters = []
@@ -42,7 +42,8 @@ def move_player(dx, dy):
     elif not dungeon.is_blocked(new_pos):
         player.position = new_pos
 
-    dungeon.update_fov(player.position)
+    player.update_fov()
+    dungeon.update_explored(player)
 
 
 def take_turn_monster(monster):

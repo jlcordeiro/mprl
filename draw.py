@@ -35,7 +35,12 @@ class Draw(object):
 
     def draw(self, dungeon, player, messages, draw_not_in_fov):
         #render the screen
-        dungeon.draw_ui(self.con, draw_not_in_fov)
+        if draw_not_in_fov is True:
+            is_in_fov_func = lambda pos: True
+        else:
+            is_in_fov_func = player.is_in_fov
+
+        dungeon.draw_ui(self.con, is_in_fov_func)
 
         #draw stairs, then the items on the floor and finally, the monsters that are still alive
 #        objects = items + monsters

@@ -121,9 +121,6 @@ class Dungeon(object):
         #return (self.get_monster_in_pos(pos) is not None)
         return False
 
-    def is_in_fov(self, pos):
-        return self.__clevel.is_in_fov(pos)
-
     def random_unblocked_pos(self):
         #choose random spot
         pos = Point(random.randint(1, MAP_WIDTH - 1),
@@ -144,13 +141,10 @@ class Dungeon(object):
 
         return libtcod.path_get(self.path, 0)
 
-    def update_fov(self, pos):
-        libtcod.map_compute_fov(self.__clevel.fov_map, pos[0], pos[1],
-                                TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
-
+    def update_explored(self, player):
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                if self.is_in_fov((x, y)):
+                if player.is_in_fov((x, y)):
                     self.__clevel.explored[x][y] = True
 
     def compute_path(self):
@@ -176,8 +170,8 @@ class Dungeon(object):
     def clear_ui(self, con):
         self._view.clear(con, self.__clevel)
 
-    def draw_ui(self, con, draw_outside_fov):
-        self._view.draw(con, self.__clevel, draw_outside_fov)
+    def draw_ui(self, con, is_in_fov_func):
+        self._view.draw(con, self.__clevel, is_in_fov_func)
 
     def draw_name(self, con, x, y):
         self._view.draw_name(con, self.__clevel, x, y)

@@ -15,7 +15,6 @@ class TCPServer:
         self.client_fds = []
 
     def broadcast(self, data):
-        print " >> ", data, " << "
         for fd in self.client_fds:
             fd.send(data)
 

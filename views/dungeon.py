@@ -19,15 +19,15 @@ class Level:
     def __init__(self):
         pass
 
-    def draw(self, console, level, draw_not_in_fov=False):
+    def draw(self, console, level, is_in_fov_func):
         #go through all tiles, and set their background color
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
                 wall = level.is_blocked((x, y))
-                visible = level.is_in_fov((x, y))
+                visible = is_in_fov_func((x, y))
 
                 color = libtcod.black
-                if visible or draw_not_in_fov:
+                if visible:
                     color = LEVEL_COLOURS.light_wall if wall else LEVEL_COLOURS.light_ground
                 elif level.explored[x][y]:
                     color = LEVEL_COLOURS.dark_wall if wall else LEVEL_COLOURS.dark_ground
@@ -40,7 +40,7 @@ class Level:
 
         #draw stairs
         stairs = level.stairs
-        if stairs is not None and (level.is_in_fov(stairs.position) or draw_not_in_fov):
+        if stairs is not None and is_in_fov_func(stairs.position):
             draw_object(console, stairs)
 
     def draw_name(self, console, level, x, y):

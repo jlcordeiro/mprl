@@ -41,16 +41,6 @@ try:
         print ">> ", len(all_data)
         data = json.loads(all_data)
 
-        (player_x, player_y) = data['player']['position']
-
-        player = common.models.creatures.Player(player_x, player_y)
-#        player = common.models.creatures.Creature('player',
-#                                                  player_x,
-#                                                  player_y,
-#                                                  data['player']['hp'],
-#                                                  data['player']['defense'],
-#                                                  data['player']['power'])
-
         levels = {}
         for idx, ldata in data['dungeon']['levels'].items():
             sdata = ldata['stairs']
@@ -62,7 +52,20 @@ try:
 
         dungeon = controllers.dungeon.Dungeon(levels)
 
-        draw.draw(dungeon, player, None, True)
+        (player_x, player_y) = data['player']['position']
+
+        player = common.models.creatures.Player(dungeon, player_x, player_y)
+#        player = common.models.creatures.Creature('player',
+#                                                  player_x,
+#                                                  player_y,
+#                                                  data['player']['hp'],
+#                                                  data['player']['defense'],
+#                                                  data['player']['power'])
+
+        player.update_fov()
+        dungeon.update_explored(player)
+
+        draw.draw(dungeon, player, None, DRAW_NOT_IN_FOV)
 finally:
     sock.close()
 

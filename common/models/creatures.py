@@ -1,3 +1,4 @@
+import libtcodpy as libtcod
 from objects import ObjectModel
 from config import *
 
@@ -94,5 +95,20 @@ class Creature(ObjectModel):
 
 
 class Player(Creature):
-    def __init__(self, x, y):
+    def __init__(self, dungeon, x, y):
         super(Player, self).__init__('player', x, y, 30, 2, 5)
+        self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
+
+        for y in range(MAP_HEIGHT):
+            for x in range(MAP_WIDTH):
+                libtcod.map_set_properties(self.fov_map, x, y,
+                                           not dungeon.is_blocked((x, y)),
+                                           not dungeon.is_blocked((x, y)))
+
+    def is_in_fov(self, pos):
+        return libtcod.map_is_in_fov(self.fov_map, pos[0], pos[1])
+
+    def update_fov(self):
+        libtcod.map_compute_fov(self.fov_map,
+                                self.position[0], self.position[1],
+                                TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
