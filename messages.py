@@ -10,7 +10,7 @@ class MessagesBorg:
     def __init__(self):
         pass
 
-    def add(self, new_msg, color=libtcod.white):
+    def add(self, new_msg):
         #split the message if necessary, among multiple lines
         new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
 
@@ -19,8 +19,8 @@ class MessagesBorg:
             if len(self.messages) == MSG_HEIGHT:
                 del self.messages[0]
 
-            #add the new line as a tuple, with the text and the color
-            self.messages.append((line, color))
+            self.messages.append(line)
+        print self.messages
 
     def get_all(self):
         return self.messages

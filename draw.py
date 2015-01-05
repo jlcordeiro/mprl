@@ -18,7 +18,7 @@ class Draw(object):
 
 
 
-    def flush(self, dungeon, player):
+    def flush(self, dungeon, player, monsters, items):
         #blit the contents of "console" to the root console
         libtcod.console_blit(self.con, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0)
 
@@ -28,12 +28,12 @@ class Draw(object):
         libtcod.console_flush()
         dungeon.clear_ui(self.con)
 
-#        for obj in monsters + items:
-#            erase_object(self.con, obj)
+        for obj in monsters + items:
+            erase_object(self.con, obj)
 
         erase_object(self.con, player)
 
-    def draw(self, dungeon, player, messages, draw_not_in_fov):
+    def draw(self, dungeon, player, monsters, items, messages, draw_not_in_fov):
         #render the screen
         if draw_not_in_fov is True:
             is_in_fov_func = lambda pos: True
@@ -43,19 +43,16 @@ class Draw(object):
         dungeon.draw_ui(self.con, is_in_fov_func)
 
         #draw stairs, then the items on the floor and finally, the monsters that are still alive
-#        objects = items + monsters
-#        for obj in objects:
-#            if dungeon.is_in_fov(obj.position) or draw_not_in_fov:
-#                draw_object(self.con, obj)
+        objects = items + monsters
+        for obj in objects:
+            if dungeon.is_in_fov(obj.position) or draw_not_in_fov:
+                draw_object(self.con, obj)
 
         draw_object(self.con, player)
 
         #prepare to render the GUI panel
         libtcod.console_set_default_background(self.panel, libtcod.black)
         libtcod.console_clear(self.panel)
-
-        #draw level name
-        dungeon.draw_name(self.panel, 1, 1)
 
         #show the player's stats
         self.hp_bar.update(player.hp, player.max_hp)
@@ -68,12 +65,12 @@ class Draw(object):
                                  "Defense: " + str(player.defense))
 
         #print the game messages, one line at a time
-#        y = 1
-#        for (line, color) in messages.get_all():
-#            libtcod.console_set_default_foreground(self.panel, color)
-#            libtcod.console_print_ex(self.panel, MSG_X, y,
-#                                     libtcod.BKGND_NONE, libtcod.LEFT,
-#                                     line)
-#            y += 1
+        y = 1
+        for line in messages:
+            libtcod.console_set_default_foreground(self.panel, libtcod.white)
+            libtcod.console_print_ex(self.panel, MSG_X, y,
+                                     libtcod.BKGND_NONE, libtcod.LEFT,
+                                     line)
+            y += 1
 
-        self.flush(dungeon, player)
+        self.flush(dungeon, player, monsters, items)

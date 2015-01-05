@@ -6,7 +6,6 @@ Stairs = namedtuple('Stairs', ['position', 'type'])
 
 class Level(object):
     def __init__(self, walls, stairs = None):
-        self.id = id
         self.walls = walls
         self.explored = [[False for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
         self.stairs = stairs

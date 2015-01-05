@@ -105,7 +105,7 @@ def inventory_menu(con, rect, header, player):
     #show a menu with each item of the inventory as an option
     items = player.inventory
     if len(items) == 0:
-        messages.add('Inventory is empty.', libtcod.orange)
+        messages.add('Inventory is empty.')
         return
 
     options = []
