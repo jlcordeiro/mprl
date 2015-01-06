@@ -17,12 +17,12 @@ def confused_move(source):
     source.confused_turns -= 1
 
 
-def MonsterFactory(x, y):
+def MonsterFactory(pos):
     dice = libtcod.random_get_int(0, 0, 100)
 
     if dice < 80:
-        model = common.models.creatures.Creature('Orc', x, y, 10, 0, 3)
+        model = common.models.creatures.Creature('Orc', pos, 10, 0, 3)
     else:
-        model = common.models.creatures.Creature('Troll', x, y, 16, 1, 4)
+        model = common.models.creatures.Creature('Troll', pos, 16, 1, 4)
 
     return model

@@ -5,7 +5,7 @@ from messages import *
 from platform.ui import *
 from platform.keyboard import *
 from common.models.dungeon import Stairs, Level
-from common.utilities.geometry import Rect, Point
+from common.utilities.geometry import Rect, Point2, Point3
 from views.objects import draw_object, erase_object
 import common.models.creatures
 import controllers.creatures
@@ -46,15 +46,15 @@ try:
             sdata = ldata['stairs']
             stairs = None
             if sdata is not None:
-                stairs = Stairs(Point(sdata[0], sdata[1]), "stairs_down")
+                stairs = Stairs(Point2(sdata[0], sdata[1]), "stairs_down")
 
             levels[int(idx)] = Level(ldata['walls'], stairs)
 
         dungeon = controllers.dungeon.Dungeon(levels)
 
-        (player_x, player_y) = data['player']['position']
+        (player_x, player_y, player_z) = data['player']['position']
 
-        player = common.models.creatures.Player(dungeon, player_x, player_y)
+        player = common.models.creatures.Player(dungeon, Point3(player_x, player_y, player_z))
 #        player = common.models.creatures.Creature('player',
 #                                                  player_x,
 #                                                  player_y,

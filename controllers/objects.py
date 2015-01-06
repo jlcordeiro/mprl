@@ -50,19 +50,19 @@ def use_confusion_scroll(player, monsters):
 ################ Weapons
 
 
-def ItemFactory(x, y):
+def ItemFactory(pos):
     dice = libtcod.random_get_int(0, 0, 100)
     if dice < 20:
-        return common.models.objects.HealingPotion(x, y)
+        return common.models.objects.HealingPotion(pos)
     elif dice < 20:
-        return common.models.objects.LightningBolt(x, y)
+        return common.models.objects.LightningBolt(pos)
     elif dice < 60:
-        return common.models.objects.ConfusionScroll(x, y)
+        return common.models.objects.ConfusionScroll(pos)
     elif dice < 70:
-        return common.models.objects.WoodenShield(x, y)
+        return common.models.objects.WoodenShield(pos)
     elif dice < 80:
-        return common.models.objects.Cloak(x, y)
+        return common.models.objects.Cloak(pos)
     elif dice < 90:
-        return common.models.objects.Stick(x, y)
+        return common.models.objects.Stick(pos)
     else:
-        return common.models.objects.Crowbar(x, y)
+        return common.models.objects.Crowbar(pos)

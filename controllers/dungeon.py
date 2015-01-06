@@ -3,7 +3,7 @@ import random
 import views.dungeon
 import common.models.dungeon
 from common.models.dungeon import Stairs, Level
-from common.utilities.geometry import Rect, Point
+from common.utilities.geometry import Rect, Point2
 from config import *
 from messages import *
 
@@ -89,7 +89,7 @@ def generate_random_levels():
     #build stairs
     for idx in xrange(0, NUM_LEVELS - 1):
         while True:
-            stairs_pos = Point(random.randint(1, MAP_WIDTH - 1),
+            stairs_pos = Point2(random.randint(1, MAP_WIDTH - 1),
                                random.randint(1, MAP_HEIGHT - 1))
             if not levels[idx].is_blocked(stairs_pos) and \
                not levels[idx + 1].is_blocked(stairs_pos):
@@ -123,8 +123,8 @@ class Dungeon(object):
 
     def random_unblocked_pos(self):
         #choose random spot
-        pos = Point(random.randint(1, MAP_WIDTH - 1),
-                    random.randint(1, MAP_HEIGHT - 1))
+        pos = Point2(random.randint(1, MAP_WIDTH - 1),
+                     random.randint(1, MAP_HEIGHT - 1))
 
         if not self.is_blocked(pos):
             return pos
@@ -161,7 +161,8 @@ class Dungeon(object):
     def climb_stairs(self, pos):
         messages = MessagesBorg()
 
-        if self.__clevel.stairs.position != pos:
+        sx, sy = self.__clevel.stairs.position
+        if sx != pos.x or sy != pos.y:
             messages.add('There are no stairs here.', libtcod.orange)
         else:
             messages.add('You climb some stairs..', libtcod.green)

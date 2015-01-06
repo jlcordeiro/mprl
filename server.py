@@ -3,7 +3,7 @@ from config import *
 from messages import *
 from platform.ui import *
 from platform.keyboard import *
-from common.utilities.geometry import Rect, Point
+from common.utilities.geometry import Rect, Point3
 import controllers.creatures
 import controllers.dungeon
 import common.models.creatures
@@ -27,14 +27,14 @@ player_action = None
 # start the player on a random position (not blocked)
 dungeon = controllers.dungeon.Dungeon()
 (x, y) = dungeon.random_unblocked_pos()
-player = common.models.creatures.Player(dungeon, x, y)
+player = common.models.creatures.Player(dungeon, Point3(x, y, 0))
 
 items = []
 monsters = []
 
 def move_player(dx, dy):
     old_pos = player.position
-    new_pos = old_pos.add(Point(dx, dy))
+    new_pos = old_pos.add(Point3(dx, dy, 0))
 
     monster = None # TODO: monster = dungeon.get_monster_in_pos(new_pos)
     if monster is not None:
@@ -76,7 +76,7 @@ def take_turn_monster(monster):
         if euclidean_distance(monster.position, monster.target_pos) >= 2:
             path = dungeon.get_path(monster.position, monster.target_pos)
             if path is not None and not dungeon.is_blocked(path):
-                monster.position = Point(path[0], path[1])
+                monster.position = Point3(path[0], path[1], monster.position.z)
 
 def take_turn():
     dungeon.compute_path()

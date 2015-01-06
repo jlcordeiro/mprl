@@ -1,7 +1,7 @@
 import libtcodpy as libtcod
 from config import *
 from platform.ui import *
-from common.utilities.geometry import Rect, Point
+from common.utilities.geometry import Rect
 from views.objects import draw_object, erase_object
 
 class Draw(object):
