@@ -102,8 +102,8 @@ class Player(Creature):
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
                 libtcod.map_set_properties(self.fov_map, x, y,
-                                           not dungeon.is_blocked((x, y)),
-                                           not dungeon.is_blocked((x, y)))
+                                           not dungeon.is_blocked(pos),
+                                           not dungeon.is_blocked(pos))
 
     def is_in_fov(self, pos):
         return libtcod.map_is_in_fov(self.fov_map, pos[0], pos[1])

@@ -45,7 +45,7 @@ class Draw(object):
         #draw stairs, then the items on the floor and finally, the monsters that are still alive
         objects = items + monsters
         for obj in objects:
-            if dungeon.is_in_fov(obj.position) or draw_not_in_fov:
+            if player.is_in_fov(obj.position) or draw_not_in_fov:
                 draw_object(self.con, obj)
 
         draw_object(self.con, player)

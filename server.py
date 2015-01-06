@@ -3,8 +3,9 @@ from config import *
 from messages import *
 from platform.ui import *
 from platform.keyboard import *
-from common.utilities.geometry import Rect, Point3
+from common.utilities.geometry import Rect, Point3, euclidean_distance
 import controllers.creatures
+import controllers.objects
 import controllers.dungeon
 import common.models.creatures
 from controllers.creatures import attack
@@ -26,17 +27,46 @@ player_action = None
 
 # start the player on a random position (not blocked)
 dungeon = controllers.dungeon.Dungeon()
-(x, y) = dungeon.random_unblocked_pos()
+(x, y, z) = dungeon.random_unblocked_pos(depth = 0)
 player = common.models.creatures.Player(dungeon, Point3(x, y, 0))
 
-items = []
-monsters = []
+def generate_monsters():
+    new_monsters = []
+
+    for level_idx in xrange(0, NUM_LEVELS):
+        for _ in xrange(0, MAX_LEVEL_MONSTERS):
+            pos = dungeon.random_unblocked_pos(depth = level_idx)
+            monster = controllers.creatures.MonsterFactory(pos)
+            new_monsters.append(monster)
+
+    return new_monsters
+
+def generate_items():
+    new_items = []
+
+    for level_idx in xrange(0, NUM_LEVELS):
+        for _ in xrange(0, MAX_LEVEL_ITEMS):
+            pos = dungeon.random_unblocked_pos(depth = level_idx)
+            item = controllers.objects.ItemFactory(pos)
+            new_items.append(item)
+
+    return new_items
+
+monsters = generate_monsters()
+items = generate_items()
+
+def get_monster_in_pos(pos):
+    for monster in monsters:
+        if monster.position == pos and not monster.died:
+            return monster
+
+    return None
 
 def move_player(dx, dy):
     old_pos = player.position
     new_pos = old_pos.add(Point3(dx, dy, 0))
 
-    monster = None # TODO: monster = dungeon.get_monster_in_pos(new_pos)
+    monster = get_monster_in_pos(new_pos)
     if monster is not None:
         attack(player, monster)
     elif not dungeon.is_blocked(new_pos):
@@ -44,7 +74,6 @@ def move_player(dx, dy):
 
     player.update_fov()
     dungeon.update_explored(player)
-
 
 def take_turn_monster(monster):
     if monster.died:
@@ -55,7 +84,8 @@ def take_turn_monster(monster):
     if monster.confused_turns > 0:
         monster.confused_move()
 
-        if dungeon.is_blocked(monster.position) is False:
+        if (dungeon.is_blocked(monster.position) is False or
+            get_monster_in_pos(monster.position) is not None):
             monster.position = previous_pos
 
         return
@@ -68,20 +98,24 @@ def take_turn_monster(monster):
         return
 
     #if the monster sees the player, update its target position
-    if dungeon.is_in_fov(monster.position):
+    if player.is_in_fov(monster.position):
         monster.target_pos = player.position
 
     if monster.target_pos not in (None, monster.position):
         #move towards player if far away
         if euclidean_distance(monster.position, monster.target_pos) >= 2:
             path = dungeon.get_path(monster.position, monster.target_pos)
-            if path is not None and not dungeon.is_blocked(path):
-                monster.position = Point3(path[0], path[1], monster.position.z)
+            if path is not None:
+                new_pos = Point3(path[0], path[1], monster.position.z)
+                if not dungeon.is_blocked(new_pos):
+                    monster.position = new_pos
 
 def take_turn():
     dungeon.compute_path()
 
-    for monster in monsters:
+    level_monsters = [m for m in monsters if m.position.z == player.position.z]
+
+    for monster in level_monsters:
         take_turn_monster(monster)
 
 def take_item_from_player(item):
@@ -103,13 +137,14 @@ def give_item_to_player():
                          item.name + '.')
 
 def closest_monster_to_pos(pos, monsters, max_range):
+    level_monsters = [m for m in monsters if m.position.z == pos.z]
     #find closest enemy, up to a maximum range, and in the FOV
-    if len(monsters) < 1:
+    if len(level_monsters) < 1:
         return None
 
-    closest = min(monsters, key = lambda x: euclidean_distance(x.position, pos))
+    closest = min(level_monsters, key = lambda x: euclidean_distance(x.position, pos))
     if (closest is None or
-        not dungeon.is_in_fov(closest.position) or
+        not player.is_in_fov(closest.position) or
         euclidean_distance(closest.position, pos) > max_range):
         return None
 
@@ -200,7 +235,10 @@ RECV_THREAD.daemon = True
 RECV_THREAD.start()
 
 while not libtcod.console_is_window_closed():
-    draw.draw(dungeon, player, monsters, items, messages.get_all(), DRAW_NOT_IN_FOV)
+    level_monsters = [m for m in monsters if m.position.z == player.position.z]
+    level_items = [i for i in items if i.position.z == player.position.z]
+
+    draw.draw(dungeon, player, level_monsters, level_items, messages.get_all(), DRAW_NOT_IN_FOV)
 
     data = {}
     data['dungeon'] = dungeon._model.json()

@@ -3,7 +3,7 @@ import random
 import views.dungeon
 import common.models.dungeon
 from common.models.dungeon import Stairs, Level
-from common.utilities.geometry import Rect, Point2
+from common.utilities.geometry import Rect, Point2, Point3
 from config import *
 from messages import *
 
@@ -114,27 +114,29 @@ class Dungeon(object):
 
     def is_blocked(self, pos):
         #first test the map tile
-        if self.__clevel.is_blocked(pos):
+        if self._model.levels[pos[2]].is_blocked(pos):
             return True
 
         #now check for any blocking monsters
         #return (self.get_monster_in_pos(pos) is not None)
         return False
 
-    def random_unblocked_pos(self):
-        #choose random spot
-        pos = Point2(random.randint(1, MAP_WIDTH - 1),
-                     random.randint(1, MAP_HEIGHT - 1))
+    def random_unblocked_pos(self, depth = None):
+        if depth is None:
+            depth = self._model.current_level
+
+        pos = Point3(random.randint(1, MAP_WIDTH - 1),
+                     random.randint(1, MAP_HEIGHT - 1),
+                     depth)
 
         if not self.is_blocked(pos):
             return pos
 
-        return self.random_unblocked_pos()
+        return self.random_unblocked_pos(depth)
 
     def get_path(self, source_pos, target_pos):
-        sx, sy = source_pos
-        tx, ty = target_pos
-        libtcod.path_compute(self.path, sx, sy, tx, ty)
+        libtcod.path_compute(self.path, source_pos[0], source_pos[1],
+                                        target_pos[0], target_pos[1])
 
         if libtcod.path_is_empty(self.path):
             return None
@@ -151,10 +153,11 @@ class Dungeon(object):
         # build map for path finding
         path_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
+        z = self._model.current_level
         for x in range(MAP_WIDTH):
             for y in range(MAP_HEIGHT):
                 libtcod.map_set_properties(path_map, x, y, True,
-                                           not self.is_blocked((x, y)))
+                                           not self.is_blocked((x, y, z)))
 
         self.path = libtcod.path_new_using_map(path_map)
 
