@@ -163,9 +163,9 @@ class Dungeon(object):
 
         sx, sy = self.__clevel.stairs.position
         if sx != pos.x or sy != pos.y:
-            messages.add('There are no stairs here.', libtcod.orange)
+            messages.add('There are no stairs here.')
         else:
-            messages.add('You climb some stairs..', libtcod.green)
+            messages.add('You climb some stairs..')
             self._model.current_level += 1
 
     def clear_ui(self, con):
@@ -173,6 +173,3 @@ class Dungeon(object):
 
     def draw_ui(self, con, is_in_fov_func):
         self._view.draw(con, self.__clevel, is_in_fov_func)
-
-    def draw_name(self, con, x, y):
-        self._view.draw_name(con, self.__clevel, x, y)

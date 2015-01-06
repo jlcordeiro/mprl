@@ -43,11 +43,6 @@ class Level:
         if stairs is not None and is_in_fov_func(stairs.position):
             draw_object(console, stairs)
 
-    def draw_name(self, console, level, x, y):
-        libtcod.console_set_default_foreground(console, LEVEL_COLOURS.light_wall)
-        libtcod.console_print_ex(console, x, y, libtcod.BKGND_NONE, libtcod.LEFT,
-                                 str(level.id))
-
     def clear(self, console, level):
         #erase the character that represents this object
         if level.stairs is not None:

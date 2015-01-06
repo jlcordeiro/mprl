@@ -6,14 +6,11 @@ from platform.ui import *
 from platform.keyboard import *
 from common.models.dungeon import Stairs, Level
 from common.utilities.geometry import Rect, Point2, Point3
-from views.objects import draw_object, erase_object
 import common.models.creatures
 import controllers.creatures
 import controllers.dungeon
-from views.dungeon import LEVEL_COLOURS
 import socket
 import json
-import sys
 
 draw = Draw()
 DRAW_NOT_IN_FOV = False
@@ -24,6 +21,10 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_address = ('localhost', 4446)
 print 'connecting to %s port %s' % server_address
 sock.connect(server_address)
+
+messages = []
+monsters = []
+items = []
 
 try:
     while True:
@@ -54,6 +55,8 @@ try:
 
         (player_x, player_y, player_z) = data['player']['position']
 
+        messages = data['messages']
+
         player = common.models.creatures.Player(dungeon, Point3(player_x, player_y, player_z))
 #        player = common.models.creatures.Creature('player',
 #                                                  player_x,
@@ -65,7 +68,7 @@ try:
         player.update_fov()
         dungeon.update_explored(player)
 
-        draw.draw(dungeon, player, None, DRAW_NOT_IN_FOV)
+        draw.draw(dungeon, player, monsters, items, messages, DRAW_NOT_IN_FOV)
 finally:
     sock.close()
 

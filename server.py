@@ -86,7 +86,7 @@ def take_turn():
 
 def take_item_from_player(item):
     messages = MessagesBorg()
-    messages.add('You dropped a ' + item.name + '.', libtcod.yellow)
+    messages.add('You dropped a ' + item.name + '.')
     player.remove_item(item)
     item.position = player.position
     items.append(item)
@@ -96,11 +96,11 @@ def give_item_to_player():
     for item in items:
         if item.position == player.position:
             if player.add_item(item) is True:
-                messages.add('You picked up a ' + item.name + '! (' + item.key + ')', libtcod.green)
+                messages.add('You picked up a ' + item.name + '! (' + item.key + ')')
                 items.remove(item)
             else:
                 messages.add('Your inventory is full, cannot pick up ' +
-                         item.name + '.', libtcod.red)
+                         item.name + '.')
 
 def closest_monster_to_pos(pos, monsters, max_range):
     #find closest enemy, up to a maximum range, and in the FOV
@@ -157,12 +157,12 @@ def handle_keys():
 
             elif chosen_item.type == "armour" and option == 'w':
                 if chosen_item.type != "armour":
-                    messages.add('You can\'t wear a ' + chosen_item.name + '.', libtcod.red)
+                    messages.add('You can\'t wear a ' + chosen_item.name + '.')
                 else:
-                    messages.add('You are now wearing a ' + chosen_item.name + '.', libtcod.green)
+                    messages.add('You are now wearing a ' + chosen_item.name + '.')
                     player.armour = chosen_item
             elif chosen_item.type == "melee":
-                messages.add('You equipped a ' + weapon.name + '.', libtcod.green)
+                messages.add('You equipped a ' + weapon.name + '.')
                 if option == 'r':
                     player.weapon_right = chosen_item
                 elif option == 'l':
@@ -200,11 +200,12 @@ RECV_THREAD.daemon = True
 RECV_THREAD.start()
 
 while not libtcod.console_is_window_closed():
-    draw.draw(dungeon, player, messages, DRAW_NOT_IN_FOV)
+    draw.draw(dungeon, player, monsters, items, messages.get_all(), DRAW_NOT_IN_FOV)
 
     data = {}
     data['dungeon'] = dungeon._model.json()
     data['player'] = player.json()
+    data['messages'] = messages.get_all()
     send_data = json.dumps(data)
     TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
 
@@ -219,7 +220,7 @@ while not libtcod.console_is_window_closed():
         take_turn()
 
     if player.died and game_state != 'dead':
-        messages.add("YOU DIED!", libtcod.red)
+        messages.add("YOU DIED!")
         game_state = 'dead'
 
 TCP_SERVER.close()

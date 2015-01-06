@@ -9,7 +9,7 @@ from utils import euclidean_distance
 
 def use_healing_potion(player, monsters):
     messages = MessagesBorg()
-    messages.add('Your wounds start to feel better!', libtcod.light_violet)
+    messages.add('Your wounds start to feel better!')
     player.hp += HEAL_AMOUNT
     return True
 
@@ -18,14 +18,14 @@ def use_lightning_bolt(player, monsters):
     messages = MessagesBorg()
 
     if len(monsters) < 1:
-        messages.add('No enemy is close enough to strike.', libtcod.red)
+        messages.add('No enemy is close enough to strike.')
         return False
 
     damage = LIGHTNING_DAMAGE
     for monster in monsters:
         messages.add('A lighting bolt strikes the ' + monster.name +
                      ' with a loud thunder! The damage is '
-                     + str(damage) + ' hit points.', libtcod.light_blue)
+                     + str(damage) + ' hit points.')
         monster.hp -= damage
 
     return True
@@ -35,13 +35,12 @@ def use_confusion_scroll(player, monsters):
     messages = MessagesBorg()
 
     if len(monsters) < 1:
-        messages.add('No enemy is close enough to confuse.', libtcod.red)
+        messages.add('No enemy is close enough to confuse.')
         return False
 
     for monster in monsters:
         messages.add('The eyes of the ' + monster.name +
-                     ' look vacant, as he starts to stumble around!',
-                     libtcod.light_green)
+                     ' look vacant, as he starts to stumble around!')
         monster.confused_turns = CONFUSE_NUM_TURNS
 
     return True
