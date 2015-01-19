@@ -58,13 +58,7 @@ try:
         messages = data['messages']
 
         player = common.models.creatures.Player(dungeon, Point3(player_x, player_y, player_z))
-#        player = common.models.creatures.Creature('player',
-#                                                  player_x,
-#                                                  player_y,
-#                                                  data['player']['hp'],
-#                                                  data['player']['defense'],
-#                                                  data['player']['power'])
-
+        player.hp = data['player']['hp']
         player.update_fov()
         dungeon.update_explored(player)
 
