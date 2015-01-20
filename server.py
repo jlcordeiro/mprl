@@ -224,6 +224,7 @@ def send_all():
     data = {}
     data['dungeon'] = dungeon._model.json()
     data['player'] = player.json()
+    data['monsters'] = [m.json() for m in monsters]
     data['messages'] = messages.get_all()
     send_data = json.dumps(data)
     TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
