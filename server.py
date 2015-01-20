@@ -11,7 +11,7 @@ import common.models.creatures
 from controllers.creatures import attack
 import time
 import json
-from sockets import TCPServer
+from sockets import *
 from Queue import Queue
 from threading import Thread
 from draw import Draw
@@ -164,12 +164,7 @@ def handle_keys():
 
     if game_state == 'playing':
         #movement keys
-        movement = get_key_direction(key)
-        if movement is not None:
-            dx, dy = movement
-            move_player(dx, dy)
-
-        elif chr(key.c) == 'i':
+        if chr(key.c) == 'i':
             header = "Press the key next to an item to choose it, or any other to cancel.\n"
             (chosen_item, option) = inventory_menu(con, SCREEN_RECT, header, player)
 
@@ -225,10 +220,28 @@ messages = MessagesBorg()
 
 message_queue = Queue()
 
+def send_all():
+    data = {}
+    data['dungeon'] = dungeon._model.json()
+    data['player'] = player.json()
+    data['messages'] = messages.get_all()
+    send_data = json.dumps(data)
+    TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
+
 def recv_forever(put_queue):
     while True:
         TCP_SERVER.receive(put_queue)
-        time.sleep(1)
+
+        if not put_queue.empty():
+            data = put_queue.get()
+            print(data)
+            if 'move' in data.keys():
+                dx, dy = data['move']
+                move_player(dx, dy)
+            put_queue.task_done()
+
+            draw.draw(dungeon, player, level_monsters, level_items, messages.get_all(), DRAW_NOT_IN_FOV)
+            send_all()
 
 RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
 RECV_THREAD.daemon = True
@@ -239,14 +252,7 @@ while not libtcod.console_is_window_closed():
     level_items = [i for i in items if i.position.z == player.position.z]
 
     draw.draw(dungeon, player, level_monsters, level_items, messages.get_all(), DRAW_NOT_IN_FOV)
-
-    data = {}
-    data['dungeon'] = dungeon._model.json()
-    data['player'] = player.json()
-    data['messages'] = messages.get_all()
-    send_data = json.dumps(data)
-    TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
-
+    send_all()
 
     #handle keys and exit game if needed
     player_action = handle_keys()

@@ -11,6 +11,9 @@ import controllers.creatures
 import controllers.dungeon
 import socket
 import json
+import time
+from sockets import *
+from threading import Thread
 
 draw = Draw()
 DRAW_NOT_IN_FOV = False
@@ -22,25 +25,42 @@ server_address = ('localhost', 4446)
 print 'connecting to %s port %s' % server_address
 sock.connect(server_address)
 
+dungeon = None
+player = None
 messages = []
 monsters = []
 items = []
 
-try:
+def handle_keys():
+    key = wait_keypress()
+
+    if key_is_escape(key):
+        return "exit"
+
+    movement = get_key_direction(key)
+    if movement is not None:
+        json_data = {'move': movement}
+        send_data = json.dumps(json_data)
+        print ">> ", send_data
+        sock.send(str(len(send_data)) + " " + send_data)
+
+    elif chr(key.c) == 'g':
+        #pick up an item
+        give_item_to_player()
+    else:
+        if chr(key.c) == 'v':
+            DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
+        elif chr(key.c) in ('>', '<'):
+            dungeon.climb_stairs(player.position)
+            move_player(0, 0)
+
+        return 'did-not-take-turn'
+
+
+def recv_forever():
+    global messages, monsters, items, dungeon, player
     while True:
-        data_expected = None
-        all_data = None
-        while all_data is None or len(all_data) < data_expected:
-            new_data = sock.recv(16)
-
-            if data_expected is None:
-                data_expected = int(new_data.split(' ')[0])
-                all_data = " ".join(new_data.split(' ')[1:])
-            else:
-                all_data += new_data
-
-        print ">> ", len(all_data)
-        data = json.loads(all_data)
+        data = recv_json(sock)
 
         levels = {}
         for idx, ldata in data['dungeon']['levels'].items():
@@ -63,6 +83,16 @@ try:
         dungeon.update_explored(player)
 
         draw.draw(dungeon, player, monsters, items, messages, DRAW_NOT_IN_FOV)
+
+RECV_THREAD = Thread(target = recv_forever, args = ())
+RECV_THREAD.daemon = True
+RECV_THREAD.start()
+
+try:
+    while True:
+        player_action = handle_keys()
+        if player_action == "exit":
+            break
 finally:
     sock.close()
 
