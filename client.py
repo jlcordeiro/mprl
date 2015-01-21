@@ -80,15 +80,31 @@ def recv_forever():
         dungeon.update_explored(player)
 
         monsters = []
-        json_monsters = data['monsters']
-        for json_m in json_monsters:
+        for json_m in data['monsters']:
             (x, y, z) = json_m['position']
-            monster = controllers.creatures.MonsterFactory(Point3(x, y, z), type = json_m['name'])
-            monster.hp = json_m['hp']
+            monster = common.models.creatures.Creature(json_m['name'],
+                                                       Point3(x, y, z),
+                                                       json_m['hp'],
+                                                       json_m['defense'],
+                                                       json_m['power'])
             monsters.append(monster)
 
         level_monsters = [m for m in monsters if m.position.z == player_z]
-        draw.draw(dungeon, player, level_monsters, items, messages, DRAW_NOT_IN_FOV)
+
+        items = []
+        for json_i in data['items']:
+            (x, y, z) = json_i['position']
+            item = common.models.creatures.Creature(json_i['name'],
+                                                    Point3(x, y, z),
+                                                    json_i['hp'],
+                                                    json_i['defense'],
+                                                    json_i['power'])
+
+            items.append(item)
+
+        level_items = [i for i in items if i.position.z == player.position.z]
+
+        draw.draw(dungeon, player, level_monsters, level_items, messages, DRAW_NOT_IN_FOV)
 
 RECV_THREAD = Thread(target = recv_forever, args = ())
 RECV_THREAD.daemon = True
