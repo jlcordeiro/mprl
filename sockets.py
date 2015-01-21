@@ -7,9 +7,13 @@ def recv_json(sock):
     data_expected = None
     all_data = None
     while all_data is None or len(all_data) < data_expected:
-        new_data = sock.recv(16)
+        size_recv = 16 if data_expected is None else data_expected - len(all_data)
+        new_data = sock.recv(size_recv)
 
         if data_expected is None:
+            if len(new_data) is 0:
+                return None
+
             data_expected = int(new_data.split(' ')[0])
             all_data = " ".join(new_data.split(' ')[1:])
         else:
@@ -17,6 +21,10 @@ def recv_json(sock):
 
     print all_data
     return json.loads(all_data)
+
+def send_json(sock, message):
+    send_data = json.dumps(message) 
+    sock.send(str(len(send_data)) + " " + send_data)
 
 class TCPServer:
     def __init__(self, host, port):
@@ -32,7 +40,7 @@ class TCPServer:
 
     def broadcast(self, data):
         for fd in self.client_fds:
-            fd.send(data)
+            send_json(fd, data)
 
     def receive(self, put_queue):
         input_fds, _, _ = select.select(self.client_fds + [self.socket], [], [])
@@ -42,13 +50,10 @@ class TCPServer:
                 csock, _ = self.socket.accept()
                 self.client_fds.append(csock)
             else:
-                print "a"
                 data = recv_json(x)
-                if data:
-                    print "b"
+                if data is not None:
                     put_queue.put(data)
                 else:
-                    print "c"
                     x.close()
                     self.client_fds.remove(x)
 

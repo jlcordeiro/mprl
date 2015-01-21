@@ -39,10 +39,7 @@ def handle_keys():
 
     movement = get_key_direction(key)
     if movement is not None:
-        json_data = {'move': movement}
-        send_data = json.dumps(json_data)
-        print ">> ", send_data
-        sock.send(str(len(send_data)) + " " + send_data)
+        send_json(sock, {'move': movement})
 
     elif chr(key.c) == 'g':
         #pick up an item
@@ -51,8 +48,7 @@ def handle_keys():
         if chr(key.c) == 'v':
             DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
         elif chr(key.c) in ('>', '<'):
-            dungeon.climb_stairs(player.position)
-            move_player(0, 0)
+            send_json(sock, {'climb': None})
 
         return 'did-not-take-turn'
 
@@ -71,7 +67,8 @@ def recv_forever():
 
             levels[int(idx)] = Level(ldata['walls'], stairs)
 
-        dungeon = controllers.dungeon.Dungeon(levels)
+        current_level = data['dungeon']['current_level']
+        dungeon = controllers.dungeon.Dungeon(levels, current_level)
 
         (player_x, player_y, player_z) = data['player']['position']
 
@@ -90,7 +87,8 @@ def recv_forever():
             monster.hp = json_m['hp']
             monsters.append(monster)
 
-        draw.draw(dungeon, player, monsters, items, messages, DRAW_NOT_IN_FOV)
+        level_monsters = [m for m in monsters if m.position.z == player_z]
+        draw.draw(dungeon, player, level_monsters, items, messages, DRAW_NOT_IN_FOV)
 
 RECV_THREAD = Thread(target = recv_forever, args = ())
 RECV_THREAD.daemon = True

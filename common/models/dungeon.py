@@ -18,9 +18,9 @@ class Level(object):
                 'stairs': self.stairs.position if self.stairs is not None else None}
 
 class Dungeon(object):
-    def __init__(self, levels):
+    def __init__(self, levels, current_level):
         self.levels = levels
-        self.current_level = 0
+        self.current_level = current_level
 
     def json(self):
         return {'current_level': self.current_level,

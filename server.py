@@ -62,9 +62,9 @@ def get_monster_in_pos(pos):
 
     return None
 
-def move_player(dx, dy):
+def move_player(dx, dy, dz = 0):
     old_pos = player.position
-    new_pos = old_pos.add(Point3(dx, dy, 0))
+    new_pos = old_pos.add(Point3(dx, dy, dz))
 
     monster = get_monster_in_pos(new_pos)
     if monster is not None:
@@ -204,9 +204,6 @@ def handle_keys():
         else:
             if chr(key.c) == 'v':
                 DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
-            elif chr(key.c) in ('>', '<'):
-                dungeon.climb_stairs(player.position)
-                move_player(0, 0)
 
             return 'did-not-take-turn'
 
@@ -226,8 +223,7 @@ def send_all():
     data['player'] = player.json()
     data['monsters'] = [m.json() for m in monsters]
     data['messages'] = messages.get_all()
-    send_data = json.dumps(data)
-    TCP_SERVER.broadcast(str(len(send_data)) + " " + send_data)
+    TCP_SERVER.broadcast(data)
 
 def recv_forever(put_queue):
     while True:
@@ -239,8 +235,13 @@ def recv_forever(put_queue):
             if 'move' in data.keys():
                 dx, dy = data['move']
                 move_player(dx, dy)
+            elif 'climb' in data.keys():
+                new_level = dungeon.climb_stairs(player.position)
+                move_player(0, 0, new_level - player.position.z)
+
             put_queue.task_done()
 
+            level_monsters = [m for m in monsters if m.position.z == player.position.z]
             draw.draw(dungeon, player, level_monsters, level_items, messages.get_all(), DRAW_NOT_IN_FOV)
             send_all()
 

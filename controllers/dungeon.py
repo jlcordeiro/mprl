@@ -101,10 +101,10 @@ def generate_random_levels():
 
 
 class Dungeon(object):
-    def __init__(self, levels = None):
+    def __init__(self, levels = None, current_level = 0):
         if levels is None:
             levels = generate_random_levels()
-        self._model = common.models.dungeon.Dungeon(levels)
+        self._model = common.models.dungeon.Dungeon(levels, current_level)
         self._view = views.dungeon.Level()
 
     @property
@@ -170,6 +170,8 @@ class Dungeon(object):
         else:
             messages.add('You climb some stairs..')
             self._model.current_level += 1
+
+        return self._model.current_level
 
     def clear_ui(self, con):
         self._view.clear(con, self.__clevel)
