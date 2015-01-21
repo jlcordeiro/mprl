@@ -10,8 +10,10 @@ class ObjectModel(object):
         self.type = type
 
     def json(self):
-        return {'type': self.type,
-                'position': self.position
+        return {'name': self.name,
+                'type': self.type,
+                'position': self.position,
+                'blocks': self.blocks
                }
 
 
@@ -34,13 +36,6 @@ class Weapon(ObjectModel):
         super(Weapon, self).__init__(name, "melee", pos, False)
         self.damage = damage
         self.defense = defense
- 
-    def json(self):
-        return {'type': self.type,
-                'position': self.position,
-                'damage': self.damage,
-                'defense': self.defense
-               }
 
 
 class Armour(ObjectModel):
@@ -48,13 +43,6 @@ class Armour(ObjectModel):
         super(Armour, self).__init__(name, "armour", pos, False)
         self.damage = damage
         self.defense = defense
- 
-    def json(self):
-        return {'type': self.type,
-                'position': self.position,
-                'damage': self.damage,
-                'defense': self.defense
-               }
 
 
 ################ Potions

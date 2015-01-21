@@ -94,11 +94,10 @@ def recv_forever():
         items = []
         for json_i in data['items']:
             (x, y, z) = json_i['position']
-            item = common.models.creatures.Creature(json_i['name'],
-                                                    Point3(x, y, z),
-                                                    json_i['hp'],
-                                                    json_i['defense'],
-                                                    json_i['power'])
+            item = common.models.objects.ObjectModel(json_i['name'],
+                                                     json_i['type'],
+                                                     Point3(x, y, z),
+                                                     json_i['blocks'])
 
             items.append(item)
 
