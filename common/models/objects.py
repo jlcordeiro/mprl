@@ -2,8 +2,8 @@ from config import *
 from common.utilities.geometry import Point3
 
 class ObjectModel(object):
-    def __init__(self, name, type, pos, blocks):
-        self.position = pos
+    def __init__(self, name, type, position, blocks):
+        self.position = Point3.copy(position)
         self.key = '_'
         self.name = name
         self.blocks = blocks

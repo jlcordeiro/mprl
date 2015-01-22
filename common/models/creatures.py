@@ -3,9 +3,9 @@ from objects import ObjectModel
 from config import *
 
 class Creature(ObjectModel):
-    def __init__(self, name, pos, hp, defense, power):
-        super(Creature, self).__init__(name, "creature", pos, True)
-        self.max_hp = hp
+    def __init__(self, name, position, max_hp, hp, defense, power):
+        super(Creature, self).__init__(name, "creature", position, True)
+        self.max_hp = max_hp
         self.current_hp = hp
         self.base_defense = defense
         self.base_power = power
@@ -96,7 +96,7 @@ class Creature(ObjectModel):
 
 class Player(Creature):
     def __init__(self, dungeon, pos):
-        super(Player, self).__init__('player', pos, 30, 2, 5)
+        super(Player, self).__init__('player', pos, 30, 30, 2, 5)
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
         for y in range(MAP_HEIGHT):

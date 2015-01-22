@@ -88,28 +88,10 @@ def recv_forever():
         player.update_fov()
         dungeon.update_explored(player)
 
-        monsters = []
-        for json_m in data['monsters']:
-            (x, y, z) = json_m['position']
-            monster = common.models.creatures.Creature(json_m['name'],
-                                                       Point3(x, y, z),
-                                                       json_m['hp'],
-                                                       json_m['defense'],
-                                                       json_m['power'])
-            monsters.append(monster)
-
+        monsters = [common.models.creatures.Creature(**m) for m in data['monsters']]
         level_monsters = [m for m in monsters if m.position.z == player_z]
 
-        items = []
-        for json_i in data['items']:
-            (x, y, z) = json_i['position']
-            item = common.models.objects.ObjectModel(json_i['name'],
-                                                     json_i['type'],
-                                                     Point3(x, y, z),
-                                                     json_i['blocks'])
-
-            items.append(item)
-
+        items = [common.models.objects.ObjectModel(**i) for i in data['items']]
         level_items = [i for i in items if i.position.z == player.position.z]
 
         draw.draw(dungeon, player, level_monsters, level_items, messages, DRAW_NOT_IN_FOV)

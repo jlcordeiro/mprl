@@ -27,6 +27,10 @@ class Point3(namedtuple('Point3', 'x y z')):
 
     __slots__ = ()
 
+    @staticmethod
+    def copy(other):
+        return Point3(other[0], other[1], other[2])
+
     def add(self, other):
         return Point3(self.x + other[0], self.y + other[1], self.z + other[2])
 

@@ -20,8 +20,8 @@ def confused_move(source):
 def MonsterFactory(pos):
     dice = libtcod.random_get_int(0, 0, 100)
     if dice < 80:
-        return common.models.creatures.Creature('Orc', pos, 10, 0, 3)
+        return common.models.creatures.Creature('Orc', pos, 10, 10, 0, 3)
     else:
-        return common.models.creatures.Creature('Troll', pos, 16, 1, 4)
+        return common.models.creatures.Creature('Troll', pos, 16, 16, 1, 4)
 
     return None
