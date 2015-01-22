@@ -8,14 +8,14 @@ from utils import euclidean_distance
 ################ Potions/Scrolls
 
 def use_healing_potion(player, monsters):
-    messages = MessagesBorg()
+    messages = Messages()
     messages.add('Your wounds start to feel better!')
     player.hp += HEAL_AMOUNT
     return True
 
 
 def use_lightning_bolt(player, monsters):
-    messages = MessagesBorg()
+    messages = Messages()
 
     if len(monsters) < 1:
         messages.add('No enemy is close enough to strike.')
@@ -32,7 +32,7 @@ def use_lightning_bolt(player, monsters):
 
 
 def use_confusion_scroll(player, monsters):
-    messages = MessagesBorg()
+    messages = Messages()
 
     if len(monsters) < 1:
         messages.add('No enemy is close enough to confuse.')

@@ -8,7 +8,6 @@ import controllers.creatures
 import controllers.objects
 import controllers.dungeon
 import common.models.creatures
-from controllers.creatures import attack
 import time
 import json
 from sockets import *
@@ -54,6 +53,14 @@ def generate_items():
 
 monsters = generate_monsters()
 items = generate_items()
+
+def attack(source, target):
+    damage = max(0, source.power - target.defense)
+    target.hp -= damage
+
+    messages = Messages()
+    messages.add(source.name + ' attacks ' + target.name + ' for '
+                 + str(damage) + ' hit points.')
 
 def get_monster_in_pos(pos):
     for monster in monsters:
@@ -119,14 +126,14 @@ def take_turn():
         take_turn_monster(monster)
 
 def take_item_from_player(item):
-    messages = MessagesBorg()
+    messages = Messages()
     messages.add('You dropped a ' + item.name + '.')
     player.remove_item(item)
     item.position = player.position
     items.append(item)
 
 def give_item_to_player():
-    messages = MessagesBorg()
+    messages = Messages()
     for item in items:
         if item.position == player.position:
             if player.add_item(item) is True:
@@ -209,7 +216,7 @@ def handle_keys():
 
 move_player(0, 0)
 
-messages = MessagesBorg()
+messages = Messages()
 
 message_queue = Queue()
 
@@ -219,7 +226,7 @@ def send_all():
     data['player'] = player.json()
     data['monsters'] = [m.json() for m in monsters]
     data['items'] = [i.json() for i in items]
-    data['messages'] = messages.get_all()
+    data['messages'] = messages.toList()
     TCP_SERVER.broadcast(data)
 
 def recv_forever(put_queue):
@@ -241,7 +248,7 @@ def recv_forever(put_queue):
             put_queue.task_done()
 
             level_monsters = [m for m in monsters if m.position.z == player.position.z]
-            draw.draw(dungeon, player, level_monsters, level_items, messages.get_all(), DRAW_NOT_IN_FOV)
+            draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), DRAW_NOT_IN_FOV)
             send_all()
 
 RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
@@ -252,7 +259,7 @@ while not libtcod.console_is_window_closed():
     level_monsters = [m for m in monsters if m.position.z == player.position.z]
     level_items = [i for i in items if i.position.z == player.position.z]
 
-    draw.draw(dungeon, player, level_monsters, level_items, messages.get_all(), DRAW_NOT_IN_FOV)
+    draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), DRAW_NOT_IN_FOV)
     send_all()
 
     #handle keys and exit game if needed

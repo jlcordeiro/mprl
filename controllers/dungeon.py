@@ -162,7 +162,7 @@ class Dungeon(object):
         self.path = libtcod.path_new_using_map(path_map)
 
     def climb_stairs(self, pos):
-        messages = MessagesBorg()
+        messages = Messages()
 
         sx, sy = self.__clevel.stairs.position
         if sx != pos.x or sy != pos.y:

@@ -36,24 +36,28 @@ items = []
 
 def handle_keys():
     key = wait_keypress()
+    print "a"
 
     if key_is_escape(key):
         return "exit"
 
     movement = get_key_direction(key)
+    print "b"
     if movement is not None:
         send_json(sock, {'move': movement})
-
+        print "c"
     elif chr(key.c) == 'g':
         #pick up an item
         send_json(sock, {'get': None})
-
+        print "d"
     elif chr(key.c) == 'i':
         header = "Press the key next to an item to choose it, or any other to cancel.\n"
         (chosen_item, option) = inventory_menu(draw.con, SCREEN_RECT, header, player)
+        print "e"
         if chosen_item is None:
             return 'did-not-take-turn'
     else:
+        print "f"
         if chr(key.c) == 'v':
             DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
         elif chr(key.c) in ('>', '<'):
@@ -65,7 +69,9 @@ def handle_keys():
 def recv_forever():
     global messages, monsters, items, dungeon, player
     while True:
+        print "1"
         data = recv_json(sock)
+        print "2"
 
         levels = {}
         for idx, ldata in data['dungeon']['levels'].items():
@@ -81,18 +87,22 @@ def recv_forever():
 
         (player_x, player_y, player_z) = data['player']['position']
 
-        messages = data['messages']
+        print "3"
 
-        player = common.models.creatures.Player(dungeon, Point3(player_x, player_y, player_z))
+        player = common.models.creatures.Player(dungeon, (player_x, player_y, player_z))
+        print "4"
         player.hp = data['player']['hp']
         player.update_fov()
         dungeon.update_explored(player)
+
+        messages = data['messages']
 
         monsters = [common.models.creatures.Creature(**m) for m in data['monsters']]
         level_monsters = [m for m in monsters if m.position.z == player_z]
 
         items = [common.models.objects.ObjectModel(**i) for i in data['items']]
         level_items = [i for i in items if i.position.z == player.position.z]
+
 
         draw.draw(dungeon, player, level_monsters, level_items, messages, DRAW_NOT_IN_FOV)
 
