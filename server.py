@@ -19,8 +19,6 @@ TCP_SERVER = TCPServer('localhost', 4446)
 
 draw = Draw()
 
-DRAW_NOT_IN_FOV = False
-
 game_state = 'playing'
 player_action = None
 
@@ -161,54 +159,13 @@ gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
 SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
 
 def handle_keys():
-    global DRAW_NOT_IN_FOV
-
     #turn-based
     key = wait_keypress()
 
     if key_is_escape(key):
         return "exit"
 
-    if game_state == 'playing':
-        #movement keys
-        if chr(key.c) == 'i':
-            header = "Press the key next to an item to choose it, or any other to cancel.\n"
-            (chosen_item, option) = inventory_menu(con, SCREEN_RECT, header, player)
-
-            if chosen_item is None:
-                return
-
-            if option == 'd':
-                dungeon.take_item_from_player(chosen_item)
-            elif chosen_item.type == "cast" and option == 'u':
-                item_range = chosen_item.range
-                affected_monsters = []
-
-                if chosen_item.affects == 'closest':
-                    closest_one = dungeon.closest_monster_to_player(item_range)
-                    if closest_one is not None:
-                        affected_monsters.append(closest_one)
-
-                if chosen_item.use(player, affected_monsters) is True:
-                    player.remove_item(chosen_item)
-
-            elif chosen_item.type == "armour" and option == 'w':
-                if chosen_item.type != "armour":
-                    messages.add('You can\'t wear a ' + chosen_item.name + '.')
-                else:
-                    messages.add('You are now wearing a ' + chosen_item.name + '.')
-                    player.armour = chosen_item
-            elif chosen_item.type == "melee":
-                messages.add('You equipped a ' + weapon.name + '.')
-                if option == 'r':
-                    player.weapon_right = chosen_item
-                elif option == 'l':
-                    player.weapon_left = chosen_item
-        else:
-            if chr(key.c) == 'v':
-                DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
-
-            return 'did-not-take-turn'
+    return 'did-not-take-turn'
 
 #############################################
 # Initialization & Main Loop
@@ -248,7 +205,7 @@ def recv_forever(put_queue):
             put_queue.task_done()
 
             level_monsters = [m for m in monsters if m.position.z == player.position.z]
-            draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), DRAW_NOT_IN_FOV)
+            draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), False)
             send_all()
 
 RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
@@ -259,7 +216,7 @@ while not libtcod.console_is_window_closed():
     level_monsters = [m for m in monsters if m.position.z == player.position.z]
     level_items = [i for i in items if i.position.z == player.position.z]
 
-    draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), DRAW_NOT_IN_FOV)
+    draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), False)
     send_all()
 
     #handle keys and exit game if needed

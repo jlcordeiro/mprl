@@ -103,11 +103,9 @@ def option_menu(con, rect, header, options, hide_options = False):
 
 def inventory_menu(con, rect, header, player):
     #show a menu with each item of the inventory as an option
-    items = player.inventory
-
     options = []
-    for item in items:
-        text = "(*) " + item.name if False else item.name #TODO: fix
+    for item in player.inventory:
+        text = "(*) " + item.name if False else item.name
         options.append((item.key, text))
 
     item_key = option_menu(con, rect, header, options)

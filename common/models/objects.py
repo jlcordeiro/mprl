@@ -2,9 +2,9 @@ from config import *
 from common.utilities.geometry import Point3
 
 class ObjectModel(object):
-    def __init__(self, name, type, position, blocks):
+    def __init__(self, name, type, position, blocks, key = '_'):
         self.position = Point3.copy(position)
-        self.key = '_'
+        self.key = key
         self.name = name
         self.blocks = blocks
         self.type = type
@@ -13,7 +13,8 @@ class ObjectModel(object):
         return {'name': self.name,
                 'type': self.type,
                 'position': self.position,
-                'blocks': self.blocks
+                'blocks': self.blocks,
+                'key': self.key
                }
 
 

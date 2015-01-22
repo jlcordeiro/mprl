@@ -12,39 +12,9 @@ class Creature(ObjectModel):
         self.confused_turns = 0
         self.target_pos = None
 
-        self.inventory = []
         self.weapon_right = None
         self.weapon_left = None
         self.armour = None
-
-    def __key_is_used(self, key):
-        for item in self.inventory:
-            if item.key == key:
-                return True
-
-        return False
-
-    def __get_unused_key(self):
-        for key in ITEM_KEYS:
-            if not self.__key_is_used(key):
-                return key
-
-    def add_item(self, item):
-        if len(self.inventory) >= len(ITEM_KEYS):
-            return False
-
-        item.key = self.__get_unused_key()
-        self.inventory.append(item)
-        self.inventory.sort(key=lambda i: i.key)
-        return True
-
-    def get_item(self, key):
-        for item in self._model.inventory:
-            if item.key == key:
-                return item
-
-    def remove_item(self, item):
-        self.inventory.remove(item)
 
     @property
     def hp(self):
@@ -97,6 +67,7 @@ class Creature(ObjectModel):
 class Player(Creature):
     def __init__(self, dungeon, pos):
         super(Player, self).__init__('player', pos, 30, 30, 2, 5)
+        self.inventory = []
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
         for y in range(MAP_HEIGHT):
@@ -105,6 +76,35 @@ class Player(Creature):
                                            not dungeon.is_blocked(pos),
                                            not dungeon.is_blocked(pos))
 
+    def __key_is_used(self, key):
+        for item in self.inventory:
+            if item.key == key:
+                return True
+
+        return False
+
+    def __get_unused_key(self):
+        for key in ITEM_KEYS:
+            if not self.__key_is_used(key):
+                return key
+
+    def add_item(self, item):
+        if len(self.inventory) >= len(ITEM_KEYS):
+            return False
+
+        item.key = self.__get_unused_key()
+        self.inventory.append(item)
+        self.inventory.sort(key=lambda i: i.key)
+        return True
+
+    def get_item(self, key):
+        for item in self.inventory:
+            if item.key == key:
+                return item
+
+    def remove_item(self, item):
+        self.inventory.remove(item)
+
     def is_in_fov(self, pos):
         return libtcod.map_is_in_fov(self.fov_map, pos[0], pos[1])
 
@@ -112,3 +112,8 @@ class Player(Creature):
         libtcod.map_compute_fov(self.fov_map,
                                 self.position[0], self.position[1],
                                 TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+
+    def json(self):
+        result = super(Player, self).json()
+        result['items'] = [i.json() for i in self.inventory]
+        return result

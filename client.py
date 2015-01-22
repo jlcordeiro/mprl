@@ -35,29 +35,30 @@ monsters = []
 items = []
 
 def handle_keys():
+    global DRAW_NOT_IN_FOV
     key = wait_keypress()
-    print "a"
 
     if key_is_escape(key):
         return "exit"
 
     movement = get_key_direction(key)
-    print "b"
     if movement is not None:
         send_json(sock, {'move': movement})
-        print "c"
     elif chr(key.c) == 'g':
         #pick up an item
         send_json(sock, {'get': None})
-        print "d"
     elif chr(key.c) == 'i':
         header = "Press the key next to an item to choose it, or any other to cancel.\n"
         (chosen_item, option) = inventory_menu(draw.con, SCREEN_RECT, header, player)
-        print "e"
         if chosen_item is None:
             return 'did-not-take-turn'
+
+        if option == 'd':
+            send_json(sock, {'drop': chosen_item.key})
+        else:
+            send_json(sock, {'use': chosen_item.key})
+
     else:
-        print "f"
         if chr(key.c) == 'v':
             DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
         elif chr(key.c) in ('>', '<'):
@@ -69,9 +70,7 @@ def handle_keys():
 def recv_forever():
     global messages, monsters, items, dungeon, player
     while True:
-        print "1"
         data = recv_json(sock)
-        print "2"
 
         levels = {}
         for idx, ldata in data['dungeon']['levels'].items():
@@ -87,11 +86,9 @@ def recv_forever():
 
         (player_x, player_y, player_z) = data['player']['position']
 
-        print "3"
-
         player = common.models.creatures.Player(dungeon, (player_x, player_y, player_z))
-        print "4"
         player.hp = data['player']['hp']
+        player.inventory = [common.models.objects.ObjectModel(**i) for i in data['player']['items']]
         player.update_fov()
         dungeon.update_explored(player)
 
