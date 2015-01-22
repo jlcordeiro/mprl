@@ -25,6 +25,9 @@ server_address = ('localhost', 4446)
 print 'connecting to %s port %s' % server_address
 sock.connect(server_address)
 
+gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
+SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
+
 dungeon = None
 player = None
 messages = []
@@ -43,7 +46,13 @@ def handle_keys():
 
     elif chr(key.c) == 'g':
         #pick up an item
-        give_item_to_player()
+        send_json(sock, {'get': None})
+
+    elif chr(key.c) == 'i':
+        header = "Press the key next to an item to choose it, or any other to cancel.\n"
+        (chosen_item, option) = inventory_menu(draw.con, SCREEN_RECT, header, player)
+        if chosen_item is None:
+            return 'did-not-take-turn'
     else:
         if chr(key.c) == 'v':
             DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV

@@ -104,9 +104,6 @@ def option_menu(con, rect, header, options, hide_options = False):
 def inventory_menu(con, rect, header, player):
     #show a menu with each item of the inventory as an option
     items = player.inventory
-    if len(items) == 0:
-        messages.add('Inventory is empty.')
-        return
 
     options = []
     for item in items:
@@ -117,7 +114,7 @@ def inventory_menu(con, rect, header, player):
 
     #if an item was chosen, return it
     if item_key is None:
-        return None
+        return (None, None)
 
     chosen_item = player.get_item(item_key)
 

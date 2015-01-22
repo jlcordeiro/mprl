@@ -197,10 +197,6 @@ def handle_keys():
                     player.weapon_right = chosen_item
                 elif option == 'l':
                     player.weapon_left = chosen_item
-
-        elif chr(key.c) == 'g':
-            #pick up an item
-            give_item_to_player()
         else:
             if chr(key.c) == 'v':
                 DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
@@ -239,6 +235,8 @@ def recv_forever(put_queue):
             elif 'climb' in data.keys():
                 new_level = dungeon.climb_stairs(player.position)
                 move_player(0, 0, new_level - player.position.z)
+            elif 'get' in data.keys():
+                give_item_to_player()
 
             put_queue.task_done()
 
