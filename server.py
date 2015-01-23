@@ -16,6 +16,7 @@ dungeon = controllers.dungeon.Dungeon()
 (x, y, z) = dungeon.random_unblocked_pos(depth=0)
 player = common.models.creatures.Player(dungeon, Point(x, y, 0))
 
+messages = Messages()
 
 def generate_monsters():
     new_monsters = []
@@ -42,7 +43,6 @@ def generate_items():
 
 
 def use_healing_potion(player):
-    messages = Messages()
     messages.add('Your wounds start to feel better!')
     player.hp += HEAL_AMOUNT
 
@@ -54,7 +54,6 @@ def attack(source, target):
     damage = max(0, source.power - target.defense)
     target.hp -= damage
 
-    messages = Messages()
     messages.add(source.name + ' attacks ' + target.name + ' for '
                  + str(damage) + ' hit points.')
 
@@ -130,7 +129,6 @@ def take_turn():
 
 
 def take_item_from_player(item):
-    messages = Messages()
     messages.add('You dropped a ' + item.name + '.')
     player.remove_item(item)
     item.position = player.position
@@ -138,7 +136,6 @@ def take_item_from_player(item):
 
 
 def give_item_to_player():
-    messages = Messages()
     for item in items:
         if item.position == player.position:
             if player.add_item(item) is True:
@@ -170,8 +167,6 @@ def closest_monster_to_pos(pos, monsters, max_range):
 
 move_player(0, 0)
 
-messages = Messages()
-
 message_queue = Queue()
 
 
@@ -186,7 +181,7 @@ def send_all():
 
 
 def recv_forever(put_queue):
-    while True:
+    while not player.died:
         TCP_SERVER.receive(put_queue)
 
         if not put_queue.empty():
@@ -209,9 +204,13 @@ def recv_forever(put_queue):
                 item_key = data['use']
                 item = player.get_item(item_key)
                 if item is not None:
-                    print "I should be using this"
+                    print "I should be using this. TODO."
 
             put_queue.task_done()
+            take_turn()
+
+            if player.died:
+                messages.add('You died. Game over.')
 
             send_all()
 
