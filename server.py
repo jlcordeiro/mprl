@@ -1,26 +1,14 @@
-import libtcodpy as libtcod
 from config import *
-from messages import *
-from platform.ui import *
-from platform.keyboard import *
-from common.utilities.geometry import Rect, Point3, euclidean_distance
+from messages import Messages
+from common.utilities.geometry import Point3, euclidean_distance
 import controllers.creatures
 import controllers.objects
 import controllers.dungeon
 import common.models.creatures
-import time
-import json
-from sockets import *
+from sockets import TCPServer
 from Queue import Queue
-from threading import Thread
-from draw import Draw
 
 TCP_SERVER = TCPServer('localhost', 4446)
-
-draw = Draw()
-
-game_state = 'playing'
-player_action = None
 
 # start the player on a random position (not blocked)
 dungeon = controllers.dungeon.Dungeon()
@@ -155,18 +143,6 @@ def closest_monster_to_pos(pos, monsters, max_range):
 
     return closest
 
-gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
-SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
-
-def handle_keys():
-    #turn-based
-    key = wait_keypress()
-
-    if key_is_escape(key):
-        return "exit"
-
-    return 'did-not-take-turn'
-
 #############################################
 # Initialization & Main Loop
 #############################################
@@ -201,36 +177,21 @@ def recv_forever(put_queue):
                 move_player(0, 0, new_level - player.position.z)
             elif 'get' in data.keys():
                 give_item_to_player()
+            elif 'drop' in data.keys():
+                item_key = data['drop']
+                item = player.get_item(item_key)
+                if item is not None:
+                    take_item_from_player(item)
+            elif 'use' in data.keys():
+                item_key = data['use']
+                item = player.get_item(item_key)
+                if item is not None:
+                    print "I should be using this"
+
 
             put_queue.task_done()
 
-            level_monsters = [m for m in monsters if m.position.z == player.position.z]
-            draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), False)
             send_all()
 
-RECV_THREAD = Thread(target = recv_forever, args = (message_queue,))
-RECV_THREAD.daemon = True
-RECV_THREAD.start()
-
-while not libtcod.console_is_window_closed():
-    level_monsters = [m for m in monsters if m.position.z == player.position.z]
-    level_items = [i for i in items if i.position.z == player.position.z]
-
-    draw.draw(dungeon, player, level_monsters, level_items, messages.toList(), False)
-    send_all()
-
-    #handle keys and exit game if needed
-    player_action = handle_keys()
-    if player_action == "exit":
-        break
-
-    #let monsters take their turn
-    if game_state == "playing" and player_action != 'did-not-take-turn':
-        take_turn()
-
-    if player.died and game_state != 'dead':
-        messages.add("YOU DIED!")
-        game_state = 'dead'
-
+recv_forever(message_queue)
 TCP_SERVER.close()
-#RECV_THREAD.join()
