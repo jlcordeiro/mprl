@@ -1,8 +1,9 @@
 from config import *
 from common.utilities.geometry import Point3
 
+
 class ObjectModel(object):
-    def __init__(self, name, type, position, blocks, key = '_'):
+    def __init__(self, name, type, position, blocks, key='_'):
         self.position = Point3.copy(position)
         self.key = key
         self.name = name
@@ -15,7 +16,7 @@ class ObjectModel(object):
                 'position': self.position,
                 'blocks': self.blocks,
                 'key': self.key
-               }
+                }
 
 
 class Potion(ObjectModel):
@@ -61,8 +62,10 @@ class Crowbar(Weapon):
 
 class WoodenShield(Weapon):
     def __init__(self, pos):
-        super(WoodenShield, self).__init__('Wooden Shield', pos,
-                                           WOODEN_SHIELD_DMG, WOODEN_SHIELD_DEF)
+        super(WoodenShield, self).__init__('Wooden Shield',
+                                           pos,
+                                           WOODEN_SHIELD_DMG,
+                                           WOODEN_SHIELD_DEF)
 
 
 class Cloak(Weapon):

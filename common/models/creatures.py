@@ -2,6 +2,7 @@ import libtcodpy as libtcod
 from objects import ObjectModel
 from config import *
 
+
 class Creature(ObjectModel):
     def __init__(self, name, position, max_hp, hp, defense, power):
         super(Creature, self).__init__(name, "creature", position, True)

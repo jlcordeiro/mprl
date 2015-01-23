@@ -7,6 +7,7 @@ from common.utilities.geometry import Rect, Point2, Point3
 from config import *
 from messages import *
 
+
 def create_room_connection(room1, room2):
     """Create tunnels to connect room1 and room2.
        The origin points are random points inside the room."""
@@ -29,6 +30,7 @@ def create_room_connection(room1, room2):
 
     return (h_tunnel, v_tunnel)
 
+
 def get_room_connections(rooms):
     connections = []
 
@@ -45,12 +47,13 @@ def get_room_connections(rooms):
         if len(unconnected) == 0:
             break
 
-        closest = min(unconnected, key = room.distance_to_rect)
+        closest = min(unconnected, key=room.distance_to_rect)
 
         (h_tunnel, v_tunnel) = create_room_connection(room, closest)
         connections += [h_tunnel, v_tunnel]
 
     return connections
+
 
 def generate_rooms(n_rooms):
     rooms = []
@@ -71,6 +74,7 @@ def generate_rooms(n_rooms):
 
     return rooms
 
+
 def generate_random_walls(n_rooms):
     result = [[True for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
 
@@ -83,14 +87,16 @@ def generate_random_walls(n_rooms):
 
     return result
 
+
 def generate_random_levels():
-    levels = {idx: Level(generate_random_walls(MAX_ROOMS)) for idx in xrange(0, NUM_LEVELS)}
+    levels = {idx: Level(generate_random_walls(MAX_ROOMS))
+              for idx in xrange(0, NUM_LEVELS)}
 
     #build stairs
     for idx in xrange(0, NUM_LEVELS - 1):
         while True:
             stairs_pos = Point2(random.randint(1, MAP_WIDTH - 1),
-                               random.randint(1, MAP_HEIGHT - 1))
+                                random.randint(1, MAP_HEIGHT - 1))
             if not levels[idx].is_blocked(stairs_pos) and \
                not levels[idx + 1].is_blocked(stairs_pos):
                 break
@@ -101,7 +107,7 @@ def generate_random_levels():
 
 
 class Dungeon(object):
-    def __init__(self, levels = None, current_level = 0):
+    def __init__(self, levels=None, current_level=0):
         if levels is None:
             levels = generate_random_levels()
         self._model = common.models.dungeon.Dungeon(levels, current_level)
@@ -121,7 +127,7 @@ class Dungeon(object):
         #return (self.get_monster_in_pos(pos) is not None)
         return False
 
-    def random_unblocked_pos(self, depth = None):
+    def random_unblocked_pos(self, depth=None):
         if depth is None:
             depth = self._model.current_level
 
@@ -136,7 +142,7 @@ class Dungeon(object):
 
     def get_path(self, source_pos, target_pos):
         libtcod.path_compute(self.path, source_pos[0], source_pos[1],
-                                        target_pos[0], target_pos[1])
+                             target_pos[0], target_pos[1])
 
         if libtcod.path_is_empty(self.path):
             return None

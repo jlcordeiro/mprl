@@ -2,6 +2,7 @@ import math
 import random
 from collections import namedtuple
 
+
 def euclidean_distance(pos1, pos2):
     (x1, y1) = pos1[0], pos1[1]
     (x2, y2) = pos2[0], pos2[1]
@@ -21,6 +22,7 @@ class Point2(namedtuple('Point2', 'x y')):
     @property
     def coords(self):
         return (self.x, self.y)
+
 
 class Point3(namedtuple('Point3', 'x y z')):
     """ Point with 3 coordinates. """
@@ -58,7 +60,7 @@ class Rect(object):
         center_x = (self.tleft.x + self.bright.x) / 2
         center_y = (self.tleft.y + self.bright.y) / 2
         return Point2(center_x, center_y)
- 
+
     @property
     def width(self):
         return self.bright.x - self.tleft.x
@@ -111,4 +113,3 @@ class Rect(object):
         dy = self.y_distance_to_rect(other)
 
         return math.sqrt(dx ** 2 + dy ** 2)
-

@@ -3,15 +3,20 @@
 import libtcodpy as libtcod
 from config import *
 
-ITEM_TYPE_OPTIONS = {
-        "cast": [('u', "(U)se"), ('d', "(D)rop")],
-        "melee": [('r', "Equip in (r)ight hand"), ('l', "Equip in (l)eft hand"), ('d', "(D)rop")],
-        "armour": [('w', "(W)ear"), ('d', "(D)rop")]
-        }
+
+ITEM_TYPE_OPTIONS = {"cast": [('u', "(U)se"),
+                              ('d', "(D)rop")],
+                     "melee": [('r', "Equip in (r)ight hand"),
+                               ('l', "Equip in (l)eft hand"),
+                               ('d', "(D)rop")],
+                     "armour": [('w', "(W)ear"),
+                                ('d', "(D)rop")]
+                     }
+
 
 class UIBar(object):
     """ Class representing a horizontal bar. """
-    def __init__(self, name, bg_colour, fg_colour, maximum = 0):
+    def __init__(self, name, bg_colour, fg_colour, maximum=0):
         self.name = name
         self.bg_colour = bg_colour
         self.fg_colour = fg_colour
@@ -25,7 +30,7 @@ class UIBar(object):
         """ Update bar values. """
         self.value = value
         self.maximum = maximum
-        self.text = "%s %s/%s" % (self.name, str(self.value), str(self.maximum))
+        self.text = "%s %s/%s" % (self.name, str(value), str(maximum))
 
     def draw(self, panel, bar_rect):
         """ Draw the bar. """
@@ -38,11 +43,13 @@ class UIBar(object):
 
         #render the background first
         libtcod.console_set_default_background(panel, self.bg_colour)
-        libtcod.console_rect(panel, x, y, width, height, False, libtcod.BKGND_SCREEN)
+        libtcod.console_rect(panel, x, y, width, height,
+                             False, libtcod.BKGND_SCREEN)
 
         #now render the bar on top
         libtcod.console_set_default_background(panel, self.fg_colour)
-        libtcod.console_rect(panel, x, y, bar_width, height, False, libtcod.BKGND_SCREEN)
+        libtcod.console_rect(panel, x, y, bar_width, height,
+                             False, libtcod.BKGND_SCREEN)
 
         #finally, some centered text with the values
         libtcod.console_set_default_foreground(panel, libtcod.white)
@@ -50,7 +57,7 @@ class UIBar(object):
                                  libtcod.BKGND_NONE, libtcod.CENTER, self.text)
 
 
-def show_menu(con, header, options, rect, hide_options = False):
+def show_menu(con, header, options, rect, hide_options=False):
     """ Show menu with header and options in the screen. """
 
     height = rect.bottom_right.y - rect.top_left.y
@@ -85,7 +92,8 @@ def show_menu(con, header, options, rect, hide_options = False):
     x, y = rect.top_left.coords
     libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
 
-def option_menu(con, rect, header, options, hide_options = False):
+
+def option_menu(con, rect, header, options, hide_options=False):
     show_menu(con, header, options, rect, hide_options)
 
     #wait for a key-press
@@ -100,6 +108,7 @@ def option_menu(con, rect, header, options, hide_options = False):
         return chr(key.c)
 
     return None
+
 
 def inventory_menu(con, rect, header, player):
     #show a menu with each item of the inventory as an option
@@ -124,4 +133,3 @@ def inventory_menu(con, rect, header, player):
                          ITEM_TYPE_OPTIONS[chosen_item.type], True)
 
     return (chosen_item, option)
-

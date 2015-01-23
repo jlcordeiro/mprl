@@ -4,6 +4,7 @@ import random
 import common.models.objects
 import common.models.creatures
 
+
 def create_random_monster(pos):
     """ Randomly create a monster at a given position. """
     dice = random.randint(0, 100)

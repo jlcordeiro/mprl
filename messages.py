@@ -3,6 +3,7 @@ from common.utilities.utils import Borg
 from collections import deque
 from textwrap import wrap
 
+
 class Messages(Borg):
     def __init__(self):
         Borg.__init__(self)

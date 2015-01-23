@@ -3,15 +3,16 @@ from config import *
 from collections import namedtuple
 from views.objects import draw_object, erase_object
 
-LevelColours = namedtuple('LevelColours', ['dark_wall',
-                                           'light_wall',
-                                           'dark_ground',
-                                           'light_ground'])
+LevelColors = namedtuple('LevelColors', ['dark_wall',
+                                         'light_wall',
+                                         'dark_ground',
+                                         'light_ground'])
 
-LEVEL_COLOURS = LevelColours(libtcod.Color(0, 0, 200),
-                             libtcod.Color(200, 200, 200),
-                             libtcod.Color(0, 0, 70),
-                             libtcod.Color(0, 25, 50))
+COLORS = LevelColors(libtcod.Color(0, 0, 200),
+                     libtcod.Color(200, 200, 200),
+                     libtcod.Color(0, 0, 70),
+                     libtcod.Color(0, 25, 50))
+
 
 class Level:
     background = libtcod.BKGND_NONE
@@ -28,9 +29,9 @@ class Level:
 
                 color = libtcod.black
                 if visible:
-                    color = LEVEL_COLOURS.light_wall if wall else LEVEL_COLOURS.light_ground
+                    color = COLORS.light_wall if wall else COLORS.light_ground
                 elif level.explored[x][y]:
-                    color = LEVEL_COLOURS.dark_wall if wall else LEVEL_COLOURS.dark_ground
+                    color = COLORS.dark_wall if wall else COLORS.dark_ground
 
                 libtcod.console_set_char_background(console,
                                                     x,
