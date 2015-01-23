@@ -25,13 +25,6 @@ class Potion(ObjectModel):
         self.affects = affects
 
 
-class Scroll(ObjectModel):
-    def __init__(self, name, pos, range, affects):
-        super(Scroll, self).__init__(name, "cast", pos, False)
-        self.range = range
-        self.affects = affects
-
-
 class Weapon(ObjectModel):
     def __init__(self, name, pos, damage, defense):
         super(Weapon, self).__init__(name, "melee", pos, False)
@@ -52,21 +45,6 @@ class Armour(ObjectModel):
 class HealingPotion(Potion):
     def __init__(self, pos):
         super(HealingPotion, self).__init__('Healing Potion', pos, 0, 'owner')
-
-
-################ Scrolls
-
-
-class LightningBolt(Scroll):
-    def __init__(self, pos):
-        super(LightningBolt, self).__init__('Lightning Bolt Scroll',
-                                            pos, LIGHTNING_RANGE, 'closest')
-
-
-class ConfusionScroll(Scroll):
-    def __init__(self, pos):
-        super(ConfusionScroll, self).__init__('Confusion Scroll',
-                                              pos, CONFUSE_RANGE, 'aim')
 
 
 ################ Weapons

@@ -1,67 +1,32 @@
-import math
-import views.objects
+""" Object (items/creatures) controller. """
+
+import random
 import common.models.objects
-import libtcodpy as libtcod
-from messages import *
-from utils import euclidean_distance
+import common.models.creatures
 
-################ Potions/Scrolls
+def create_random_monster(pos):
+    """ Randomly create a monster at a given position. """
+    dice = random.randint(0, 100)
+    if dice < 80:
+        return common.models.creatures.Creature('Orc', pos, 10, 10, 0, 3)
+    else:
+        return common.models.creatures.Creature('Troll', pos, 16, 16, 1, 4)
 
-def use_healing_potion(player, monsters):
-    messages = Messages()
-    messages.add('Your wounds start to feel better!')
-    player.hp += HEAL_AMOUNT
-    return True
-
-
-def use_lightning_bolt(player, monsters):
-    messages = Messages()
-
-    if len(monsters) < 1:
-        messages.add('No enemy is close enough to strike.')
-        return False
-
-    damage = LIGHTNING_DAMAGE
-    for monster in monsters:
-        messages.add('A lighting bolt strikes the ' + monster.name +
-                     ' with a loud thunder! The damage is '
-                     + str(damage) + ' hit points.')
-        monster.hp -= damage
-
-    return True
+    return None
 
 
-def use_confusion_scroll(player, monsters):
-    messages = Messages()
-
-    if len(monsters) < 1:
-        messages.add('No enemy is close enough to confuse.')
-        return False
-
-    for monster in monsters:
-        messages.add('The eyes of the ' + monster.name +
-                     ' look vacant, as he starts to stumble around!')
-        monster.confused_turns = CONFUSE_NUM_TURNS
-
-    return True
-
-
-################ Weapons
-
-
-def ItemFactory(pos):
-    dice = libtcod.random_get_int(0, 0, 100)
+def create_random_item(pos):
+    """ Randomly create an item at a given position. """
+    dice = random.randint(0, 100)
     if dice < 20:
         return common.models.objects.HealingPotion(pos)
-    elif dice < 20:
-        return common.models.objects.LightningBolt(pos)
-    elif dice < 60:
-        return common.models.objects.ConfusionScroll(pos)
-    elif dice < 70:
+    elif dice < 40:
         return common.models.objects.WoodenShield(pos)
-    elif dice < 80:
+    elif dice < 60:
         return common.models.objects.Cloak(pos)
     elif dice < 90:
         return common.models.objects.Stick(pos)
     else:
         return common.models.objects.Crowbar(pos)
+
+    return None

@@ -1,3 +1,4 @@
+from random import randint
 from config import *
 from messages import Messages
 from common.utilities.geometry import Point3, euclidean_distance
@@ -21,7 +22,7 @@ def generate_monsters():
     for level_idx in xrange(0, NUM_LEVELS):
         for _ in xrange(0, MAX_LEVEL_MONSTERS):
             pos = dungeon.random_unblocked_pos(depth = level_idx)
-            monster = controllers.creatures.MonsterFactory(pos)
+            monster = controllers.objects.create_random_monster(pos)
             new_monsters.append(monster)
 
     return new_monsters
@@ -32,10 +33,15 @@ def generate_items():
     for level_idx in xrange(0, NUM_LEVELS):
         for _ in xrange(0, MAX_LEVEL_ITEMS):
             pos = dungeon.random_unblocked_pos(depth = level_idx)
-            item = controllers.objects.ItemFactory(pos)
+            item = controllers.objects.create_random_item(pos)
             new_items.append(item)
 
     return new_items
+
+def use_healing_potion(player):
+    messages = Messages()
+    messages.add('Your wounds start to feel better!')
+    player.hp += HEAL_AMOUNT
 
 monsters = generate_monsters()
 items = generate_items()
@@ -75,7 +81,9 @@ def take_turn_monster(monster):
     previous_pos = monster.position
 
     if monster.confused_turns > 0:
-        monster.confused_move()
+        randx, randy = randint(-1, 1), randint(-1, 1)
+        monster.position = monster.position.add(randx, randy)
+        monster.confused_turns -= 1
 
         if (dungeon.is_blocked(monster.position) is False or
             get_monster_in_pos(monster.position) is not None):

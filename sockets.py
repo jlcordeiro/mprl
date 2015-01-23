@@ -46,7 +46,6 @@ class TCPServer:
         input_fds, _, _ = select.select(self.client_fds + [self.socket], [], [])
         for x in input_fds:
             if x == self.socket:
-                print "NEW CLIENT JOINED!"
                 csock, _ = self.socket.accept()
                 self.client_fds.append(csock)
             else:
