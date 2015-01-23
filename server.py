@@ -1,7 +1,7 @@
 from random import randint
 from config import *
 from messages import Messages
-from common.utilities.geometry import Point3, euclidean_distance
+from common.utilities.geometry import Point, euclidean_distance
 import controllers.creatures
 import controllers.objects
 import controllers.dungeon
@@ -14,7 +14,7 @@ TCP_SERVER = TCPServer('localhost', 4446)
 # start the player on a random position (not blocked)
 dungeon = controllers.dungeon.Dungeon()
 (x, y, z) = dungeon.random_unblocked_pos(depth=0)
-player = common.models.creatures.Player(dungeon, Point3(x, y, 0))
+player = common.models.creatures.Player(dungeon, Point(x, y, 0))
 
 
 def generate_monsters():
@@ -69,7 +69,7 @@ def get_monster_in_pos(pos):
 
 def move_player(dx, dy, dz=0):
     old_pos = player.position
-    new_pos = old_pos.add(Point3(dx, dy, dz))
+    new_pos = old_pos.add(Point(dx, dy, dz))
 
     monster = get_monster_in_pos(new_pos)
     if monster is not None:
@@ -115,7 +115,7 @@ def take_turn_monster(monster):
         if euclidean_distance(monster.position, monster.target_pos) >= 2:
             path = dungeon.get_path(monster.position, monster.target_pos)
             if path is not None:
-                new_pos = Point3(path[0], path[1], monster.position.z)
+                new_pos = Point(path[0], path[1], monster.position.z)
                 if not dungeon.is_blocked(new_pos):
                     monster.position = new_pos
 

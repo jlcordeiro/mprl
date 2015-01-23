@@ -3,7 +3,7 @@ import random
 import views.dungeon
 import common.models.dungeon
 from common.models.dungeon import Stairs, Level
-from common.utilities.geometry import Rect, Point2, Point3
+from common.utilities.geometry import Rect, Point
 from config import *
 from messages import *
 
@@ -95,8 +95,9 @@ def generate_random_levels():
     #build stairs
     for idx in xrange(0, NUM_LEVELS - 1):
         while True:
-            stairs_pos = Point2(random.randint(1, MAP_WIDTH - 1),
-                                random.randint(1, MAP_HEIGHT - 1))
+            stairs_pos = Point(random.randint(1, MAP_WIDTH - 1),
+                               random.randint(1, MAP_HEIGHT - 1),
+                               0)
             if not levels[idx].is_blocked(stairs_pos) and \
                not levels[idx + 1].is_blocked(stairs_pos):
                 break
@@ -131,9 +132,9 @@ class Dungeon(object):
         if depth is None:
             depth = self._model.current_level
 
-        pos = Point3(random.randint(1, MAP_WIDTH - 1),
-                     random.randint(1, MAP_HEIGHT - 1),
-                     depth)
+        pos = Point(random.randint(1, MAP_WIDTH - 1),
+                    random.randint(1, MAP_HEIGHT - 1),
+                    depth)
 
         if not self.is_blocked(pos):
             return pos
@@ -168,7 +169,7 @@ class Dungeon(object):
         self.path = libtcod.path_new_using_map(path_map)
 
     def climb_stairs(self, pos):
-        sx, sy = self.__clevel.stairs.position
+        sx, sy, _ = self.__clevel.stairs.position
         if sx == pos.x and sy == pos.y:
             self._model.current_level += 1
 

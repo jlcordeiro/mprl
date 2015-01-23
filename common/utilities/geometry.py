@@ -12,29 +12,17 @@ def euclidean_distance(pos1, pos2):
     return math.sqrt(dx ** 2 + dy ** 2)
 
 
-class Point2(namedtuple('Point2', 'x y')):
-    """ Point with 2 coordinates. """
-    __slots__ = ()
-
-    def add(self, other):
-        return Point2(self.x + other[0], self.y + other[1])
-
-    @property
-    def coords(self):
-        return (self.x, self.y)
-
-
-class Point3(namedtuple('Point3', 'x y z')):
+class Point(namedtuple('Point', 'x y z')):
     """ Point with 3 coordinates. """
 
     __slots__ = ()
 
     @staticmethod
     def copy(other):
-        return Point3(other[0], other[1], other[2])
+        return Point(other[0], other[1], other[2])
 
     def add(self, other):
-        return Point3(self.x + other[0], self.y + other[1], self.z + other[2])
+        return Point(self.x + other[0], self.y + other[1], self.z + other[2])
 
     @property
     def coords(self):
@@ -44,8 +32,8 @@ class Point3(namedtuple('Point3', 'x y z')):
 class Rect(object):
     #a rectangle on the map. used to characterize a room.
     def __init__(self, x, y, w, h):
-        self.tleft = Point2(x, y)
-        self.bright = Point2(x + w, y + h)
+        self.tleft = Point(x, y, 0)
+        self.bright = Point(x + w, y + h, 0)
 
     @property
     def top_left(self):
@@ -59,7 +47,7 @@ class Rect(object):
     def center(self):
         center_x = (self.tleft.x + self.bright.x) / 2
         center_y = (self.tleft.y + self.bright.y) / 2
-        return Point2(center_x, center_y)
+        return Point(center_x, center_y, 0)
 
     @property
     def width(self):
@@ -73,7 +61,7 @@ class Rect(object):
         x = random.randint(self.top_left.x + 1, self.bottom_right.x - 1)
         y = random.randint(self.top_left.y + 1, self.bottom_right.y - 1)
 
-        return Point2(x, y)
+        return Point(x, y, 0)
 
     def x_distance_to_rect(self, other):
         s1x, s2x = self.tleft.x, self.bright.x

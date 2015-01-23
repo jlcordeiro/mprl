@@ -47,5 +47,5 @@ class Level:
     def clear(self, console, level):
         #erase the character that represents this object
         if level.stairs is not None:
-            (x, y) = level.stairs.position
+            (x, y, _) = level.stairs.position
             libtcod.console_put_char(console, x, y, ' ', Level.background)

@@ -35,7 +35,7 @@ class UIBar(object):
     def draw(self, panel, bar_rect):
         """ Draw the bar. """
 
-        x, y = bar_rect.top_left.coords
+        x, y, _ = bar_rect.top_left.coords
         width, height = bar_rect.width, bar_rect.height
 
         #first calculate the width of the bar
@@ -89,7 +89,7 @@ def show_menu(con, header, options, rect, hide_options=False):
         y += 1
 
     #blit the contents of "window" to the root console
-    x, y = rect.top_left.coords
+    x, y, _ = rect.top_left.coords
     libtcod.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
 
 
