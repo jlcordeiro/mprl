@@ -9,30 +9,24 @@ from common.utilities.geometry import Rect, Point2, Point3
 import common.models.creatures
 import controllers.creatures
 import controllers.dungeon
-import socket
 import json
-import time
 from sockets import *
 from threading import Thread
 
 draw = Draw()
 DRAW_NOT_IN_FOV = False
 
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Connect the socket to the port where the server is listening
-server_address = ('localhost', 4446)
-print 'connecting to %s port %s' % server_address
-sock.connect(server_address)
+socket = TCPClient('localhost', 4446)
 
 gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
-SCREEN_RECT = Rect(gap/2, gap/2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
+SCREEN_RECT = Rect(gap / 2, gap / 2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
 
 dungeon = None
 player = None
 messages = []
 monsters = []
 items = []
+
 
 def handle_keys():
     global DRAW_NOT_IN_FOV
@@ -43,10 +37,10 @@ def handle_keys():
 
     movement = get_key_direction(key)
     if movement is not None:
-        send_json(sock, {'move': movement})
+        socket.send({'move': movement})
     elif chr(key.c) == 'g':
         #pick up an item
-        send_json(sock, {'get': None})
+        socket.send({'get': None})
     elif chr(key.c) == 'i':
         header = "Press the key next to an item to choose it, or any other to cancel.\n"
         (chosen_item, option) = inventory_menu(draw.con, SCREEN_RECT, header, player)
@@ -54,15 +48,15 @@ def handle_keys():
             return 'did-not-take-turn'
 
         if option == 'd':
-            send_json(sock, {'drop': chosen_item.key})
+            socket.send({'drop': chosen_item.key})
         else:
-            send_json(sock, {'use': chosen_item.key})
+            socket.send({'use': chosen_item.key})
 
     else:
         if chr(key.c) == 'v':
             DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
         elif chr(key.c) in ('>', '<'):
-            send_json(sock, {'climb': None})
+            socket.send({'climb': None})
 
         return 'did-not-take-turn'
 
@@ -70,7 +64,7 @@ def handle_keys():
 def recv_forever():
     global messages, monsters, items, dungeon, player
     while True:
-        data = recv_json(sock)
+        data = socket.recv()
 
         levels = {}
         for idx, ldata in data['dungeon']['levels'].items():
@@ -100,10 +94,9 @@ def recv_forever():
         items = [common.models.objects.ObjectModel(**i) for i in data['items']]
         level_items = [i for i in items if i.position.z == player.position.z]
 
-
         draw.draw(dungeon, player, level_monsters, level_items, messages, DRAW_NOT_IN_FOV)
 
-RECV_THREAD = Thread(target = recv_forever, args = ())
+RECV_THREAD = Thread(target=recv_forever, args=())
 RECV_THREAD.daemon = True
 RECV_THREAD.start()
 
@@ -113,5 +106,4 @@ try:
         if player_action == "exit":
             break
 finally:
-    sock.close()
-
+    socket.close()
