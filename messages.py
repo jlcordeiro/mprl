@@ -1,12 +1,10 @@
 from config import MSG_HEIGHT, MSG_WIDTH
-from common.utilities.utils import Borg
 from collections import deque
 from textwrap import wrap
 
 
-class Messages(Borg):
+class Messages():
     def __init__(self):
-        Borg.__init__(self)
         self._messages = deque([], MSG_HEIGHT)
 
     def add(self, msg):

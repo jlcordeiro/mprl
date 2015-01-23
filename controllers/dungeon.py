@@ -168,13 +168,8 @@ class Dungeon(object):
         self.path = libtcod.path_new_using_map(path_map)
 
     def climb_stairs(self, pos):
-        messages = Messages()
-
         sx, sy = self.__clevel.stairs.position
-        if sx != pos.x or sy != pos.y:
-            messages.add('There are no stairs here.')
-        else:
-            messages.add('You climb some stairs..')
+        if sx == pos.x and sy == pos.y:
             self._model.current_level += 1
 
         return self._model.current_level
