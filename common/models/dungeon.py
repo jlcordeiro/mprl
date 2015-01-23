@@ -6,17 +6,20 @@ Stairs = namedtuple('Stairs', ['position', 'type'])
 
 
 class Level(object):
-    def __init__(self, walls, stairs=None):
+    def __init__(self, walls, stairs=None, explored=None):
         self.walls = walls
-        self.explored = [[False for _ in range(MAP_HEIGHT)]
-                         for _ in range(MAP_WIDTH)]
+        self.explored = explored if explored else self._get_unexplored_array()
         self.stairs = stairs
+
+    def _get_unexplored_array(self):
+        return [[False for _ in range(MAP_HEIGHT)] for _ in range(MAP_WIDTH)]
 
     def is_blocked(self, pos):
         return self.walls[pos[0]][pos[1]]
 
     def json(self):
         return {'walls': [[b for b in row] for row in self.walls],
+                'explored': [[e for e in row] for row in self.explored],
                 'stairs': self.stairs.position if self.stairs else None}
 
 

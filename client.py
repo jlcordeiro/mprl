@@ -73,7 +73,7 @@ def recv_forever():
             if sdata is not None:
                 stairs = Stairs(Point2(sdata[0], sdata[1]), "stairs_down")
 
-            levels[int(idx)] = Level(ldata['walls'], stairs)
+            levels[int(idx)] = Level(ldata['walls'], stairs, ldata['explored'])
 
         current_level = data['dungeon']['current_level']
         dungeon = controllers.dungeon.Dungeon(levels, current_level)
