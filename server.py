@@ -13,17 +13,28 @@ TCP_SERVER = TCPServer('localhost', 4446)
 
 # start the player on a random position (not blocked)
 dungeon = controllers.dungeon.Dungeon()
-(x, y, z) = dungeon.random_unblocked_pos(depth=0)
-player = common.models.creatures.Player(dungeon, Point(x, y, 0))
-
 messages = Messages()
+
+def random_unblocked_pos(objects, depth=None):
+    if depth is None:
+        depth = dungeon.depth
+
+    pos = Point(randint(1, MAP_WIDTH - 1),
+                randint(1, MAP_HEIGHT - 1),
+                depth)
+
+    existing_objects = [o for o in objects if o.position == pos]
+    if not dungeon.is_blocked(pos) and len(existing_objects) == 0:
+        return pos
+
+    return random_unblocked_pos(objects, depth)
 
 def generate_monsters():
     new_monsters = []
 
     for level_idx in xrange(0, NUM_LEVELS):
         for _ in xrange(0, MAX_LEVEL_MONSTERS):
-            pos = dungeon.random_unblocked_pos(depth=level_idx)
+            pos = random_unblocked_pos(new_monsters, depth=level_idx)
             monster = controllers.objects.create_random_monster(pos)
             new_monsters.append(monster)
 
@@ -35,7 +46,7 @@ def generate_items():
 
     for level_idx in xrange(0, NUM_LEVELS):
         for _ in xrange(0, MAX_LEVEL_ITEMS):
-            pos = dungeon.random_unblocked_pos(depth=level_idx)
+            pos = random_unblocked_pos(new_items, depth=level_idx)
             item = controllers.objects.create_random_item(pos)
             new_items.append(item)
 
@@ -46,6 +57,8 @@ def use_healing_potion(player):
     messages.add('Your wounds start to feel better!')
     player.hp += HEAL_AMOUNT
 
+ppos = random_unblocked_pos([], depth=0)
+player = common.models.creatures.Player(dungeon, ppos)
 monsters = generate_monsters()
 items = generate_items()
 
@@ -115,7 +128,7 @@ def take_turn_monster(monster):
             path = dungeon.get_path(monster.position, monster.target_pos)
             if path is not None:
                 new_pos = Point(path[0], path[1], monster.position.z)
-                if not dungeon.is_blocked(new_pos):
+                if not dungeon.is_blocked(new_pos) and get_monster_in_pos(new_pos) is None:
                     monster.position = new_pos
 
 

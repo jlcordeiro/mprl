@@ -119,27 +119,12 @@ class Dungeon(object):
         """ Return the current level. """
         return self._model.levels[self._model.current_level]
 
+    @property
+    def depth(self):
+        return self._model.current_level
+
     def is_blocked(self, pos):
-        #first test the map tile
-        if self._model.levels[pos[2]].is_blocked(pos):
-            return True
-
-        #now check for any blocking monsters
-        #return (self.get_monster_in_pos(pos) is not None)
-        return False
-
-    def random_unblocked_pos(self, depth=None):
-        if depth is None:
-            depth = self._model.current_level
-
-        pos = Point(random.randint(1, MAP_WIDTH - 1),
-                    random.randint(1, MAP_HEIGHT - 1),
-                    depth)
-
-        if not self.is_blocked(pos):
-            return pos
-
-        return self.random_unblocked_pos(depth)
+        return self._model.levels[pos[2]].is_blocked(pos)
 
     def get_path(self, source_pos, target_pos):
         libtcod.path_compute(self.path, source_pos[0], source_pos[1],
