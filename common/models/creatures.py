@@ -67,7 +67,7 @@ class Creature(ObjectModel):
 
 class Player(Creature):
     def __init__(self, dungeon, pos):
-        super(Player, self).__init__('player', pos, 30, 30, 2, 5)
+        super(Player, self).__init__('player', pos, 30, 30, PLAYER_BASE_DEF, PLAYER_BASE_POW)
         self.inventory = []
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
@@ -117,4 +117,11 @@ class Player(Creature):
     def json(self):
         result = super(Player, self).json()
         result['items'] = [i.json() for i in self.inventory]
+
+        w_right = self.weapon_right
+        w_left = self.weapon_left
+        armour = self.armour
+        result['weapon_right'] = w_right.json() if w_right else None
+        result['weapon_left'] = w_left.json() if w_left else None
+        result['armour'] = armour.json() if armour else None
         return result

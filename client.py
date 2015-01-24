@@ -7,6 +7,7 @@ from platform.keyboard import *
 from common.models.dungeon import Stairs, Level
 from common.utilities.geometry import Rect, Point
 import common.models.creatures
+from common.models.objects import ObjectModel, Weapon, Armour
 import controllers.creatures
 import controllers.dungeon
 import json
@@ -47,10 +48,16 @@ def handle_keys():
         if chosen_item is None:
             return 'did-not-take-turn'
 
-        if option == 'd':
-            socket.send({'drop': chosen_item.key})
-        else:
-            socket.send({'use': chosen_item.key})
+        try:
+            option_name = {'u': 'cast',
+                           'd': 'drop',
+                           'w': 'wear',
+                           'r': 'use-right',
+                           'l': 'use-left'}[option]
+        except KeyError, ke:
+            return 'did-not-take-turn'
+
+        socket.send({option_name: chosen_item.key})
 
     else:
         if chr(key.c) == 'v':
@@ -78,11 +85,18 @@ def recv_forever():
         current_level = data['dungeon']['current_level']
         dungeon = controllers.dungeon.Dungeon(levels, current_level)
 
-        (player_x, player_y, player_z) = data['player']['position']
+        player_d = data['player']
+        (player_x, player_y, player_z) = player_d['position']
 
         player = common.models.creatures.Player(dungeon, (player_x, player_y, player_z))
-        player.hp = data['player']['hp']
-        player.inventory = [common.models.objects.ObjectModel(**i) for i in data['player']['items']]
+        player.hp = player_d['hp']
+        player.inventory = [common.models.objects.ObjectModel(**i) for i in player_d['items']]
+        if player_d['weapon_left'] is not None:
+            player.weapon_left = Weapon(**player_d['weapon_left'])
+        if player_d['weapon_right'] is not None:
+            player.weapon_right = Weapon(**player_d['weapon_right'])
+        if player_d['armour'] is not None:
+            player.armour = Armour(**player_d['armour'])
         player.update_fov()
         dungeon.update_explored(player)
 

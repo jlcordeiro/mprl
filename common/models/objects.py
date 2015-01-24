@@ -3,7 +3,7 @@ from common.utilities.geometry import Point
 
 
 class ObjectModel(object):
-    def __init__(self, name, type, position, blocks, key='_'):
+    def __init__(self, name, type, position, blocks, key='_', **extras):
         self.position = Point.copy(position)
         self.key = key
         self.name = name
@@ -15,29 +15,40 @@ class ObjectModel(object):
                 'type': self.type,
                 'position': self.position,
                 'blocks': self.blocks,
-                'key': self.key
-                }
+                'key': self.key}
 
 
 class Potion(ObjectModel):
-    def __init__(self, name, pos, range, affects):
-        super(Potion, self).__init__(name, "cast", pos, False)
+    def __init__(self, name, position, range, affects):
+        super(Potion, self).__init__(name, "cast", position, False)
         self.range = range
         self.affects = affects
 
 
 class Weapon(ObjectModel):
-    def __init__(self, name, pos, damage, defense):
-        super(Weapon, self).__init__(name, "melee", pos, False)
+    def __init__(self, name, position, damage, defense, **extrase):
+        super(Weapon, self).__init__(name, "melee", position, False)
         self.damage = damage
         self.defense = defense
+
+    def json(self):
+        result = super(Weapon, self).json()
+        result['damage'] = self.damage
+        result['defense'] = self.defense
+        return result
 
 
 class Armour(ObjectModel):
-    def __init__(self, name, pos, damage, defense):
-        super(Armour, self).__init__(name, "armour", pos, False)
+    def __init__(self, name, position, damage, defense, **extras):
+        super(Armour, self).__init__(name, "armour", position, False)
         self.damage = damage
         self.defense = defense
+
+    def json(self):
+        result = super(Armour, self).json()
+        result['damage'] = self.damage
+        result['defense'] = self.defense
+        return result
 
 
 ################ Potions
@@ -68,6 +79,6 @@ class WoodenShield(Weapon):
                                            WOODEN_SHIELD_DEF)
 
 
-class Cloak(Weapon):
+class Cloak(Armour):
     def __init__(self, pos):
         super(Cloak, self).__init__('Cloak', pos, CLOAK_DMG, CLOAK_DEF)

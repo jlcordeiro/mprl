@@ -213,11 +213,20 @@ def recv_forever(put_queue):
                 item = player.get_item(item_key)
                 if item is not None:
                     take_item_from_player(item)
-            elif 'use' in data.keys():
-                item_key = data['use']
-                item = player.get_item(item_key)
-                if item is not None:
-                    print "I should be using this. TODO."
+            elif 'use-left' in data.keys():
+                item = player.get_item(data['use-left'])
+                player.weapon_right = item
+                player.inventory.remove(item)
+            elif 'use-right' in data.keys():
+                item = player.get_item(data['use-right'])
+                player.weapon_right = item
+                player.inventory.remove(item)
+            elif 'wear' in data.keys():
+                item = player.get_item(data['wear'])
+                player.armour = item
+                player.inventory.remove(item)
+            elif 'cast' in data.keys():
+                use_healing_potion(player)
 
             put_queue.task_done()
             take_turn()
