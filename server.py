@@ -133,6 +133,8 @@ def take_turn_monster(monster):
 
 
 def take_turn():
+    global monsters
+
     dungeon.compute_path()
 
     level_monsters = [m for m in monsters if m.position.z == player.position.z]
@@ -140,6 +142,7 @@ def take_turn():
     for monster in level_monsters:
         take_turn_monster(monster)
 
+    monsters = filter(lambda x: not x.died, monsters)
 
 def take_item_from_player(item):
     messages.add('You dropped a ' + item.name + '.')
@@ -233,7 +236,6 @@ def recv_forever(put_queue):
 
             if player.died:
                 messages.add('You died. Game over.')
-
             send_all()
 
 recv_forever(message_queue)
