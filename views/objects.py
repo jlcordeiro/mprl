@@ -1,40 +1,33 @@
 import libtcodpy as libtcod
 
 
-class ObjectView(object):
-    """Base class for a view of any object. Potions, weapons, etc."""
+def get_symbol(model):
+    SYMBOLS = {'melee': ('|', libtcod.light_red),
+               'armour': ('[', libtcod.light_red),
+               'cast': ('!', libtcod.light_green),
+               'scroll': ('#', libtcod.light_yellow),
+               'Orc': ('O', libtcod.light_orange),
+               'Troll': ('T', libtcod.light_orange),
+               'player': ('@', libtcod.white),
+               'stairs_up': ('<', libtcod.white),
+               'stairs_down': ('>', libtcod.white)
+               }
 
-    def __init__(self, model, char, colour):
-        self._model = model
-        self.char = char
-        self.colour = colour
+    if model.type == 'creature':
+        return SYMBOLS[model.name]
 
-    def _put(self, console, char):
-        """Put char on the current position."""
-        libtcod.console_put_char(console, self._model.x, self._model.y,
-                                 char, libtcod.BKGND_NONE)
-
-    def draw(self, console):
-        """Set the colour."""
-        libtcod.console_set_default_foreground(console, self.colour)
-        #draw the character that represents this object at its position
-        self._put(console, self.char)
-
-    def clear(self, console):
-        """Erase the character that represents this object."""
-        self._put(console, ' ')
+    return SYMBOLS[model.type]
 
 
-class Potion(ObjectView):
-    def __init__(self, model):
-        super(Potion, self).__init__(model, '!', libtcod.light_green)
+def draw_object(console, model):
+    (char, colour) = get_symbol(model)
+    char = char if model.type != "creature" or model.died is False else '%'
+    pos = model.position
+
+    libtcod.console_set_default_foreground(console, colour)
+    libtcod.console_put_char(console, pos.x, pos.y, char, libtcod.BKGND_NONE)
 
 
-class Scroll(ObjectView):
-    def __init__(self, model):
-        super(Scroll, self).__init__(model, '#', libtcod.light_yellow)
-
-
-class Weapon(ObjectView):
-    def __init__(self, model):
-        super(Weapon, self).__init__(model, '|', libtcod.light_red)
+def erase_object(console, model):
+    pos = model.position
+    libtcod.console_put_char(console, pos.x, pos.y, ' ', libtcod.BKGND_NONE)

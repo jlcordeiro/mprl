@@ -1,26 +1,14 @@
-import textwrap
-import libtcodpy as libtcod
-from config import *
+from config import MSG_HEIGHT, MSG_WIDTH
+from collections import deque
+from textwrap import wrap
 
 
-class MessagesBorg:
-    __shared_state = {}
-    messages = []
-
+class Messages():
     def __init__(self):
-        pass
+        self._messages = deque([], MSG_HEIGHT)
 
-    def add(self, new_msg, color=libtcod.white):
-        #split the message if necessary, among multiple lines
-        new_msg_lines = textwrap.wrap(new_msg, MSG_WIDTH)
+    def add(self, msg):
+        self._messages.extend(wrap(msg, MSG_WIDTH))
 
-        for line in new_msg_lines:
-            #if the buffer is full, remove the first line
-            if len(self.messages) == MSG_HEIGHT:
-                del self.messages[0]
-
-            #add the new line as a tuple, with the text and the color
-            self.messages.append((line, color))
-
-    def get_all(self):
-        return self.messages
+    def toList(self):
+        return list(self._messages)

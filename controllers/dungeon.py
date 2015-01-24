@@ -1,21 +1,118 @@
 import libtcodpy as libtcod
-from utils import euclidean_distance
 import random
 import views.dungeon
-import models.dungeon
-from objects import ItemFactory
-from creatures import MonsterFactory
+import common.models.dungeon
+from common.models.dungeon import Stairs, Level
+from common.utilities.geometry import Rect, Point
 from config import *
 from messages import *
 
+
+def create_room_connection(room1, room2):
+    """Create tunnels to connect room1 and room2.
+       The origin points are random points inside the room."""
+
+    h_tunnel = lambda x1, x2, y: Rect(min(x1, x2), y, abs(x1 - x2) + 1, 1)
+    v_tunnel = lambda y1, y2, x: Rect(x, min(y1, y2), 1, abs(y1 - y2) + 1)
+
+    origin1 = room1.get_random_point()
+    origin2 = room2.get_random_point()
+
+    #draw a coin (random number that is either 0 or 1)
+    if random.choice([True, False]):
+        #first move horizontally, then vertically
+        h_tunnel = h_tunnel(origin1.x, origin2.x, origin1.y)
+        v_tunnel = v_tunnel(origin1.y, origin2.y, origin2.x)
+    else:
+        #first move vertically, then horizontally
+        v_tunnel = v_tunnel(origin1.y, origin2.y, origin1.x)
+        h_tunnel = h_tunnel(origin1.x, origin2.x, origin2.y)
+
+    return (h_tunnel, v_tunnel)
+
+
+def get_room_connections(rooms):
+    connections = []
+
+    # keep track of which rooms aren't connected yet
+    unconnected = list(rooms)
+
+    for room in rooms:
+        # connect rooms
+        if room not in unconnected:
+            continue
+
+        unconnected.remove(room)
+
+        if len(unconnected) == 0:
+            break
+
+        closest = min(unconnected, key=room.distance_to_rect)
+
+        (h_tunnel, v_tunnel) = create_room_connection(room, closest)
+        connections += [h_tunnel, v_tunnel]
+
+    return connections
+
+
+def generate_rooms(n_rooms):
+    rooms = []
+
+    for _ in xrange(0, n_rooms):
+        #random width and height
+        w = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        h = random.randint(ROOM_MIN_SIZE, ROOM_MAX_SIZE)
+        #random position without going out of the boundaries of the map
+        x = random.randint(1, MAP_WIDTH - w - 1)
+        y = random.randint(1, MAP_HEIGHT - h - 1)
+
+        room = Rect(x, y, w, h)
+
+        #check if there are no intersections, so this room is valid
+        if next((r for r in rooms if r.intersects(room)), None) is None:
+            rooms.append(room)
+
+    return rooms
+
+
+def generate_random_walls(n_rooms):
+    result = [[True for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)]
+
+    rooms = generate_rooms(n_rooms)
+
+    for room in rooms + get_room_connections(rooms):
+        for x in range(room.top_left.x, room.bottom_right.x):
+            for y in range(room.top_left.y, room.bottom_right.y):
+                result[x][y] = False
+
+    return result
+
+
+def generate_random_levels():
+    levels = {idx: Level(generate_random_walls(MAX_ROOMS))
+              for idx in xrange(0, NUM_LEVELS)}
+
+    #build stairs
+    for idx in xrange(0, NUM_LEVELS - 1):
+        while True:
+            stairs_pos = Point(random.randint(1, MAP_WIDTH - 1),
+                               random.randint(1, MAP_HEIGHT - 1),
+                               0)
+            if not levels[idx].is_blocked(stairs_pos) and \
+               not levels[idx + 1].is_blocked(stairs_pos):
+                break
+
+        levels[idx].stairs = Stairs(stairs_pos, "stairs_down")
+
+    return levels
+
+
 class Dungeon(object):
-    def __init__(self):
-        self._model = models.dungeon.Dungeon()
+    def __init__(self, levels=None, current_level=0):
+        if levels is None:
+            levels = generate_random_levels()
+        self._model = common.models.dungeon.Dungeon(levels, current_level)
         self._view = views.dungeon.Level()
-    
-    @property
-    def player(self):
-        return self._model.player
 
     @property
     def __clevel(self):
@@ -23,110 +120,48 @@ class Dungeon(object):
         return self._model.levels[self._model.current_level]
 
     @property
-    def aim_target(self):
-        return self.__clevel.aim_target
-
-    @aim_target.setter
-    def aim_target(self, value):
-        self.__clevel.aim_target = value
-        self.__clevel.temp_artifacts.append([value, '+', 1])
-
-    def move_player(self, dx, dy):
-        self._model.move_player(dx, dy)
-
-    def closest_monster_to_player(self, max_range):
-        pos = self.player.position
-        return self.__clevel.closest_monster_to_pos(pos, max_range)
+    def depth(self):
+        return self._model.current_level
 
     def is_blocked(self, pos):
-        return self.__clevel.is_blocked(pos)
+        return self._model.levels[pos[2]].is_blocked(pos)
 
-    def __take_turn_monster(self, monster):
-        previous_pos = monster.position
+    def get_path(self, source_pos, target_pos):
+        libtcod.path_compute(self.path, source_pos[0], source_pos[1],
+                             target_pos[0], target_pos[1])
 
-        messages = MessagesBorg()
+        if libtcod.path_is_empty(self.path):
+            return None
 
-        if monster.confused_turns > 0:
-            monster.confused_move()
+        return libtcod.path_get(self.path, 0)
 
-            if self.is_blocked(monster.position) is False:
-                monster.move(new_pos = previous_pos)
+    def update_explored(self, player):
+        for y in range(MAP_HEIGHT):
+            for x in range(MAP_WIDTH):
+                if player.is_in_fov((x, y)):
+                    self.__clevel.explored[x][y] = True
 
-            return
+    def compute_path(self):
+        # build map for path finding
+        path_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
-        #not confused
+        z = self._model.current_level
+        for x in range(MAP_WIDTH):
+            for y in range(MAP_HEIGHT):
+                libtcod.map_set_properties(path_map, x, y, True,
+                                           not self.is_blocked((x, y, z)))
 
-        #close enough, attack! (if the player is still alive.)
-        if self.player.distance_to(monster.position) < 2 and self.player.hp > 0:
-            monster.attack(self.player)
-            return
+        self.path = libtcod.path_new_using_map(path_map)
 
-        #if the monster sees the player, update its target position
-        if self.__clevel.is_in_fov(monster.position):
-            monster.target = self.player.position
-
-        if monster.target not in (None, monster.position):
-            #move towards player if far away
-            if monster.distance_to(monster.target) >= 2:
-                path = self.__clevel.get_path_to_pos(monster, monster.target)
-                if path is not None and not self.is_blocked(path):
-                    monster.move(new_pos=path)
-
-    def take_turn(self):
-        self.__clevel.compute_path()
-
-        for monster in self.__clevel.monsters:
-            #a basic monster takes its turn. If you can see it, it can see you
-            if not monster.died:
-                self.__take_turn_monster(monster)
-
-    def take_item_from_player(self, item):
-        self.player.drop_item(item)
-        self.__clevel.items.append(item)
-
-    def give_item_to_player(self):
-        for item in self.__clevel.items:
-            if item.position == self.player.position:
-                if self.player.pick_item(item) is True:
-                    self.__clevel.items.remove(item)
-
-    def monsters_in_area(self, pos, radius):
-        return [m for m in self.__clevel.monsters
-                if euclidean_distance(pos, m.position) <= radius]
-
-    def climb_stairs(self):
-        messages = MessagesBorg()
-        if self.player.position == self.__clevel.stairs_up_pos:
-            messages.add('You climb up some stairs..', libtcod.green)
-            self._model.current_level -= 1
-            self.player.move(new_pos = self.__clevel.stairs_down_pos)
-            self.move_player(0, 0)
-        elif self.player.position == self.__clevel.stairs_down_pos:
-            messages.add('You climb down some stairs..', libtcod.green)
+    def climb_stairs(self, pos):
+        sx, sy, _ = self.__clevel.stairs.position
+        if sx == pos.x and sy == pos.y:
             self._model.current_level += 1
-            self.player.move(new_pos = self.__clevel.stairs_up_pos)
-            self.move_player(0, 0)
-        else:
-            messages.add('There are no stairs here.', libtcod.orange)
+
+        return self._model.current_level
 
     def clear_ui(self, con):
         self._view.clear(con, self.__clevel)
 
-        self.player.clear_ui(con)
-
-        for monster in self.__clevel.monsters:
-            monster.clear_ui(con)
-
-        for item in self.__clevel.items:
-            item.clear_ui(con)
-
-        #remove artifacts that are too "old"
-        self.__clevel.temp_artifacts = [v for v in self.__clevel.temp_artifacts if v[2] > 0]
-
-    def draw_ui(self, con, draw_outside_fov):
-        self._view.draw(con, self.__clevel, draw_outside_fov)
-        self.player.draw_ui(con)
-
-        #decrement turns of all temporary artifacts
-        self.__clevel.temp_artifacts = [(p, c, t-1) for (p, c, t) in self.__clevel.temp_artifacts]
-
+    def draw_ui(self, con, is_in_fov_func):
+        self._view.draw(con, self.__clevel, is_in_fov_func)
