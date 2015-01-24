@@ -26,31 +26,20 @@ class Creature(ObjectModel):
         self.current_hp = min(amount, self.max_hp)
 
         if self.current_hp <= 0:
-            #transform it into a nasty corpse! it doesn't block, can't be
-            #attacked and doesn't move
             self.confused_turns = 0
             self.blocks = False
 
     @property
     def power(self):
-        total = self.base_power
-
-        r_dmg = 0 if self.weapon_right is None else self.weapon_right.damage
-        l_dmg = 0 if self.weapon_left is None else self.weapon_left.damage
-
-        return total + max(r_dmg, l_dmg)
+        damage = lambda x: 0 if x is None else x.damage
+        base = self.base_power
+        return base + max(damage(self.weapon_right), damage(self.weapon_left))
 
     @property
     def defense(self):
-        total = self.base_defense
-
-        if self.armour is not None:
-            total += self.armour.defense
-
-        r_def = 0 if self.weapon_right is None else self.weapon_right.defense
-        l_def = 0 if self.weapon_left is None else self.weapon_left.defense
-
-        return total + max(r_def, l_def)
+        defense = lambda x: 0 if x is None else x.defense
+        return self.base_defense + defense(self.armour) + \
+               max(defense(self.weapon_right), defense(self.weapon_left))
 
     @property
     def died(self):
@@ -73,9 +62,9 @@ class Player(Creature):
 
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
+                unblocked = not dungeon.is_blocked(pos)
                 libtcod.map_set_properties(self.fov_map, x, y,
-                                           not dungeon.is_blocked(pos),
-                                           not dungeon.is_blocked(pos))
+                                           unblocked, unblocked)
 
     def __key_is_used(self, key):
         for item in self.inventory:
@@ -118,10 +107,9 @@ class Player(Creature):
         result = super(Player, self).json()
         result['items'] = [i.json() for i in self.inventory]
 
-        w_right = self.weapon_right
-        w_left = self.weapon_left
-        armour = self.armour
-        result['weapon_right'] = w_right.json() if w_right else None
-        result['weapon_left'] = w_left.json() if w_left else None
-        result['armour'] = armour.json() if armour else None
+        weapon_json = lambda x: x.json() if x else None
+
+        result['weapon_right'] = weapon_json(self.weapon_right)
+        result['weapon_left'] = weapon_json(self.weapon_left)
+        result['armour'] = weapon_json(self.armour)
         return result
