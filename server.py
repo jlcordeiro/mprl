@@ -230,6 +230,7 @@ def recv_forever(put_queue):
                 player.inventory.remove(item)
             elif 'cast' in data.keys():
                 use_healing_potion(player)
+                player.inventory.remove(player.get_item(data['cast']))
 
             put_queue.task_done()
             take_turn()
