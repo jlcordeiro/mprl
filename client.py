@@ -77,6 +77,7 @@ def recv_forever():
         monsters = [Creature(**m) for m in data['monsters']]
         items = [ObjectModel(**i) for i in data['items']]
 
+        dungeon.update_explored(player)
         draw.draw(dungeon, player, monsters, items, messages, DRAW_NOT_IN_FOV)
 
 RECV_THREAD = Thread(target=recv_forever, args=())
