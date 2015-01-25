@@ -21,7 +21,6 @@ def get_symbol(model):
 
 def draw_object(console, model):
     (char, colour) = get_symbol(model)
-    char = char if model.type != "creature" or model.died is False else '%'
     pos = model.position
 
     libtcod.console_set_default_foreground(console, colour)

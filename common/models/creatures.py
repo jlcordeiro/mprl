@@ -1,6 +1,6 @@
 import libtcodpy as libtcod
-from objects import ObjectModel
 from config import *
+from objects import ObjectModel, Weapon, Armour
 
 
 class Creature(ObjectModel):
@@ -55,16 +55,18 @@ class Creature(ObjectModel):
 
 
 class Player(Creature):
-    def __init__(self, dungeon, pos):
-        super(Player, self).__init__('player', pos, 30, 30, PLAYER_BASE_DEF, PLAYER_BASE_POW)
+    def __init__(self, dungeon, position, max_hp=30, hp=30, **extras):
+        super(Player, self).__init__('player', position, max_hp, hp, PLAYER_BASE_DEF, PLAYER_BASE_POW)
         self.inventory = []
         self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
 
         for y in range(MAP_HEIGHT):
             for x in range(MAP_WIDTH):
-                unblocked = not dungeon.is_blocked(pos)
+                unblocked = not dungeon.is_blocked(position)
                 libtcod.map_set_properties(self.fov_map, x, y,
                                            unblocked, unblocked)
+
+        self.update_fov()
 
     def __key_is_used(self, key):
         for item in self.inventory:
@@ -113,3 +115,15 @@ class Player(Creature):
         result['weapon_left'] = weapon_json(self.weapon_left)
         result['armour'] = weapon_json(self.armour)
         return result
+
+    @staticmethod
+    def fromJson(dungeon, dic, **extras):
+        player = Player(dungeon, **dic)
+        player.inventory = [ObjectModel(**i) for i in dic['items']]
+
+        wear = lambda c, x: c(**dic[x]) if dic[x] else None
+        player.weapon_left = wear(Weapon, 'weapon_left')
+        player.weapon_right = wear(Weapon, 'weapon_right')
+        player.armour = wear(Armour, 'armour')
+
+        return player

@@ -2,7 +2,7 @@ import libtcodpy as libtcod
 import random
 import views.dungeon
 import common.models.dungeon
-from common.models.dungeon import Stairs, Level
+from common.models.dungeon import Level, Stairs
 from common.utilities.geometry import Rect, Point
 from config import *
 from messages import *
@@ -95,14 +95,14 @@ def generate_random_levels():
     #build stairs
     for idx in xrange(0, NUM_LEVELS - 1):
         while True:
-            stairs_pos = Point(random.randint(1, MAP_WIDTH - 1),
-                               random.randint(1, MAP_HEIGHT - 1),
-                               0)
+            stairs_pos = (random.randint(1, MAP_WIDTH - 1),
+                          random.randint(1, MAP_HEIGHT - 1),
+                          0)
             if not levels[idx].is_blocked(stairs_pos) and \
                not levels[idx + 1].is_blocked(stairs_pos):
                 break
 
-        levels[idx].stairs = Stairs(stairs_pos, "stairs_down")
+        levels[idx].stairs = Stairs(stairs_pos)
 
     return levels
 

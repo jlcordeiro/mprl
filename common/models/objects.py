@@ -26,7 +26,7 @@ class Potion(ObjectModel):
 
 
 class Weapon(ObjectModel):
-    def __init__(self, name, position, damage, defense, **extrase):
+    def __init__(self, name, position, damage, defense, **extras):
         super(Weapon, self).__init__(name, "melee", position, False)
         self.damage = damage
         self.defense = defense

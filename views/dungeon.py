@@ -2,6 +2,7 @@ import libtcodpy as libtcod
 from config import *
 from collections import namedtuple
 from views.objects import draw_object, erase_object
+from common.models.dungeon import Stairs
 
 LevelColors = namedtuple('LevelColors', ['dark_wall',
                                          'light_wall',
@@ -41,11 +42,11 @@ class Level:
 
         #draw stairs
         stairs = level.stairs
-        if stairs is not None and is_in_fov_func(stairs.position):
-            draw_object(console, stairs)
+        if stairs is not None and is_in_fov_func(stairs):
+            draw_object(console, Stairs(stairs))
 
     def clear(self, console, level):
         #erase the character that represents this object
         if level.stairs is not None:
-            (x, y, _) = level.stairs.position
+            (x, y, _) = level.stairs
             libtcod.console_put_char(console, x, y, ' ', Level.background)

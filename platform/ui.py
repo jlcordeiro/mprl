@@ -2,6 +2,10 @@
 
 import libtcodpy as libtcod
 from config import *
+from common.utilities.geometry import Rect
+
+gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
+SCREEN_RECT = Rect(gap / 2, gap / 2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
 
 
 ITEM_TYPE_OPTIONS = {"cast": [('u', "(U)se"),
@@ -110,7 +114,7 @@ def option_menu(con, rect, header, options, hide_options=False):
     return None
 
 
-def inventory_menu(con, rect, header, player):
+def inventory_menu(con, header, player):
     #show a menu with each item of the inventory as an option
     options = []
     for item in player.inventory:

@@ -1,8 +1,11 @@
 import libtcodpy as libtcod
 from config import *
-from collections import namedtuple
+from common.utilities.geometry import Point
+from common.models.objects import ObjectModel
 
-Stairs = namedtuple('Stairs', ['position', 'type'])
+class Stairs(ObjectModel):
+    def __init__(self, position):
+        super(Stairs, self).__init__("stairs", "stairs_down", position, False)
 
 
 class Level(object):
