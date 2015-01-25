@@ -74,6 +74,7 @@ class TCPServer(object):
             if in_fd == self.sock:
                 csock, _ = self.sock.accept()
                 self.client_fds.append(csock)
+                put_queue.put({'new-user': None})
             else:
                 data = read_json_message(in_fd)
                 if data is not None:

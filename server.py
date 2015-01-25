@@ -137,11 +137,12 @@ move_player(0, 0, 0)
 message_queue = Queue()
 
 
-def send_all():
+def send(send_dungeon=False):
     depth = player.position.z
 
     data = {}
-    data['dungeon'] = dungeon._model.json()
+    if send_dungeon:
+        data['dungeon'] = dungeon._model.json()
     data['player'] = player.json()
     data['monsters'] = [m.json() for m in monsters if m.position.z == depth]
     data['items'] = [i.json() for i in items if i.position.z == depth]
@@ -156,7 +157,9 @@ def recv_forever(put_queue):
         if not put_queue.empty():
             data = put_queue.get()
             print(data)
-            if 'move' in data.keys():
+            if 'new-user' in data.keys():
+                send(send_dungeon=True)
+            elif 'move' in data.keys():
                 dx, dy = data['move']
                 move_player(dx, dy, 0)
             elif 'climb' in data.keys():
@@ -191,7 +194,7 @@ def recv_forever(put_queue):
             if player.died:
                 messages.add('You died. Game over.')
 
-            send_all()
+            send()
 
 recv_forever(message_queue)
 TCP_SERVER.close()

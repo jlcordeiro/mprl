@@ -66,10 +66,11 @@ def recv_forever():
     while True:
         data = socket.recv()
 
-        dungeon_d = data['dungeon']
-        levels = {int(i): Level(**d) for i, d in dungeon_d['levels'].items()}
-        current_level = dungeon_d['current_level']
-        dungeon = controllers.dungeon.Dungeon(levels, current_level)
+        if 'dungeon' in data.keys():
+            dungeon_d = data['dungeon']
+            levels = {int(i): Level(**d) for i, d in dungeon_d['levels'].items()}
+            current_level = dungeon_d['current_level']
+            dungeon = controllers.dungeon.Dungeon(levels, current_level)
 
         player = Player.fromJson(dungeon, data['player'])
         messages = data['messages']
