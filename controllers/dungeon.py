@@ -4,6 +4,7 @@ import views.dungeon
 import common.models.dungeon
 from common.models.dungeon import Level, Stairs
 from common.utilities.geometry import Rect, Point
+from common.utilities.utils import reduce_map, expand_map
 from config import *
 from messages import *
 
@@ -89,7 +90,7 @@ def generate_random_walls(n_rooms):
 
 
 def generate_random_levels():
-    levels = {idx: Level(generate_random_walls(MAX_ROOMS))
+    levels = {idx: Level(reduce_map(generate_random_walls(MAX_ROOMS)))
               for idx in xrange(0, NUM_LEVELS)}
 
     #build stairs
