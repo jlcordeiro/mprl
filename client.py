@@ -15,12 +15,6 @@ DRAW_NOT_IN_FOV = False
 
 socket = TCPClient('localhost', 4446)
 
-dungeon = None
-player = None
-messages = []
-monsters = []
-items = []
-
 
 def handle_keys():
     global DRAW_NOT_IN_FOV
@@ -62,23 +56,39 @@ def handle_keys():
 
 
 def recv_forever():
-    global messages, monsters, items, dungeon, player
+    dungeon = None
+    player = None
+    messages = []
+    monsters = []
+    items = []
+
     while True:
         data = socket.recv()
+        if data is None:
+            continue
 
-        if 'dungeon' in data.keys():
-            dungeon_d = data['dungeon']
-            levels = {int(i): Level(**d) for i, d in dungeon_d['levels'].items()}
-            current_level = dungeon_d['current_level']
-            dungeon = controllers.dungeon.Dungeon(levels, current_level)
+        for key in ('dungeon', 'player', 'messages', 'monsters', 'items'):
+            if key not in data.keys():
+                continue
 
-        player = Player.fromJson(dungeon, data['player'])
-        messages = data['messages']
-        monsters = [Creature(**m) for m in data['monsters']]
-        items = [ObjectModel(**i) for i in data['items']]
+            value = data[key]
+            if key == 'dungeon':
+                levels = {int(i): Level(**d)
+                          for i, d in value['levels'].items()}
+                current_level = value['current_level']
+                dungeon = controllers.dungeon.Dungeon(levels, current_level)
+            elif key == 'player':
+                player = Player.fromJson(dungeon, value)
+            elif key == 'messages':
+                messages = value
+            elif key == 'monsters':
+                monsters = [Creature(**m) for m in value]
+            elif key == 'items':
+                items = [ObjectModel(**i) for i in value]
 
         dungeon.update_explored(player)
         draw.draw(dungeon, player, monsters, items, messages, DRAW_NOT_IN_FOV)
+
 
 RECV_THREAD = Thread(target=recv_forever, args=())
 RECV_THREAD.daemon = True
@@ -86,8 +96,7 @@ RECV_THREAD.start()
 
 try:
     while True:
-        player_action = handle_keys()
-        if player_action == "exit":
+        if handle_keys() == "exit":
             break
 finally:
     socket.close()
