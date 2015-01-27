@@ -1,8 +1,8 @@
-import libtcodpy as libtcod
 from config import *
 from common.utilities.geometry import Point
 from common.models.objects import ObjectModel
 from common.utilities.utils import reduce_map, expand_map
+
 
 class Stairs(ObjectModel):
     def __init__(self, position):
