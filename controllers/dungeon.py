@@ -125,6 +125,7 @@ class Dungeon(object):
         return self._model.current_level
 
     def is_blocked(self, pos):
+        if len(pos) == 2: pos = (pos[0], pos[1], self.depth)
         return self._model.levels[pos[2]].is_blocked(pos)
 
     def get_path(self, source_pos, target_pos):

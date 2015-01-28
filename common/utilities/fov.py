@@ -19,7 +19,7 @@ def bresenham_fov(origin, target, radius, blocks=None):
 
     visible_points = []
 
-    point_x, point_y = origin
+    point_x, point_y = origin[0], origin[1]
     w, h = target[0] - point_x, target[1] - point_y
 
     longest = max(abs(w), abs(h))

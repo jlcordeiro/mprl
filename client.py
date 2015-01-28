@@ -78,7 +78,8 @@ def recv_forever():
                 current_level = value['current_level']
                 dungeon = controllers.dungeon.Dungeon(levels, current_level)
             elif key == 'player':
-                player = Player.fromJson(dungeon, value)
+                player = Player.fromJson(value)
+                player.update_fov(dungeon.is_blocked)
             elif key == 'messages':
                 messages = value
             elif key == 'monsters':

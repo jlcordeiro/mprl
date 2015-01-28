@@ -1,6 +1,7 @@
 import libtcodpy as libtcod
 from config import *
 from objects import ObjectModel, Weapon, Armour
+from common.utilities.fov import Fov
 
 
 class Creature(ObjectModel):
@@ -38,8 +39,8 @@ class Creature(ObjectModel):
     @property
     def defense(self):
         defense = lambda x: 0 if x is None else x.defense
-        return self.base_defense + defense(self.armour) + \
-               max(defense(self.weapon_right), defense(self.weapon_left))
+        return (self.base_defense + defense(self.armour) +
+                max(defense(self.weapon_right), defense(self.weapon_left)))
 
     @property
     def died(self):
@@ -55,18 +56,10 @@ class Creature(ObjectModel):
 
 
 class Player(Creature):
-    def __init__(self, dungeon, position, max_hp=30, hp=30, **extras):
+    def __init__(self, position, max_hp=30, hp=30, **extras):
         super(Player, self).__init__('player', position, max_hp, hp, PLAYER_BASE_DEF, PLAYER_BASE_POW)
         self.inventory = []
-        self.fov_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
-
-        for y in range(MAP_HEIGHT):
-            for x in range(MAP_WIDTH):
-                unblocked = not dungeon.is_blocked(position)
-                libtcod.map_set_properties(self.fov_map, x, y,
-                                           unblocked, unblocked)
-
-        self.update_fov()
+        self.fov = Fov(MAP_WIDTH, MAP_HEIGHT)
 
     def __key_is_used(self, key):
         for item in self.inventory:
@@ -98,12 +91,10 @@ class Player(Creature):
         self.inventory.remove(item)
 
     def is_in_fov(self, pos):
-        return libtcod.map_is_in_fov(self.fov_map, pos[0], pos[1])
+        return self.fov.contains((pos[0], pos[1]))
 
-    def update_fov(self):
-        libtcod.map_compute_fov(self.fov_map,
-                                self.position[0], self.position[1],
-                                TORCH_RADIUS, FOV_LIGHT_WALLS, FOV_ALGO)
+    def update_fov(self, blocks_visibility):
+        self.fov.update(self.position, TORCH_RADIUS, blocks_visibility)
 
     def json(self):
         result = super(Player, self).json()
@@ -117,8 +108,8 @@ class Player(Creature):
         return result
 
     @staticmethod
-    def fromJson(dungeon, dic, **extras):
-        player = Player(dungeon, **dic)
+    def fromJson(dic, **extras):
+        player = Player(**dic)
         player.inventory = [ObjectModel(**i) for i in dic['items']]
 
         wear = lambda c, x: c(**dic[x]) if dic[x] else None

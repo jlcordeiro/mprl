@@ -15,6 +15,7 @@ TCP_SERVER = TCPServer('localhost', 4446)
 dungeon = controllers.dungeon.Dungeon()
 messages = Messages()
 
+
 def random_unblocked_pos(objects, depth):
     pos = Point(randint(1, MAP_WIDTH - 1), randint(1, MAP_HEIGHT - 1), depth)
 
@@ -23,6 +24,7 @@ def random_unblocked_pos(objects, depth):
         return pos
 
     return random_unblocked_pos(objects, depth)
+
 
 def generate_monsters():
     new_monsters = []
@@ -49,7 +51,7 @@ def generate_items():
 
 
 ppos = random_unblocked_pos([], 0)
-player = common.models.creatures.Player(dungeon, ppos)
+player = common.models.creatures.Player(ppos)
 monsters = generate_monsters()
 items = generate_items()
 
@@ -71,7 +73,7 @@ def move_player(dx, dy, dz):
         attack(player, monster)
     elif not dungeon.is_blocked(new_pos):
         player.position = new_pos
-        player.update_fov()
+        player.update_fov(dungeon.is_blocked)
         dungeon.update_explored(player)
 
 
