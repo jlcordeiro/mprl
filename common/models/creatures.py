@@ -1,4 +1,3 @@
-import libtcodpy as libtcod
 from config import *
 from objects import ObjectModel, Weapon, Armour
 from common.utilities.fov import Fov
