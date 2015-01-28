@@ -167,6 +167,7 @@ def recv_forever(put_queue):
             elif 'climb' in data.keys():
                 new_level = dungeon.climb_stairs(player.position)
                 move_player(0, 0, new_level - player.position.z)
+                send(send_dungeon=True)
             elif 'get' in data.keys():
                 give_item_to_player()
             elif 'drop' in data.keys():
