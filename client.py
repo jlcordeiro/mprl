@@ -19,8 +19,10 @@ INVENTORY_ITEM = None
 
 def loop(func):
     """ Run function passed as parameter until the game is closing. """
+    import time
     while not CLOSE_CLIENT:
         func()
+        time.sleep(0.1)
 
 
 def handle_keys():
@@ -141,12 +143,10 @@ if __name__ == '__main__':
 
     Thread(target=loop, args=(recv_data,)).start()
     Thread(target=loop, args=(ui_draw.handle_event,)).start()
-    Thread(target=loop, args=(handle_keys,)).start()
 
-    # wait until game is closed
-    import time
-    while not CLOSE_CLIENT:
-        time.sleep(0.1)
+# wait until game is closed
+while not CLOSE_CLIENT:
+    handle_keys()
 
     # release resources
-    SOCKET.close()
+SOCKET.close()

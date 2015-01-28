@@ -2,7 +2,6 @@ from random import randint
 from config import *
 from messages import Messages
 from common.utilities.geometry import Point, euclidean_distance
-import controllers.creatures
 import controllers.objects
 import controllers.dungeon
 import common.models.creatures

@@ -129,7 +129,6 @@ class MainWindow(object):
         self.flush(dungeon, player, monsters, items)
 
     def show_menu(self, options, header, hide_options=False):
-        print header, options
         """ Show menu with header and options in the screen. """
 
         #calculate total height for the header (after auto-wrap)
