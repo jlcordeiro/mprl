@@ -77,7 +77,7 @@ class TCPServer(object):
             Also removes file descriptors from clients that leave.
         """
         self.lock.acquire()
-        input_fds, _, _ = select.select(self.client_fds + [self.sock], [], [])
+        input_fds, _, _ = select.select(self.client_fds + [self.sock], [], [], 0.05)
         for in_fd in input_fds:
             if in_fd == self.sock:
                 csock, _ = self.sock.accept()
@@ -127,7 +127,7 @@ class TCPClient(object):
         data = None
 
         self.lock.acquire()
-        input_fds, _, _ = select.select([self.sock], [], [])
+        input_fds, _, _ = select.select([self.sock], [], [], 0.05)
         if len(input_fds) > 0:
             data = read_json_message(self.sock)
             if data is None:
