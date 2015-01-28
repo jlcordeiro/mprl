@@ -1,123 +1,152 @@
-import libtcodpy as libtcod
-from draw import Draw
-from config import *
-from messages import *
+""" Game client. """
+
 from platform.ui import *
 from platform.keyboard import *
-from common.models.dungeon import Stairs, Level
-from common.utilities.geometry import Rect, Point
-import common.models.creatures
-from common.models.objects import ObjectModel, Weapon, Armour
-import controllers.creatures
-import controllers.dungeon
-import json
-from sockets import *
+from common.models.dungeon import Level
+from common.models.objects import ObjectModel
+from common.models.creatures import Creature, Player
+from controllers.dungeon import Dungeon
+from sockets import TCPClient
 from threading import Thread
+from Queue import Queue
 
-draw = Draw()
-DRAW_NOT_IN_FOV = False
+## Variables shared by all threads
+SOCKET = TCPClient('localhost', 4446)
+DRAW_EVENTS = Queue()
+CLOSE_CLIENT = False
+INVENTORY_ITEM = None
 
-socket = TCPClient('localhost', 4446)
 
-gap = (SCREEN_WIDTH - INVENTORY_WIDTH)
-SCREEN_RECT = Rect(gap / 2, gap / 2, INVENTORY_WIDTH, SCREEN_HEIGHT - gap)
-
-dungeon = None
-player = None
-messages = []
-monsters = []
-items = []
+def loop(func):
+    """ Run function passed as parameter until the game is closing. """
+    while not CLOSE_CLIENT:
+        func()
 
 
 def handle_keys():
-    global DRAW_NOT_IN_FOV
+    global CLOSE_CLIENT
     key = wait_keypress()
 
     if key_is_escape(key):
-        return "exit"
+        CLOSE_CLIENT = True
+        return
+
+    if INVENTORY_ITEM is not None:
+        option = chr(key.c)
+        # tell the draw thread to close the inventory window
+        DRAW_EVENTS.put(('inventory-hide', None))
+        # send chosen option to the game server
+        if option in ObjectModel.action_names:
+            SOCKET.send({ObjectModel.action_names[option]: INVENTORY_ITEM.key})
+        return
 
     movement = get_key_direction(key)
     if movement is not None:
-        socket.send({'move': movement})
+        SOCKET.send({'move': movement})
     elif chr(key.c) == 'g':
-        #pick up an item
-        socket.send({'get': None})
+        SOCKET.send({'get': None})
     elif chr(key.c) == 'i':
-        header = "Press the key next to an item to choose it, or any other to cancel.\n"
-        (chosen_item, option) = inventory_menu(draw.con, SCREEN_RECT, header, player)
-        if chosen_item is None:
-            return 'did-not-take-turn'
-
-        try:
-            option_name = {'u': 'cast',
-                           'd': 'drop',
-                           'w': 'wear',
-                           'r': 'use-right',
-                           'l': 'use-left'}[option]
-        except KeyError, ke:
-            return 'did-not-take-turn'
-
-        socket.send({option_name: chosen_item.key})
-
+        DRAW_EVENTS.put(('inventory-show', None))
+        key = wait_keypress()
+        item_key = chr(key.c)
+        DRAW_EVENTS.put(('inventory-item', item_key))
     else:
         if chr(key.c) == 'v':
-            DRAW_NOT_IN_FOV = not DRAW_NOT_IN_FOV
+            DRAW_EVENTS.put(('toggle-fov', None))
         elif chr(key.c) in ('>', '<'):
-            socket.send({'climb': None})
-
-        return 'did-not-take-turn'
+            SOCKET.send({'climb': None})
 
 
-def recv_forever():
-    global messages, monsters, items, dungeon, player
-    while True:
-        data = socket.recv()
+class UIDraw(object):
+    def __init__(self):
+        self.main_window = MainWindow()
 
-        levels = {}
-        for idx, ldata in data['dungeon']['levels'].items():
-            sdata = ldata['stairs']
-            stairs = None
-            if sdata is not None:
-                stairs = Stairs(Point(sdata[0], sdata[1], idx), "stairs_down")
+        self.dungeon = None
+        self.player = None
+        self.messages = []
+        self.monsters = []
+        self.items = []
+        self.draw_not_in_fov = False
 
-            levels[int(idx)] = Level(ldata['walls'], stairs, ldata['explored'])
+    def draw(self):
+        """ Draw main game window. """
+        self.main_window.draw(self.dungeon, self.player, self.monsters,
+                              self.items, self.messages, self.draw_not_in_fov)
 
-        current_level = data['dungeon']['current_level']
-        dungeon = controllers.dungeon.Dungeon(levels, current_level)
+    def _handle_server_data(self, data):
+        """ Handle data that was sent by the server. """
+        for key in ('dungeon', 'player', 'messages', 'monsters', 'items'):
+            if key not in data.keys():
+                continue
 
-        player_d = data['player']
-        (player_x, player_y, player_z) = player_d['position']
+            value = data[key]
+            if key == 'dungeon':
+                levels = {int(i): Level(**d)
+                          for i, d in value['levels'].items()}
+                current_level = value['current_level']
+                self.dungeon = Dungeon(levels, current_level)
+            elif key == 'player':
+                self.player = Player.fromJson(value)
+                self.player.update_fov(self.dungeon.is_blocked)
+            elif key == 'messages':
+                self.messages = value
+            elif key == 'monsters':
+                self.monsters = [Creature(**m) for m in value]
+            elif key == 'items':
+                self.items = [ObjectModel(**i) for i in value]
 
-        player = common.models.creatures.Player(dungeon, (player_x, player_y, player_z))
-        player.hp = player_d['hp']
-        player.inventory = [common.models.objects.ObjectModel(**i) for i in player_d['items']]
-        if player_d['weapon_left'] is not None:
-            player.weapon_left = Weapon(**player_d['weapon_left'])
-        if player_d['weapon_right'] is not None:
-            player.weapon_right = Weapon(**player_d['weapon_right'])
-        if player_d['armour'] is not None:
-            player.armour = Armour(**player_d['armour'])
-        player.update_fov()
-        dungeon.update_explored(player)
+        self.dungeon.update_explored(self.player)
+        self.draw()
 
-        messages = data['messages']
+    def handle_event(self):
+        global INVENTORY_ITEM
+        """ Get a new event and process it. """
+        if not DRAW_EVENTS.empty():
+            event_name, event_data = DRAW_EVENTS.get()
 
-        monsters = [common.models.creatures.Creature(**m) for m in data['monsters']]
-        level_monsters = [m for m in monsters if m.position.z == player_z]
+            if event_name == 'toggle-fov':
+                self.draw_not_in_fov = not self.draw_not_in_fov
+                self.draw()
+            elif event_name == 'inventory-show':
+                header = "Press the key next to an item to choose it, or any other to cancel.\n"
+                options = [(item.key, item.name) for item in self.player.inventory]
+                self.main_window.show_menu(options, header, False)
+            elif event_name == 'inventory-item':
+                INVENTORY_ITEM = self.player.get_item(event_data)
 
-        items = [common.models.objects.ObjectModel(**i) for i in data['items']]
-        level_items = [i for i in items if i.position.z == player.position.z]
+                if INVENTORY_ITEM:
+                    header = INVENTORY_ITEM.name + ":\n"
+                    options = INVENTORY_ITEM.allowed_actions()
+                    self.main_window.show_menu(options, header, True)
+                else:
+                    self.draw()
+            elif event_name == 'inventory-hide':
+                INVENTORY_ITEM = None
+                self.draw()
+            elif event_name == 'server-msg':
+                self._handle_server_data(event_data)
 
-        draw.draw(dungeon, player, level_monsters, level_items, messages, DRAW_NOT_IN_FOV)
+            DRAW_EVENTS.task_done()
 
-RECV_THREAD = Thread(target=recv_forever, args=())
-RECV_THREAD.daemon = True
-RECV_THREAD.start()
 
-try:
-    while True:
-        player_action = handle_keys()
-        if player_action == "exit":
-            break
-finally:
-    socket.close()
+def recv_data():
+    """ Receive data from the server and insert it into the events queue. """
+    data = SOCKET.recv()
+    if data:
+        DRAW_EVENTS.put(('server-msg', data))
+
+
+if __name__ == '__main__':
+    ui_draw = UIDraw()
+
+    Thread(target=loop, args=(recv_data,)).start()
+    Thread(target=loop, args=(ui_draw.handle_event,)).start()
+    Thread(target=loop, args=(handle_keys,)).start()
+
+    # wait until game is closed
+    import time
+    while not CLOSE_CLIENT:
+        time.sleep(0.1)
+
+    # release resources
+    SOCKET.close()

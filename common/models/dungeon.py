@@ -1,14 +1,18 @@
-import libtcodpy as libtcod
 from config import *
-from collections import namedtuple
+from common.utilities.geometry import Point
+from common.models.objects import ObjectModel
+from common.utilities.utils import reduce_map, expand_map
 
-Stairs = namedtuple('Stairs', ['position', 'type'])
+
+class Stairs(ObjectModel):
+    def __init__(self, position):
+        super(Stairs, self).__init__("stairs", "stairs_down", position, False)
 
 
 class Level(object):
     def __init__(self, walls, stairs=None, explored=None):
-        self.walls = walls
-        self.explored = explored if explored else self._get_unexplored_array()
+        self.walls = expand_map(walls)
+        self.explored = expand_map(explored) if explored else self._get_unexplored_array()
         self.stairs = stairs
 
     def _get_unexplored_array(self):
@@ -18,8 +22,8 @@ class Level(object):
         return self.walls[pos[0]][pos[1]]
 
     def json(self):
-        return {'walls': [[b for b in row] for row in self.walls],
-                'explored': [[e for e in row] for row in self.explored],
+        return {'walls': reduce_map(self.walls),
+                'explored': reduce_map(self.explored),
                 'stairs': self.stairs.position if self.stairs else None}
 
 

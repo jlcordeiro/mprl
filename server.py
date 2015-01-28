@@ -15,13 +15,9 @@ TCP_SERVER = TCPServer('localhost', 4446)
 dungeon = controllers.dungeon.Dungeon()
 messages = Messages()
 
-def random_unblocked_pos(objects, depth=None):
-    if depth is None:
-        depth = dungeon.depth
 
-    pos = Point(randint(1, MAP_WIDTH - 1),
-                randint(1, MAP_HEIGHT - 1),
-                depth)
+def random_unblocked_pos(objects, depth):
+    pos = Point(randint(1, MAP_WIDTH - 1), randint(1, MAP_HEIGHT - 1), depth)
 
     existing_objects = [o for o in objects if o.position == pos]
     if not dungeon.is_blocked(pos) and len(existing_objects) == 0:
@@ -29,12 +25,13 @@ def random_unblocked_pos(objects, depth=None):
 
     return random_unblocked_pos(objects, depth)
 
+
 def generate_monsters():
     new_monsters = []
 
     for level_idx in xrange(0, NUM_LEVELS):
         for _ in xrange(0, MAX_LEVEL_MONSTERS):
-            pos = random_unblocked_pos(new_monsters, depth=level_idx)
+            pos = random_unblocked_pos(new_monsters, level_idx)
             monster = controllers.objects.create_random_monster(pos)
             new_monsters.append(monster)
 
@@ -46,75 +43,46 @@ def generate_items():
 
     for level_idx in xrange(0, NUM_LEVELS):
         for _ in xrange(0, MAX_LEVEL_ITEMS):
-            pos = random_unblocked_pos(new_items, depth=level_idx)
+            pos = random_unblocked_pos(new_items, level_idx)
             item = controllers.objects.create_random_item(pos)
             new_items.append(item)
 
     return new_items
 
 
-def use_healing_potion(player):
-    messages.add('Your wounds start to feel better!')
-    player.hp += HEAL_AMOUNT
-
-ppos = random_unblocked_pos([], depth=0)
-player = common.models.creatures.Player(dungeon, ppos)
+ppos = random_unblocked_pos([], 0)
+player = common.models.creatures.Player(ppos)
 monsters = generate_monsters()
 items = generate_items()
 
 
 def attack(source, target):
-    damage = max(0, source.power - target.defense)
-    target.hp -= damage
-
-    messages.add(source.name + ' attacks ' + target.name + ' for '
-                 + str(damage) + ' hit points.')
+    target.hp -= max(0, source.power - target.defense)
+    messages.add('%s attacks %s.' % (source.name, target.name))
 
 
-def get_monster_in_pos(pos):
-    for monster in monsters:
-        if monster.position == pos and not monster.died:
-            return monster
-
-    return None
+def filter_by_pos(objects, pos):
+    return next((o for o in objects if o.position == pos), None)
 
 
-def move_player(dx, dy, dz=0):
-    old_pos = player.position
-    new_pos = old_pos.add(Point(dx, dy, dz))
+def move_player(dx, dy, dz):
+    new_pos = player.position.add(Point(dx, dy, dz))
 
-    monster = get_monster_in_pos(new_pos)
+    monster = filter_by_pos(monsters, new_pos)
     if monster is not None:
         attack(player, monster)
     elif not dungeon.is_blocked(new_pos):
         player.position = new_pos
-
-    player.update_fov()
-    dungeon.update_explored(player)
+        player.update_fov(dungeon.is_blocked)
+        dungeon.update_explored(player)
 
 
 def take_turn_monster(monster):
     if monster.died:
         return
 
-    previous_pos = monster.position
-
-    if monster.confused_turns > 0:
-        randx, randy = randint(-1, 1), randint(-1, 1)
-        monster.position = monster.position.add(randx, randy)
-        monster.confused_turns -= 1
-
-        if (dungeon.is_blocked(monster.position) is False or
-                get_monster_in_pos(monster.position) is not None):
-            monster.position = previous_pos
-
-        return
-
-    #not confused
-
-    #close enough, attack! (if the player is still alive.)
-    if (euclidean_distance(player.position, monster.position) < 2 and
-            player.hp > 0):
+    #close enough, attack!
+    if euclidean_distance(player.position, monster.position) < 2:
         attack(monster, player)
         return
 
@@ -128,7 +96,7 @@ def take_turn_monster(monster):
             path = dungeon.get_path(monster.position, monster.target_pos)
             if path is not None:
                 new_pos = Point(path[0], path[1], monster.position.z)
-                if not dungeon.is_blocked(new_pos) and get_monster_in_pos(new_pos) is None:
+                if not dungeon.is_blocked(new_pos) and filter_by_pos(monsters, new_pos) is None:
                     monster.position = new_pos
 
 
@@ -144,6 +112,7 @@ def take_turn():
 
     monsters = filter(lambda x: not x.died, monsters)
 
+
 def take_item_from_player(item):
     messages.add('You dropped a ' + item.name + '.')
     player.remove_item(item)
@@ -152,46 +121,33 @@ def take_item_from_player(item):
 
 
 def give_item_to_player():
-    for item in items:
-        if item.position == player.position:
-            if player.add_item(item) is True:
-                messages.add('You picked a %s! (%s)' % (item.name, item.key))
-                items.remove(item)
-            else:
-                messages.add('Your inventory is full, cannot pick up ' +
-                             item.name + '.')
+    item = filter_by_pos(items, player.position)
+    if item and item.position == player.position:
+        if player.add_item(item) is True:
+            messages.add('You picked a %s! (%s)' % (item.name, item.key))
+            items.remove(item)
+        else:
+            messages.add('Your inventory is full')
 
-
-def closest_monster_to_pos(pos, monsters, max_range):
-    level_monsters = [m for m in monsters if m.position.z == pos.z]
-    #find closest enemy, up to a maximum range, and in the FOV
-    if len(level_monsters) < 1:
-        return None
-
-    compare_func = lambda x: euclidean_distance(x.position, pos)
-    closest = min(level_monsters, key=compare_func)
-    if (closest is None or
-            not player.is_in_fov(closest.position) or
-            euclidean_distance(closest.position, pos) > max_range):
-        return None
-
-    return closest
 
 #############################################
 # Initialization & Main Loop
 #############################################
 
-move_player(0, 0)
+move_player(0, 0, 0)
 
 message_queue = Queue()
 
 
-def send_all():
+def send(send_dungeon=False):
+    depth = player.position.z
+
     data = {}
-    data['dungeon'] = dungeon._model.json()
+    if send_dungeon:
+        data['dungeon'] = dungeon._model.json()
     data['player'] = player.json()
-    data['monsters'] = [m.json() for m in monsters]
-    data['items'] = [i.json() for i in items]
+    data['monsters'] = [m.json() for m in monsters if m.position.z == depth]
+    data['items'] = [i.json() for i in items if i.position.z == depth]
     data['messages'] = messages.toList()
     TCP_SERVER.broadcast(data)
 
@@ -203,12 +159,15 @@ def recv_forever(put_queue):
         if not put_queue.empty():
             data = put_queue.get()
             print(data)
-            if 'move' in data.keys():
+            if 'new-user' in data.keys():
+                send(send_dungeon=True)
+            elif 'move' in data.keys():
                 dx, dy = data['move']
-                move_player(dx, dy)
+                move_player(dx, dy, 0)
             elif 'climb' in data.keys():
                 new_level = dungeon.climb_stairs(player.position)
                 move_player(0, 0, new_level - player.position.z)
+                send(send_dungeon=True)
             elif 'get' in data.keys():
                 give_item_to_player()
             elif 'drop' in data.keys():
@@ -223,21 +182,22 @@ def recv_forever(put_queue):
             elif 'use-right' in data.keys():
                 item = player.get_item(data['use-right'])
                 player.weapon_right = item
-                player.inventory.remove(item)
+                player.remove_item(item)
             elif 'wear' in data.keys():
                 item = player.get_item(data['wear'])
                 player.armour = item
-                player.inventory.remove(item)
+                player.remove_item(item)
             elif 'cast' in data.keys():
-                use_healing_potion(player)
-                player.inventory.remove(player.get_item(data['cast']))
+                player.hp += HEAL_AMOUNT
+                player.remove_item(player.get_item(data['cast']))
 
             put_queue.task_done()
             take_turn()
 
             if player.died:
                 messages.add('You died. Game over.')
-            send_all()
+
+            send()
 
 recv_forever(message_queue)
 TCP_SERVER.close()
