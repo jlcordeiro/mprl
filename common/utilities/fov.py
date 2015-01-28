@@ -37,11 +37,11 @@ def bresenham_fov(origin, target, radius, blocks=None):
     for _ in xrange(0, longest + 1):
         point = (point_x, point_y)
 
-        if ((blocks and blocks(point)) or
-                euclidean_distance(origin, point) > radius):
-            return visible_points
-
         visible_points.append(point)
+
+        if ((blocks and blocks(point)) or
+                euclidean_distance(origin, point) >= radius):
+            return visible_points
 
         numerator += shortest
         if numerator >= longest:
