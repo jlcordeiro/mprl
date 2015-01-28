@@ -3,12 +3,34 @@ from common.utilities.geometry import Point
 
 
 class ObjectModel(object):
+    """ Base class for all objects. """
+
+    # name of each action
+    action_names = {'u': 'cast',
+                    'd': 'drop',
+                    'w': 'wear',
+                    'r': 'use-right',
+                    'l': 'use-left'}
+
     def __init__(self, name, type, position, blocks, key='_', **extras):
         self.position = Point.copy(position)
         self.key = key
         self.name = name
         self.blocks = blocks
         self.type = type
+
+    def allowed_actions(self):
+        """ Return list of actions that can be performed on this item.
+            Returns both its identifying key, and a description. """
+        _actions_by_type = {"cast": [('u', "(U)se"),
+                                     ('d', "(D)rop")],
+                            "melee": [('r', "Equip in (r)ight hand"),
+                                      ('l', "Equip in (l)eft hand"),
+                                      ('d', "(D)rop")],
+                            "armour": [('w', "(W)ear"),
+                                       ('d', "(D)rop")]}
+
+        return _actions_by_type[self.type]
 
     def json(self):
         return {'name': self.name,

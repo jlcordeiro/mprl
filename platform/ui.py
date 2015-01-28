@@ -129,6 +129,7 @@ class MainWindow(object):
         self.flush(dungeon, player, monsters, items)
 
     def show_menu(self, options, header, hide_options=False):
+        print header, options
         """ Show menu with header and options in the screen. """
 
         #calculate total height for the header (after auto-wrap)
@@ -155,3 +156,4 @@ class MainWindow(object):
         x, y, _ = SCREEN_RECT.top_left.coords
         libtcod.console_blit(self.inv_window, 0, 0, MAP_WIDTH, MAP_HEIGHT, 0, x, y, 1.0, 0.7)
         libtcod.console_flush()
+        libtcod.console_clear(self.inv_window)

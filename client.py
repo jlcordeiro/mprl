@@ -12,29 +12,15 @@ from Queue import Queue
 
 ## Variables shared by all threads
 SOCKET = TCPClient('localhost', 4446)
-EVENTS = Queue()
+DRAW_EVENTS = Queue()
 CLOSE_CLIENT = False
+INVENTORY_ITEM = None
 
 
 def loop(func):
     """ Run function passed as parameter until the game is closing. """
     while not CLOSE_CLIENT:
         func()
-
-ITEM_TYPE_OPTIONS = {"cast": [('u', "(U)se"),
-                              ('d', "(D)rop")],
-                     "melee": [('r', "Equip in (r)ight hand"),
-                               ('l', "Equip in (l)eft hand"),
-                               ('d', "(D)rop")],
-                     "armour": [('w', "(W)ear"),
-                                ('d', "(D)rop")]
-                     }
-
-OPTION_NAMES = {'u': 'cast',
-                'd': 'drop',
-                'w': 'wear',
-                'r': 'use-right',
-                'l': 'use-left'}
 
 
 def handle_keys():
@@ -45,29 +31,30 @@ def handle_keys():
         CLOSE_CLIENT = True
         return
 
+    if INVENTORY_ITEM is not None:
+        option = chr(key.c)
+        # tell the draw thread to close the inventory window
+        DRAW_EVENTS.put(('inventory-hide', None))
+        # send chosen option to the game server
+        if option in ObjectModel.action_names:
+            SOCKET.send({ObjectModel.action_names[option]: INVENTORY_ITEM.key})
+        return
+
     movement = get_key_direction(key)
     if movement is not None:
         SOCKET.send({'move': movement})
     elif chr(key.c) == 'g':
         SOCKET.send({'get': None})
     elif chr(key.c) == 'i':
-        EVENTS.put(('inventory-show',))
+        DRAW_EVENTS.put(('inventory-show', None))
         key = wait_keypress()
         item_key = chr(key.c)
-        EVENTS.put(('inventory-item', item_key))
-        key = wait_keypress()
-        option = chr(key.c)
-        EVENTS.put(('inventory-hide',))
-
-        if option in OPTION_NAMES:
-            SOCKET.send({OPTION_NAMES[option]: item_key})
+        DRAW_EVENTS.put(('inventory-item', item_key))
     else:
         if chr(key.c) == 'v':
-            EVENTS.put(('toggle-fov',))
+            DRAW_EVENTS.put(('toggle-fov', None))
         elif chr(key.c) in ('>', '<'):
             SOCKET.send({'climb': None})
-
-        return 'did-not-take-turn'
 
 
 class UIDraw(object):
@@ -87,6 +74,7 @@ class UIDraw(object):
                               self.items, self.messages, self.draw_not_in_fov)
 
     def _handle_server_data(self, data):
+        """ Handle data that was sent by the server. """
         for key in ('dungeon', 'player', 'messages', 'monsters', 'items'):
             if key not in data.keys():
                 continue
@@ -111,8 +99,10 @@ class UIDraw(object):
         self.draw()
 
     def handle_event(self):
-        if not EVENTS.empty():
-            event_name, event_data = EVENTS.get()
+        global INVENTORY_ITEM
+        """ Get a new event and process it. """
+        if not DRAW_EVENTS.empty():
+            event_name, event_data = DRAW_EVENTS.get()
 
             if event_name == 'toggle-fov':
                 self.draw_not_in_fov = not self.draw_not_in_fov
@@ -122,24 +112,28 @@ class UIDraw(object):
                 options = [(item.key, item.name) for item in self.player.inventory]
                 self.main_window.show_menu(options, header, False)
             elif event_name == 'inventory-item':
-                item = self.player.get_item(event_data)
+                INVENTORY_ITEM = self.player.get_item(event_data)
 
-                if item:
-                    header = item.name + ":\n"
-                    options = ITEM_TYPE_OPTIONS[item.type]
+                if INVENTORY_ITEM:
+                    header = INVENTORY_ITEM.name + ":\n"
+                    options = INVENTORY_ITEM.allowed_actions()
                     self.main_window.show_menu(options, header, True)
+                else:
+                    self.draw()
             elif event_name == 'inventory-hide':
+                INVENTORY_ITEM = None
                 self.draw()
             elif event_name == 'server-msg':
                 self._handle_server_data(event_data)
 
-            EVENTS.task_done()
+            DRAW_EVENTS.task_done()
 
 
 def recv_data():
+    """ Receive data from the server and insert it into the events queue. """
     data = SOCKET.recv()
     if data:
-        EVENTS.put(('server-msg', data))
+        DRAW_EVENTS.put(('server-msg', data))
 
 
 if __name__ == '__main__':
@@ -149,10 +143,10 @@ if __name__ == '__main__':
     Thread(target=loop, args=(ui_draw.handle_event,)).start()
     Thread(target=loop, args=(handle_keys,)).start()
 
+    # wait until game is closed
     import time
+    while not CLOSE_CLIENT:
+        time.sleep(0.1)
 
-    try:
-        while not CLOSE_CLIENT:
-            time.sleep(1)
-    finally:
-        SOCKET.close()
+    # release resources
+    SOCKET.close()
