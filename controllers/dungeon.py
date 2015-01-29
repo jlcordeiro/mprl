@@ -1,10 +1,10 @@
-import libtcodpy as libtcod
 import random
 import views.dungeon
 import common.models.dungeon
 from common.models.dungeon import Level, Stairs
 from common.utilities.geometry import Rect, Point
 from common.utilities.utils import reduce_map, expand_map
+from common.utilities.path import APath
 from config import *
 from messages import *
 
@@ -129,13 +129,12 @@ class Dungeon(object):
         return self._model.levels[pos[2]].is_blocked(pos)
 
     def get_path(self, source_pos, target_pos):
-        libtcod.path_compute(self.path, source_pos[0], source_pos[1],
-                             target_pos[0], target_pos[1])
+        sx, sy, _ = source_pos
+        tx, ty, _ = target_pos
+        A = APath(MAP_WIDTH, MAP_HEIGHT, (sx, sy), self.is_blocked)
+        A.find_path((tx, ty))
 
-        if libtcod.path_is_empty(self.path):
-            return None
-
-        return libtcod.path_get(self.path, 0)
+        return A.path[0]
 
     def update_explored(self, player):
         for y in range(MAP_HEIGHT):
@@ -144,16 +143,7 @@ class Dungeon(object):
                     self.__clevel.explored[x][y] = True
 
     def compute_path(self):
-        # build map for path finding
-        path_map = libtcod.map_new(MAP_WIDTH, MAP_HEIGHT)
-
-        z = self._model.current_level
-        for x in range(MAP_WIDTH):
-            for y in range(MAP_HEIGHT):
-                libtcod.map_set_properties(path_map, x, y, True,
-                                           not self.is_blocked((x, y, z)))
-
-        self.path = libtcod.path_new_using_map(path_map)
+        pass
 
     def climb_stairs(self, pos):
         sx, sy, _ = self.__clevel.stairs.position
